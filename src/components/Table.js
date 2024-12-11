@@ -1,16 +1,18 @@
 import { columns, rows } from "@/constants/tableValue";
+import { useAppContext } from "@/context/AppContext";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import * as React from "react";
 
 const Table = () => {
+  const { addEvent, tableData } = useAppContext();
+
   return (
     <div>
-      <div>
-      </div>
+      <div></div>
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
-          rows={rows}
+          rows={tableData}
           columns={columns}
           disableColumnFilter
           hideFooterPagination
