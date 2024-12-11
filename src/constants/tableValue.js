@@ -3,7 +3,12 @@ export const columns = [
     field: "name",
     headerName: "NAME",
     renderCell: (params) => (
-      <div onClick={() => console.log("Clicked on the Event")}>
+      <div
+        onClick={() => alert(`Clicked on the Event: ${params.row.name}`)}
+        style={{
+          cursor: "pointer", // Makes the cursor change to a pointer
+        }}
+      >
         <p style={{ margin: 0 }}>{params.row.name}</p>
         <p style={{ margin: 0, fontSize: "0.8em", color: "gray" }}>
           {params.row.description}
@@ -12,6 +17,7 @@ export const columns = [
     ),
     flex: 1,
   },
+
   {
     field: "stakeholders",
     headerName: "STAKEHOLDERS",

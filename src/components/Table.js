@@ -7,7 +7,6 @@ const Table = () => {
   return (
     <div>
       <div>
-        
       </div>
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
@@ -16,6 +15,7 @@ const Table = () => {
           disableColumnFilter
           hideFooterPagination
           hideFooter
+          disableColumnMenu
           disableRowSelectionOnClick
           sx={{
             "& .MuiDataGrid-columnHeaders": {
