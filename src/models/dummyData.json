@@ -1,0 +1,110 @@
+{
+    "organizations": [
+      {
+        "name": "TechCorp",
+        "applications": [
+          {
+            "type": "web",
+            "events": [
+              {
+                "eventName": "UserLogin",
+                "timestamp": "2024-12-11T10:00:00Z",
+                "items": [
+                  {
+                    "name": "username",
+                    "value": "john_doe",
+                    "additionalInfo": "Logged in from Firefox browser"
+                  },
+                  {
+                    "name": "sessionId",
+                    "value": "abc123",
+                    "additionalInfo": "Session started successfully"
+                  }
+                ]
+              },
+              {
+                "eventName": "PageView",
+                "timestamp": "2024-12-11T10:05:00Z",
+                "items": [
+                  {
+                    "name": "pageTitle",
+                    "value": "Homepage",
+                    "additionalInfo": "Viewed by John"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "chrome",
+            "events": [
+              {
+                "eventName": "ExtensionInstalled",
+                "timestamp": "2024-12-11T09:45:00Z",
+                "items": [
+                  {
+                    "name": "extensionName",
+                    "value": "AdBlock",
+                    "additionalInfo": "Version 3.2.1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "BizSolutions",
+        "applications": [
+          {
+            "type": "app",
+            "events": [
+              {
+                "eventName": "PurchaseMade",
+                "timestamp": "2024-12-11T11:00:00Z",
+                "items": [
+                  {
+                    "name": "productId",
+                    "value": "prod_5678",
+                    "additionalInfo": {
+                      "price": "$29.99",
+                      "currency": "USD"
+                    }
+                  },
+                  {
+                    "name": "paymentMethod",
+                    "value": "Credit Card",
+                    "additionalInfo": "Visa ending in 1234"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "web",
+            "events": [
+              {
+                "eventName": "FormSubmission",
+                "timestamp": "2024-12-11T12:30:00Z",
+                "items": [
+                  {
+                    "name": "formId",
+                    "value": "form_002",
+                    "additionalInfo": "Contact Us form"
+                  },
+                  {
+                    "name": "formFields",
+                    "value": {
+                      "name": "Jane Doe",
+                      "email": "jane.doe@example.com"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  
