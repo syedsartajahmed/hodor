@@ -1,19 +1,24 @@
-import { columns, rows } from "@/constants/tableValue";
+import { columns } from "@/constants/tableValue";
 import { useAppContext } from "@/context/AppContext";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import * as React from "react";
+import React from "react";
 
 const Table = () => {
-  const { addEvent, tableData } = useAppContext();
+  const { tableData, toggleDrawer } = useAppContext();
+
+  const handleRowClick = (params) => {
+    const event = tableData.find((row) => row.id === params.id);
+    toggleDrawer(true, event);
+  };
 
   return (
     <div>
-      <div></div>
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}
           columns={columns}
+          onRowClick={handleRowClick}
           disableColumnFilter
           hideFooterPagination
           hideFooter

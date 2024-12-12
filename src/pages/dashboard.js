@@ -1,12 +1,14 @@
 import Header from "@/components/Header";
 import Table from "@/components/Table";
-import * as React from "react";
+import EventDrawer from "@/components/EventDrawer";
+import React from "react";
 
 const Dashboard = () => {
   return (
     <div>
       <Header />
       <Table />
+      <EventDrawer />
     </div>
   );
 };
