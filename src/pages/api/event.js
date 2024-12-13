@@ -8,9 +8,9 @@ import Item from '@/models/item';
   
   if (req.method === "POST") {
     try {
-        const { organizationId, applicationType, eventName, items } = req.body;
+        const { organizationId, applicationType, eventName, items, stakeholders, category, propertyBundles, groupProperty, source, action } = req.body;
 
-        if (!organizationId || !applicationType || !eventName) {
+        if (!organizationId || !applicationType || !eventName || !items  || !stakeholders || !category || !propertyBundles || !groupProperty || !source || !action) {
           return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -31,6 +31,13 @@ import Item from '@/models/item';
     
         const newEvent = await Event.create({
           eventName,
+          stakeholders,
+          category,
+          propertyBundles,
+          groupProperty,
+          source,
+          action,
+          propertyBundles,
           timestamp: new Date(),
         });
     
