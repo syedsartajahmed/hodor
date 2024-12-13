@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 
 const EventDrawer = () => {
-  const { isDrawerOpen, toggleDrawer, selectedEvent } = useAppContext();
+  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent } = useAppContext();
 
-  // State for input fields
   const [formData, setFormData] = useState({
     cta_text: "",
     cta_type: "",
@@ -14,7 +13,6 @@ const EventDrawer = () => {
 
   const [generatedCode, setGeneratedCode] = useState("");
 
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -23,7 +21,6 @@ const EventDrawer = () => {
     });
   };
 
-  // Generate Mixpanel code
   const generateCode = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
 
@@ -45,18 +42,18 @@ mixpanel.track("${selectedEvent?.name}", {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full w-96 bg-white shadow-lg transform transition-transform duration-300 ${
-        isDrawerOpen ? "translate-x-0" : "translate-x-full"
+      className={`fixed top-0 right-0 h-full w-96 bg-white shadow-lg transform transition-transform duration-300 z-50 ${
+        isEventDrawerOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">
-            {selectedEvent?.name || "New Event"}
+            {selectedEvent?.name || "Event Details"}
           </h2>
           <button
-            onClick={() => toggleDrawer(false)}
+            onClick={() => toggleEventDrawer(false)}
             className="text-gray-500 hover:text-gray-800"
           >
             ✕
@@ -129,7 +126,6 @@ mixpanel.track("${selectedEvent?.name}", {
             </div>
           </div>
 
-          {/* Generated Code */}
           {generatedCode && (
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
               <h3 className="text-sm font-semibold mb-2">Generated Code:</h3>
@@ -149,7 +145,7 @@ mixpanel.track("${selectedEvent?.name}", {
             Generate Code
           </button>
           <button
-            onClick={() => toggleDrawer(false)}
+            onClick={() => toggleEventDrawer(false)}
             className="text-gray-500 hover:text-gray-800"
           >
             Cancel
