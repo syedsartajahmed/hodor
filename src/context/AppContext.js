@@ -9,6 +9,7 @@ export const AppProvider = ({ children }) => {
   const [tableData, setTableData] = useState(rows);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showList, setShowList] = useState(false);
 
   const toggleDrawer = (open, event = null) => {
     setIsDrawerOpen(open);
@@ -33,10 +34,12 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     tableData,
-    addEvent, // Ensure this is included in the context value
+    addEvent, 
     isDrawerOpen,
     toggleDrawer,
     selectedEvent,
+    showList,
+    setShowList
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

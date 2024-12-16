@@ -3,15 +3,12 @@ import {
   Box,
   Button,
   Typography,
-  TextField,
-  Modal,
   ToggleButtonGroup,
   ToggleButton,
   IconButton,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
-import { rows } from "@/constants/tableValue";
 import AddEventModal from "./AddEventModal";
 import { useAppContext } from "@/context/AppContext";
 import NewCategoryModal from "./NewCategory";
@@ -20,7 +17,7 @@ const Header = () => {
   const [view, setView] = useState("category");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const { tableData } = useAppContext();
+  const { tableData, setShowList } = useAppContext();
 
   const eventSize = tableData.length;
 
@@ -41,6 +38,14 @@ const Header = () => {
         padding={2}
         borderBottom="1px solid #e0e0e0"
         gap={2}
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          backgroundColor: "white",
+          zIndex: 1000,
+        }}
       >
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h6" fontWeight="bold">
@@ -61,10 +66,18 @@ const Header = () => {
             onChange={handleViewChange}
             aria-label="view toggle"
           >
-            <ToggleButton value="category" aria-label="category view">
+            <ToggleButton
+              value="category"
+              aria-label="category view"
+              onClick={() => setShowList(false)}
+            >
               Category
             </ToggleButton>
-            <ToggleButton value="list" aria-label="list view">
+            <ToggleButton
+              value="list"
+              aria-label="list view"
+              onClick={() => setShowList(true)}
+            >
               List
             </ToggleButton>
           </ToggleButtonGroup>
@@ -87,6 +100,9 @@ const Header = () => {
           </IconButton>
         </Box>
       </Box>
+
+      <Box sx={{ marginTop: "72px" }}></Box>
+
       {open && <AddEventModal open={open} setOpen={setOpen} />}
       {categoryOpen && (
         <NewCategoryModal open={categoryOpen} setOpen={setCategoryOpen} />

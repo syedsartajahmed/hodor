@@ -7,18 +7,12 @@ import React from "react";
 const Table = () => {
   const { tableData, toggleDrawer } = useAppContext();
 
-  const handleRowClick = (params) => {
-    const event = tableData.find((row) => row.id === params.id);
-    toggleDrawer(true, event);
-  };
-
   return (
     <div>
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}
           columns={columns}
-          onRowClick={handleRowClick}
           disableColumnFilter
           hideFooterPagination
           hideFooter
