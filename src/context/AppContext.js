@@ -11,6 +11,11 @@ export const AppProvider = ({ children }) => {
   const [isOrgDrawerOpen, setIsOrgDrawerOpen] = useState(false); // Left drawer
   const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false); // Right drawer
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [currentOrganization, setCurrentOrganization] = useState({
+    id: null,
+    name: null,
+    applicationId: null,
+  }); 
 
   const toggleOrgDrawer = (open) => {
     setIsOrgDrawerOpen(open);
@@ -19,6 +24,14 @@ export const AppProvider = ({ children }) => {
   const toggleEventDrawer = (open, event = null) => {
     setIsEventDrawerOpen(open); // Ensure this toggles the drawer's visibility
     setSelectedEvent(event); // Set the selected event data
+  };
+
+  const selectOrganization = (organization) => {
+    setCurrentOrganization({
+      id: organization._id, 
+      name: organization.name,
+      applicationId: organization.applications?.[0] || null,
+    });
   };
   
 
@@ -49,6 +62,9 @@ export const AppProvider = ({ children }) => {
     toggleEventDrawer,
     selectedEvent,
     addEvent,
+    setCurrentOrganization,
+    currentOrganization,
+    selectOrganization,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

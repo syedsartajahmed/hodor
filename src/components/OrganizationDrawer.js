@@ -1,27 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
+import axios from "axios";
 
 const OrganizationDrawer = () => {
   const {
     isOrgDrawerOpen,
     toggleOrgDrawer,
     setSelectedOrganization,
+    selectOrganization,
   } = useAppContext();
-  const [organizations, setOrganizations] = useState([
-    { id: "org1", name: "Organization 1" },
-    { id: "org2", name: "Organization 2" },
-  ]); // Dummy organizations
+  
+  const [organizations, setOrganizations] = useState([]);
   const [newOrgName, setNewOrgName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Handle adding a new organization
-  const handleAddOrganization = () => {
-    if (!newOrgName.trim()) return;
-    const newOrganization = { id: `org${Date.now()}`, name: newOrgName };
-    setOrganizations((prev) => [...prev, newOrganization]); // Add to the list
-    setSelectedOrganization(newOrganization); // Select the new organization
-    setNewOrgName(""); // Clear the input
-    toggleOrgDrawer(false); // Close the drawer
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  // Fetch organizations when the drawer is opened
+  useEffect(() => {
+
+      fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get("/api/organizations"); // Replace with your API endpoint
+      setOrganizations(response.data); // Assuming the response is an array of organizations
+    } catch (err) {
+      setError("Failed to fetch organizations");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAddOrganization = async () => {
+    if (!newOrgName.trim()) return;
+    try {
+      setLoading(true);
+      setError(null);
+  
+      const newOrganization = { name: newOrgName };
+      await axios.post("/api/organizations", newOrganization); // Call POST API to add a new organization
+      
+      setSuccessMessage("Organization added successfully!");
+      setNewOrgName(""); // Clear the input
+      fetchOrganizations(); // Refetch the latest list of organizations
+    } catch (err) {
+      setError("Failed to add organization");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrganizationDetails = async (organizationId) => {
+    try {
+      setLoading(true);
+      setError(null);
+  
+      const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
+      const organizationDetails = response.data;
+  
+      // Handle the fetched data (e.g., update the state)
+      console.log("Fetched organization details:", organizationDetails);
+      //setSelectedOrganization(organizationDetails);
+    } catch (err) {
+      setError("Failed to fetch organization details");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
 
   return (
     <div
@@ -44,13 +99,18 @@ const OrganizationDrawer = () => {
         {/* Organization List */}
         <div className="flex-1 overflow-y-auto p-4">
           <h3 className="text-sm font-medium text-gray-300 mb-2">Organizations</h3>
+          {loading && <p className="text-gray-500">Loading...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {successMessage && <p className="text-green-500">{successMessage}</p>}
           <ul className="space-y-2">
             {organizations.map((org) => (
               <li
-                key={org.id}
+                key={org._id}
                 className="p-2 bg-gray-800 rounded-md cursor-pointer hover:bg-gray-700"
                 onClick={() => {
                   setSelectedOrganization(org);
+                  fetchOrganizationDetails(org._id);
+                  selectOrganization(org); 
                   toggleOrgDrawer(false);
                 }}
               >
@@ -75,8 +135,9 @@ const OrganizationDrawer = () => {
             <button
               onClick={handleAddOrganization}
               className="bg-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-500"
+              disabled={loading}
             >
-              Add
+              {loading ? "Adding..." : "Add"}
             </button>
           </div>
         </div>

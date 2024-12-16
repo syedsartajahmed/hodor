@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import axios from "axios";
 
 const EventDrawer = () => {
-  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent } = useAppContext();
+  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent, currentOrganization } = useAppContext();
 
   const [formData, setFormData] = useState({
     cta_text: "",
@@ -20,6 +21,54 @@ const EventDrawer = () => {
       [name]: value,
     });
   };
+
+  const handleSave = async () => {
+    const { cta_text, cta_type, cta_color, cta_class } = formData;
+  
+    if (!cta_text || !cta_type || !cta_color || !cta_class) {
+      alert("Please fill in all fields to save.");
+      return;
+    }
+  
+    const payload = {
+      organization_id: currentOrganization.id, 
+      organization_name: currentOrganization.name,
+      application_id: currentOrganization.applicationId || "default_application_id", 
+      eventName: selectedEvent?.name || "Unnamed Event", 
+      items: [
+        { property: "cta_text", value: cta_text },
+        { property: "cta_type", value: cta_type },
+        { property: "cta_color", value: cta_color },
+        { property: "cta_class", value: cta_class },
+      ],
+      stakeholders: "Marketing Team", 
+      category: "CTA Tracking", 
+      propertyBundles: "Default Bundle", 
+      groupProperty: "CTA Group", 
+      source: "Web App", 
+      action: "CTA Clicked", 
+    };
+  
+    console.log("Payload being sent:", payload);
+
+    try {
+      // setLoading(true);
+      // setError(null);
+      // setSuccessMessage(null);
+  
+      // Send POST request to save data
+      const response = await axios.post("/api/save", payload);
+  
+      // setSuccessMessage("Event data saved successfully!");
+      console.log("Response:", response.data);
+    } catch (err) {
+      // setError("Failed to save event data. Please try again.");
+      console.error("Error saving event:", err.message);
+    } finally {
+      // setLoading(false);
+    }
+  };
+  
 
   const generateCode = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
@@ -46,7 +95,7 @@ mixpanel.track("${selectedEvent?.name}", {
         isEventDrawerOpen ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">
@@ -61,7 +110,7 @@ mixpanel.track("${selectedEvent?.name}", {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 relative">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -134,15 +183,29 @@ mixpanel.track("${selectedEvent?.name}", {
               </pre>
             </div>
           )}
+          <div className="absolute bottom-4 left-4">
+            <button
+              onClick={generateCode}
+              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+            >
+              Generate Code
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t flex items-center justify-between">
-          <button
+          {/* <button
             onClick={generateCode}
             className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
           >
             Generate Code
+          </button> */}
+          <button
+            onClick={handleSave}
+            className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+          >
+            Save
           </button>
           <button
             onClick={() => toggleEventDrawer(false)}
