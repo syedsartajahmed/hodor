@@ -1,19 +1,41 @@
-import React from "react";
+import React ,{ useState, useEffect} from "react";
 import { useRouter } from "next/router";
 import { Box, Typography, Card, CardContent, Avatar } from "@mui/material";
 import Navbar from "@/components/Navbar";
+import axios from "axios";
 
 const Welcome = () => {
   const router = useRouter();
+  const [counts, setCounts] = useState({ totalOrganizations: 0, events: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const response = await axios.get("/api/getCounts");
+        console.log("Counts:", response.data);
+        setCounts(response.data);
+        console.log("Counts:", counts);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  // const cards = [
+  //   { title: "Events", count: 0, initials: "WB", route: "/dashboard" },
+  //   {
+  //     title: "Organisations",
+  //     count: 0,
+  //     initials: "WB",
+  //     route: "/organizations",
+  //   },
+  // ];
 
   const cards = [
-    { title: "Events", count: 0, initials: "WB", route: "/dashboard" },
-    {
-      title: "Organisations",
-      count: 0,
-      initials: "WB",
-      route: "/organizations",
-    },
+    { title: "Events", count: counts.events, initials: "WB", route: "/dashboard" },
+    { title: "Organizations", count: counts.totalOrganizations, initials: "WB", route: "/organizations" },
   ];
 
   const handleCardClick = (route) => {
