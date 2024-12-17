@@ -1,31 +1,10 @@
-import { useAppContext } from "@/context/AppContext";
+import NameCellRenderer from "@/components/NameCellRender";
 
 export const columns = [
   {
     field: "name",
     headerName: "NAME",
-    renderCell: (params) => {
-      const { tableData, toggleDrawer } = useAppContext();
-      const handleClick = () => {
-        const event = tableData.find((row) => row.id === params.row.id);
-        toggleDrawer(true, event);
-      };
-
-      return (
-        <div
-          onClick={handleClick}
-          style={{
-            cursor: "pointer",
-            flex: 1,
-          }}
-        >
-          <p style={{ margin: 0 }}>{params.row.name}</p>
-          <p style={{ margin: 0, fontSize: "0.8em", color: "gray" }}>
-            {params.row.description}
-          </p>
-        </div>
-      );
-    },
+    renderCell: (params) => <NameCellRenderer params={params} />,
     flex: 1,
   },
 
