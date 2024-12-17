@@ -5,39 +5,34 @@ import { DataGrid } from "@mui/x-data-grid";
 import React from "react";
 
 const Table = () => {
-  const { tableData, toggleEventDrawer } = useAppContext();
-
-  const renderEventName = (params) => (
-    <button
-      onClick={(e) => {
-        e.stopPropagation(); // Prevents row-level click from interfering
-        toggleEventDrawer(true, params.row); // Opens the right drawer with event data
-      }}
-      className="text-indigo-500 hover:underline focus:outline-none"
-    >
-      {params.row.name}
-    </button>
-  );
-
-  const modifiedColumns = columns.map((col) => {
-    if (col.field === "name") {
-      return { ...col, renderCell: renderEventName }; // Attach the event click logic
-    }
-    return col;
-  });
+  const { tableData, toggleDrawer } = useAppContext();
 
   return (
-    <Box sx={{ height: "100%", width: "100%" }}>
-      <DataGrid
-        rows={tableData}
-        columns={modifiedColumns}
-        disableColumnFilter
-        hideFooterPagination
-        hideFooter
-        disableColumnMenu
-        disableRowSelectionOnClick
-      />
-    </Box>
+    <div>
+      <Box sx={{ height: "100%", width: "100%" }}>
+        <DataGrid
+          rows={tableData}
+          columns={columns}
+          disableColumnFilter
+          hideFooterPagination
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              borderBottom: "1px solid rgba(224, 224, 224, 1)",
+            },
+            "& .MuiDataGrid-columnHeader, & .MuiDataGrid-cell": {
+              borderRight: "1px solid rgba(224, 224, 224, 1)",
+            },
+            "& .MuiDataGrid-columnHeader:last-child, & .MuiDataGrid-cell:last-child":
+              {
+                borderRight: "none",
+              },
+          }}
+        />
+      </Box>
+    </div>
   );
 };
 

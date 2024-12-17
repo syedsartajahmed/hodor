@@ -11,6 +11,8 @@ export const AppProvider = ({ children }) => {
   const [isOrgDrawerOpen, setIsOrgDrawerOpen] = useState(false); // Left drawer
   const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false); // Right drawer
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showList, setShowList] = useState(false);
   const [currentOrganization, setCurrentOrganization] = useState({
     id: null,
     name: null,
@@ -24,6 +26,12 @@ export const AppProvider = ({ children }) => {
   const toggleEventDrawer = (open, event = null) => {
     setIsEventDrawerOpen(open); // Ensure this toggles the drawer's visibility
     setSelectedEvent(event); // Set the selected event data
+  };
+
+  const toggleDrawer = (open, event = null) => {
+    setIsDrawerOpen(open);
+    setIsEventDrawerOpen(open);
+    setSelectedEvent(event);
   };
 
   const selectOrganization = (organization) => {
@@ -53,6 +61,10 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     tableData,
+    addEvent, // Ensure this is included in the context value
+    isDrawerOpen,
+    toggleDrawer,
+    selectedEvent,
     setTableData,
     selectedOrganization,
     setSelectedOrganization,
@@ -60,11 +72,11 @@ export const AppProvider = ({ children }) => {
     toggleOrgDrawer,
     isEventDrawerOpen,
     toggleEventDrawer,
-    selectedEvent,
-    addEvent,
     setCurrentOrganization,
     currentOrganization,
     selectOrganization,
+    showList,
+    setShowList,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
