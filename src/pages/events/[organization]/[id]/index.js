@@ -6,8 +6,9 @@ import Table from "@/components/Table";
 import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
+import { useRouter } from "next/router";
 
-const Dashboard = () => {
+const Index = () => {
     const {
       isOrgDrawerOpen,
       toggleOrgDrawer,
@@ -18,24 +19,21 @@ const Dashboard = () => {
       currentOrganization,
     } = useAppContext();
 
+    const router = useRouter();
+    const { organization , id } = router.query;
 
     useEffect(() => {
-      console.log(currentOrganization);
-      fetchOrganizationDetails(currentOrganization.id);
-    }, []);
-  const [organizations, setOrganizations] = useState([]);
-  
+        if (id) {
+            fetchOrganizationDetails(id);
+        }
+    }, [id]);
+    
     const fetchOrganizationDetails = async (organizationId) => {
       try {
         const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
         const organizationDetails = response.data;
-    
-        // Handle the fetched data (e.g., update the state)
-        console.log("Fetched organization details:", organizationDetails.applications?.[0]?.events);
         const events = organizationDetails.applications?.[0]?.events || [];
-        console.log("Fetched organization details:", events);
-  
-        // Map through events to structure them correctly
+
         const updatedRows = events.map((event) => ({
           id: event._id,
           name: event.eventName,
@@ -51,11 +49,11 @@ const Dashboard = () => {
       } finally {
         //setLoading(false);
       }
-    };
+    };;
 
   return (
     <div>
-      <Header isShowCopy={true} />
+      <Header isShowCopy={false} />
       {showList ? <List /> : <Table />}
       <EventDrawer />
 
@@ -71,4 +69,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Index;

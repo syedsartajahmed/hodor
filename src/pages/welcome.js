@@ -34,7 +34,7 @@ const Welcome = () => {
   // ];
 
   const cards = [
-    { title: "Events", count: counts.events, initials: "WB", route: "/dashboard" },
+    { title: "Events", count: counts.events, initials: "WB", route: "/master-event" },
     { title: "Organizations", count: counts.totalOrganizations, initials: "WB", route: "/organizations" },
   ];
 
