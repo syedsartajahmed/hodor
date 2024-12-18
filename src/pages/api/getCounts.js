@@ -1,19 +1,16 @@
 import connectDB from "@/utils/mongoose";
 import Organization from "@/models/organization";
-import Event from "@/models/event";
+import MasterEvent from "@/models/masterEvents";
 
 async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      // Fetch total organizations
-      const totalOrganizations = await Organization.countDocuments();
-
-      // Fetch a fixed number of events (10 as of now)
-        const events = await Event.find();
+        const totalOrganizations = await Organization.countDocuments();
+        const totalMasterEvents  = await MasterEvent.countDocuments();
 
       res.status(200).json({
         totalOrganizations,
-        events: events.length,  // Count of the 10 events fetched
+        events: totalMasterEvents ,  
       });
     } catch (error) {
       console.error("Error fetching counts:", error);

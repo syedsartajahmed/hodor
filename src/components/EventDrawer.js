@@ -3,7 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 
 const EventDrawer = () => {
-  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent, currentOrganization } = useAppContext();
+  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent, currentOrganization, setTableData,setSelectedOrganization } = useAppContext();
 
   const [formData, setFormData] = useState({
     cta_text: "",
@@ -57,10 +57,19 @@ const EventDrawer = () => {
       // setSuccessMessage(null);
   
       // Send POST request to save data
-      const response = await axios.post("/api/save", payload);
-  
-      // setSuccessMessage("Event data saved successfully!");
-      console.log("Response:", response.data);
+      const saveResponse = await axios.post("/api/save", payload);
+      const response = await axios.get(`/api/organizations?organization_id=${currentOrganization.id}`);
+      const organizationDetails = response.data;  
+      const events = organizationDetails.applications?.[0]?.events || [];
+      const updatedRows = events.map((event) => ({
+        id: event._id,
+        name: event.eventName,
+        eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
+        ...event,
+      }));
+
+      setTableData(updatedRows);
+      setSelectedOrganization(organizationDetails);
     } catch (err) {
       // setError("Failed to save event data. Please try again.");
       console.error("Error saving event:", err.message);

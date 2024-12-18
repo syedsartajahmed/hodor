@@ -13,11 +13,11 @@ import AddEventModal from "./AddEventModal";
 import { useAppContext } from "@/context/AppContext";
 import NewCategoryModal from "./NewCategory";
 
-const Header = () => {
+const Header = ({ isShowCopy = false }) => {
   const [view, setView] = useState("category");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const { tableData, setShowList } = useAppContext();
+  const { tableData, setShowList, currentOrganization } = useAppContext();
 
   const eventSize = tableData.length;
 
@@ -28,6 +28,20 @@ const Header = () => {
   };
 
   const handleOpen = () => setOpen(true);
+
+  const handleCopy = () => {
+    const encodedName = encodeURIComponent(currentOrganization.name);
+    const url = `${window.location.origin}/events/${encodedName}/${currentOrganization.id}`;
+
+    navigator.clipboard.writeText(url)
+    .then(() => {
+      console.log("URL copied to clipboard:", url);
+      alert(`Link copied to clipboard:\n${url}`);
+    })
+    .catch((err) => {
+      console.error("Failed to copy URL to clipboard:", err);
+    });
+  }
 
   return (
     <>
@@ -98,6 +112,11 @@ const Header = () => {
             <FilterListIcon />
             <Typography variant="body2">Filter</Typography>
           </IconButton>
+          {isShowCopy && (
+            <Button variant="outlined" onClick={handleCopy}>
+              Copy URL
+            </Button>
+          )}
         </Box>
       </Box>
 
