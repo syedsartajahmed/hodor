@@ -30,6 +30,12 @@ const EventDrawer = () => {
     });
   };
 
+  const validRequest = () => {
+    const { cta_text, cta_type, cta_color, cta_class } = formData;
+    if (!cta_text || !cta_type || !cta_color || !cta_class) return false;
+    return true;
+  };
+
   const handleSave = async () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
 
@@ -209,12 +215,12 @@ mixpanel.track("${selectedEvent?.name}", {
         {/* Footer */}
         <div className="flex flex-row items-center mx-5">
           <div className="flex-1">
-            <button
+            {/* <button
               onClick={generateCode}
               className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
             >
               Generate Code
-            </button>
+            </button> */}
           </div>
           <div className="p-4 border-t flex items-center gap-7 justify-center">
             <button
