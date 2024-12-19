@@ -6,7 +6,7 @@ const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
-  const [tableData, setTableData] = useState(rows);
+  const [tableData, setTableData] = useState([]);
   const [selectedOrganization, setSelectedOrganization] = useState(null); // New State
   const [isOrgDrawerOpen, setIsOrgDrawerOpen] = useState(false); // Left drawer
   const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false); // Right drawer
