@@ -51,8 +51,8 @@ const MasterEvents = () => {
 
     return (
         <div>
-          <Header isShowCopy={true} />
-          {showList ? <List /> : <Table />}
+          <Header/>
+          {showList ? <List /> : <Table page="master-events"/>}
           <EventDrawer />
 
           {/* Main Table */}

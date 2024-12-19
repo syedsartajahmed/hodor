@@ -1,4 +1,6 @@
 import NameCellRenderer from "@/components/NameCellRender";
+import DeleteCellRenderer from "@/components/DeleteCellRenderer";
+
 
 export const columns = [
   {
@@ -18,21 +20,21 @@ export const columns = [
     headerName: "CATEGORY",
     flex: 1,
   },
-  {
-    field: "propertyBundles",
-    headerName: "PROPERTY BUNDLES",
-    flex: 1,
-  },
+  // {
+  //   field: "propertyBundles",
+  //   headerName: "PROPERTY BUNDLES",
+  //   flex: 1,
+  // },
   {
     field: "eventProperties",
     headerName: "EVENT PROPERTIES",
     flex: 1,
   },
-  {
-    field: "groupProperties",
-    headerName: "GROUP PROPERTIES",
-    flex: 1,
-  },
+  // {
+  //   field: "groupProperties",
+  //   headerName: "GROUP PROPERTIES",
+  //   flex: 1,
+  // },
   {
     field: "source",
     headerName: "SOURCE",
