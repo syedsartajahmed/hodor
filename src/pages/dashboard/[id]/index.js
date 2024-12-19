@@ -16,6 +16,7 @@ const Index = () => {
       selectOrganization,
       setTableData,
       showList,
+      setCurrentOrganization,
       currentOrganization,
     } = useAppContext();
 
@@ -36,6 +37,12 @@ const Index = () => {
         console.log("Fetched organization details:", organizationDetails.applications?.[0]?.events);
         const events = organizationDetails.applications?.[0]?.events || [];
         console.log("Fetched organization details:", events);
+        console.log(organizationDetails.applications?.[0]['_id'] || null)
+        setCurrentOrganization({
+          id: organizationDetails._id, 
+          name: organizationDetails.name,
+          applicationId: organizationDetails.applications?.[0]['_id'] || null,
+        });
 
         const updatedRows = events.map((event) => ({
           id: event._id,
@@ -57,7 +64,7 @@ const Index = () => {
   return (
     <div>
       <Header isShowCopy={true} />
-      {showList ? <List /> : <Table />}
+      {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />
 
       {/* Main Table */}

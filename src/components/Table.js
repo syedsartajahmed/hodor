@@ -3,16 +3,27 @@ import { useAppContext } from "@/context/AppContext";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import React from "react";
+import DeleteCellRenderer from "@/components/DeleteCellRenderer";
 
-const Table = () => {
+const Table = ({ page }) => {
   const { tableData, toggleDrawer } = useAppContext();
+
+  const enhancedColumns = [
+    ...columns,
+    {
+      field: "delete",
+      headerName: "DELETE",
+      renderCell: (params) => <DeleteCellRenderer params={params} page={page} />,
+      width: 100,
+    },
+  ];
 
   return (
     <div>
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}
-          columns={columns}
+          columns={enhancedColumns}
           disableColumnFilter
           hideFooterPagination
           hideFooter

@@ -22,8 +22,7 @@ async function handler(req, res) {
           source,
           action,
         } = req.body;
-
-        // Validate required fields
+    
         if (
           !organization_id ||
           !application_id ||
@@ -37,8 +36,9 @@ async function handler(req, res) {
         ) {
           return res.status(400).json({ success: false, message: "Missing required fields" });
         }
-
-        // Create and save items if provided
+    
+        let existingEvent = await Event.findOne({ eventName }).populate("items");
+    
         const itemRefs = [];
         if (items && items.length > 0) {
           for (const item of items) {
@@ -46,88 +46,96 @@ async function handler(req, res) {
             itemRefs.push(newItem._id);
           }
         }
-
-        // Create the event
-        const newEvent = await Event.create({
-          eventName,
-          items: itemRefs, // References to Item documents
-          stakeholders,
-          category,
-          propertyBundles,
-          groupProperty,
-          source,
-          action,
-        });
-
-        // Update Application to reference the new event
-        await Application.findByIdAndUpdate(application_id, {
-          $push: { events: newEvent._id },
-        });
-
+    
+        if (existingEvent) {
+          for (const oldItem of existingEvent.items) {
+            await Item.findByIdAndDelete(oldItem._id);
+          }
+    
+          existingEvent.items = itemRefs;
+          existingEvent.stakeholders = stakeholders;
+          existingEvent.category = category;
+          existingEvent.propertyBundles = propertyBundles;
+          existingEvent.groupProperty = groupProperty;
+          existingEvent.source = source;
+          existingEvent.action = action;
+    
+          await existingEvent.save();
+        } else {
+         
+          const newEvent = await Event.create({
+            eventName,
+            items: itemRefs,
+            stakeholders,
+            category,
+            propertyBundles,
+            groupProperty,
+            source,
+            action,
+          });
+    
+          await Application.findByIdAndUpdate(application_id, {
+            $push: { events: newEvent._id },
+          });
+        }
+    
+        const allEvents = await Event.find().populate("items");
+    
         return res.status(201).json({
           success: true,
-          message: "Event saved successfully",
-          event: newEvent,
+          message: existingEvent
+            ? "Event updated successfully"
+            : "Event created successfully",
+          events: allEvents,
         });
       } catch (error) {
-        console.error("Error saving event:", error);
-        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+        console.error("Error processing event:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Server error",
+          error: error.message,
+        });
       }
     }
-
-    case "PUT": {
+    
+      
+    case 'DELETE': {
       try {
-        const { event_id, eventName, items, stakeholders, category, propertyBundles, groupProperty, source, action } =
-          req.body;
-
-        // Validate required fields
-        if (!event_id) {
-          return res.status(400).json({ success: false, message: "Event ID is required" });
+        const { application_id, event_id } = req.query;
+    
+        if (!application_id || !event_id) {
+          return res.status(400).json({ success: false, message: "Missing required fields" });
         }
-
-        // Find the event
+    
         const event = await Event.findById(event_id);
         if (!event) {
           return res.status(404).json({ success: false, message: "Event not found" });
         }
-
-        // Update items
-        if (items && items.length > 0) {
-          // Clear old items
+    
+        if (event.items && event.items.length > 0) {
           await Item.deleteMany({ _id: { $in: event.items } });
-
-          // Create new items
-          const newItemRefs = [];
-          for (const item of items) {
-            const newItem = await Item.create(item);
-            newItemRefs.push(newItem._id);
-          }
-          event.items = newItemRefs;
         }
-
-        // Update other fields
-        event.eventName = eventName || event.eventName;
-        event.stakeholders = stakeholders || event.stakeholders;
-        event.category = category || event.category;
-        event.propertyBundles = propertyBundles || event.propertyBundles;
-        event.groupProperty = groupProperty || event.groupProperty;
-        event.source = source || event.source;
-        event.action = action || event.action;
-
-        // Save the updated event
-        const updatedEvent = await event.save();
-
+    
+        await Event.findByIdAndDelete(event_id);
+    
+        await Application.findByIdAndUpdate(application_id, {
+          $pull: { events: event_id },
+        });
+    
         return res.status(200).json({
           success: true,
-          message: "Event updated successfully",
-          event: updatedEvent,
+          message: "Event and associated items deleted successfully",
         });
       } catch (error) {
-        console.error("Error updating event:", error);
-        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+        console.error("Error deleting event:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Server error",
+          error: error.message,
+        });
       }
     }
-
+    
     default:
       res.setHeader("Allow", ["POST", "PUT"]);
       return res.status(405).end(`Method ${method} Not Allowed`);

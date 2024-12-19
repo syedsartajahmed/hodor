@@ -1,18 +1,13 @@
 import React, { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
+import { useRouter } from 'next/router';
 import DrawerProperties from "./DrawerProperties";
 
 const EventDrawer = () => {
-  const {
-    isEventDrawerOpen,
-    toggleEventDrawer,
-    selectedEvent,
-    currentOrganization,
-    setTableData,
-    setSelectedOrganization,
-  } = useAppContext();
-
+  const { isEventDrawerOpen, toggleEventDrawer, selectedEvent, currentOrganization, setTableData,setSelectedOrganization } = useAppContext();
+  const router = useRouter();
+  const { pathname } = router;
   const [formData, setFormData] = useState({
     cta_text: "",
     cta_type: "",
@@ -43,50 +38,98 @@ const EventDrawer = () => {
       alert("Please fill in all fields to save.");
       return;
     }
-
-    const payload = {
-      organization_id: currentOrganization.id,
-      organization_name: currentOrganization.name,
-      application_id:
-        currentOrganization.applicationId || "default_application_id",
-      eventName: selectedEvent?.name || "Unnamed Event",
-      items: [
-        { property: "cta_text", value: cta_text },
-        { property: "cta_type", value: cta_type },
-        { property: "cta_color", value: cta_color },
-        { property: "cta_class", value: cta_class },
-      ],
-      stakeholders: "Marketing Team",
-      category: "CTA Tracking",
-      propertyBundles: "Default Bundle",
-      groupProperty: "CTA Group",
-      source: "Web App",
-      action: "CTA Clicked",
-    };
-
-    console.log("Payload being sent:", payload);
-
-    try {
-      const saveResponse = await axios.post("/api/save", payload);
-      const response = await axios.get(
-        `/api/organizations?organization_id=${currentOrganization.id}`
-      );
-      const organizationDetails = response.data;
-      const events = organizationDetails.applications?.[0]?.events || [];
-      const updatedRows = events.map((event) => ({
+  
+    if (pathname === '/master-event') { 
+      const payload = {
+        eventName: selectedEvent?.name || "Unnamed Event", 
+        items: [
+          { property: "cta_text", value: cta_text },
+          { property: "cta_type", value: cta_type },
+          { property: "cta_color", value: cta_color },
+          { property: "cta_class", value: cta_class },
+        ],
+        stakeholders: "Marketing Team", 
+        category: "CTA Tracking", 
+        propertyBundles: "Default Bundle", 
+        groupProperty: "CTA Group", 
+        source: "Web App", 
+        action: "CTA Clicked", 
+      };
+      
+      try {
+        const response = await axios.post("/api/master-events", payload);
+        const masterEventsDetails = response.data;      
+        const totalEvents = masterEventsDetails.totalEvents || [];
+        const updatedRows = totalEvents.map((event) => ({
         id: event._id,
         name: event.eventName,
-        eventProperties: event.items
-          .map((item) => `${item.property}:${item.value}`)
-          .join(", "),
-        ...event,
-      }));
-
-      setTableData(updatedRows);
-      setSelectedOrganization(organizationDetails);
-    } catch (err) {
-      console.error("Error saving event:", err.message);
+        eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
+        stakeholders: event.stakeholders,
+        category: event.category,
+        propertyBundles: event.propertyBundles,
+        groupProperty: event.groupProperty,
+        source: event.source,
+        action: event.action,
+        }));
+    
+        setTableData(updatedRows);
+        setSelectedOrganization(organizationDetails);
+      } catch (err) {
+        // setError("Failed to save event data. Please try again.");
+        console.error("Error saving event:", err.message);
+      } finally {
+        // setLoading(false);
+      }
+    } else {
+      const payload = {
+        organization_id: currentOrganization.id, 
+        organization_name: currentOrganization.name,
+        application_id: currentOrganization.applicationId || "default_application_id", 
+        eventName: selectedEvent?.name || "Unnamed Event", 
+        items: [
+          { property: "cta_text", value: cta_text },
+          { property: "cta_type", value: cta_type },
+          { property: "cta_color", value: cta_color },
+          { property: "cta_class", value: cta_class },
+        ],
+        stakeholders: "Marketing Team", 
+        category: "CTA Tracking", 
+        propertyBundles: "Default Bundle", 
+        groupProperty: "CTA Group", 
+        source: "Web App", 
+        action: "CTA Clicked", 
+      };
+    
+      console.log("Payload being sent:", payload);
+  
+      try {
+        // setLoading(true);
+        // setError(null);
+        // setSuccessMessage(null);
+    
+        // Send POST request to save data
+        const saveResponse = await axios.post("/api/save", payload);
+        const response = await axios.get(`/api/organizations?organization_id=${currentOrganization.id}`);
+        const organizationDetails = response.data;  
+        const events = organizationDetails.applications?.[0]?.events || [];
+        const updatedRows = events.map((event) => ({
+          id: event._id,
+          name: event.eventName,
+          eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
+          ...event,
+        }));
+  
+        setTableData(updatedRows);
+        setSelectedOrganization(organizationDetails);
+      } catch (err) {
+        // setError("Failed to save event data. Please try again.");
+        console.error("Error saving event:", err.message);
+      } finally {
+        // setLoading(false);
+      }
     }
+  
+    
   };
 
   const generateCode = () => {
