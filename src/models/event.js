@@ -11,6 +11,7 @@ const EventSchema = new Schema({
   groupProperty: { type: String, required: true },
   source: { type: String, required: true },
   action: { type: String, required: true },
+  //propery definitaon
 });
 
 const Event = models.Event || model('Event', EventSchema);

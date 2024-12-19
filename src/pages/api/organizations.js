@@ -33,11 +33,10 @@ async function handler(req, res) {
           }
 
           return res.status(200).json(organization);
-        }
-
-        // Fetch all organizations (only `name` and `_id`)
+        } else {
         const organizations = await Organization.find({}, 'name _id applications');
         res.status(200).json(organizations);
+        }       
       } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
       }

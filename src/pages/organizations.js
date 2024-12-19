@@ -33,7 +33,7 @@ const Organizations = () => {
       name: organization.name,
       applicationId: organization.applications?.[0] || null,
     });
-    router.push(`/dashboard`); 
+    router.push(`/dashboard/${organization._id}`); 
   };
 
   return (
