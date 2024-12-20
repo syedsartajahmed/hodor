@@ -63,7 +63,7 @@ const Index = () => {
 
   return (
     <div>
-      <Header isShowCopy={true} />
+      <Header isShowCopy={true} isShowMasterEvents={true}/>
       {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />
 

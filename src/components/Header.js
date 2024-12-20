@@ -14,7 +14,7 @@ import { useAppContext } from "@/context/AppContext";
 import NewCategoryModal from "./NewCategory";
 import { useRouter } from "next/router";
 
-const Header = ({ isShowCopy = false }) => {
+const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
   const [view, setView] = useState("category");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -122,9 +122,12 @@ const Header = ({ isShowCopy = false }) => {
               Copy URL
             </Button>
           )}
-          <Button variant="outlined" onClick={handleMasterEvents}>
+          {isShowMasterEvents &&
+            (<Button variant="outlined" onClick={handleMasterEvents}>
               Master Events
             </Button>
+            )
+          }
         </Box>
       </Box>
 
