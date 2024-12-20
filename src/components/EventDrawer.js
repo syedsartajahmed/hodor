@@ -31,6 +31,7 @@ const EventDrawer = () => {
     return true;
   };
 
+
   const handleSave = async () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
 
@@ -131,25 +132,45 @@ const EventDrawer = () => {
   
     
   };
+   const generateFunctionName = (eventName) => {
+    return eventName.trim().toLowerCase().replace(/\s+/g, '_') + '_event';
+  };
+const handleSuperPropertyChange = (e) => {
+    const { name, value } = e.target;
+    setSuperProperty({
+      ...superProperty,
+      [name]: value,
+    });
+  };
 
   const generateCode = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
 
-    if (!cta_text || !cta_type || !cta_color || !cta_class) {
+    if (!validRequest()) {
       alert("Please fill in all fields to generate the code.");
       return;
     }
 
+    const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
+
     const code = `
-mixpanel.track("${selectedEvent?.name}", {
-  cta_text: "${cta_text.toLowerCase()}",
-  cta_type: "${cta_type}",
-  cta_color: "${cta_color}",
-  cta_class: "${cta_class}"
-});
-    `;
-    setGeneratedCode(code);
-  };
+    function ${functionName}() {
+      mixpanel.register({
+        super_property: "Super Property Value"
+      });
+    
+      mixpanel.track("${selectedEvent?.name}", {
+        cta_text: "${cta_text.toLowerCase()}",
+        cta_type: "${cta_type}",
+        cta_color: "${cta_color}",
+        cta_class: "${cta_class}"
+      });
+    }
+        `;
+        setGeneratedCode(code);
+      };
+    
+   
 
   return (
     <div
@@ -258,12 +279,12 @@ mixpanel.track("${selectedEvent?.name}", {
         {/* Footer */}
         <div className="flex flex-row items-center mx-5">
           <div className="flex-1">
-            {/* <button
+            <button
               onClick={generateCode}
               className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
             >
               Generate Code
-            </button> */}
+            </button>
           </div>
           <div className="p-4 border-t flex items-center gap-7 justify-center">
             <button
