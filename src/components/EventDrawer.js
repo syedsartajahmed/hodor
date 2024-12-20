@@ -15,6 +15,10 @@ const EventDrawer = () => {
     cta_class: "",
   });
 
+  const [superProperty, setSuperProperty] = useState({
+    name: "",
+    value: ""
+  });
   const [generatedCode, setGeneratedCode] = useState("");
 
   const handleChange = (e) => {
@@ -30,6 +34,7 @@ const EventDrawer = () => {
     if (!cta_text || !cta_type || !cta_color || !cta_class) return false;
     return true;
   };
+
 
   const handleSave = async () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
@@ -131,25 +136,51 @@ const EventDrawer = () => {
   
     
   };
+   const generateFunctionName = (eventName) => {
+    return eventName.trim().toLowerCase().replace(/\s+/g, '_') + '_event';
+  };
+  const handleSuperPropertyChange = (e) => {
+    const { name, value } = e.target;
+    setSuperProperty({
+      ...superProperty,
+      [name]: value,
+    });
+  };
 
   const generateCode = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
+    const { name: superPropertyName, value: superPropertyValue } = superProperty;
 
-    if (!cta_text || !cta_type || !cta_color || !cta_class) {
+    if (!validRequest()) {
       alert("Please fill in all fields to generate the code.");
       return;
     }
 
+    if (!superPropertyName || !superPropertyValue) {
+      alert("Please provide a super property name and value.");
+      return;
+    }
+
+    const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
+
     const code = `
-mixpanel.track("${selectedEvent?.name}", {
-  cta_text: "${cta_text.toLowerCase()}",
-  cta_type: "${cta_type}",
-  cta_color: "${cta_color}",
-  cta_class: "${cta_class}"
-});
+function ${functionName}() {
+  mixpanel.register({
+    ${JSON.stringify(superPropertyName)}: ${JSON.stringify(superPropertyValue)}
+  });
+
+  mixpanel.track("${selectedEvent?.name}", {
+    cta_text: "${cta_text.toLowerCase()}",
+    cta_type: "${cta_type}",
+    cta_color: "${cta_color}",
+    cta_class: "${cta_class}"
+  });
+}
     `;
     setGeneratedCode(code);
   };
+    
+   
 
   return (
     <div
@@ -239,6 +270,34 @@ mixpanel.track("${selectedEvent?.name}", {
               </select>
             </div>
           </div>
+          <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Super Property Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={superProperty.name}
+                onChange={handleSuperPropertyChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter Super Property Name"
+              />
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Super Property Value
+              </label>
+              <input
+                type="text"
+                name="value"
+                value={superProperty.value}
+                onChange={handleSuperPropertyChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter Super Property Value"
+              />
+            </div>
+          
+
 
           {generatedCode && (
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
@@ -258,12 +317,12 @@ mixpanel.track("${selectedEvent?.name}", {
         {/* Footer */}
         <div className="flex flex-row items-center mx-5">
           <div className="flex-1">
-            {/* <button
+            <button
               onClick={generateCode}
               className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
             >
               Generate Code
-            </button> */}
+            </button>
           </div>
           <div className="p-4 border-t flex items-center gap-7 justify-center">
             <button
