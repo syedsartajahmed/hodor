@@ -16,27 +16,40 @@ async function handler(req, res) {
     }
     } else if (req.method === 'POST') {
         const {
-            eventName,
-            items,
-            stakeholders,
-            category,
-            propertyBundles,
-            groupProperty,
-            source,
-            action,
+          eventName,
+          items,
+          event_definition,
+          platform,
+          stakeholders,
+          category,
+          source,
+          action,
         } = req.body;
   
-        if (
-        !eventName ||
-        !stakeholders ||
-        !category ||
-        !propertyBundles ||
-        !groupProperty ||
-        !source ||
-        !action
-        ) {
-        return res.status(400).json({ success: false, message: "Missing required fields" });
+        const requiredFields = [
+          "eventName",
+          "items",
+          "event_definition",
+          "platform",
+          "stakeholders",
+          "category",
+          "source",
+          "action",
+        ];
+        
+        const missingFields = [];
+        for (const field of requiredFields) {
+          if (!req.body[field]) {
+            missingFields.push(field);
+          }
         }
+        
+        if (missingFields.length > 0) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Missing required fields", missingFields });
+        }
+        
         try {
             let existingEvent = await MasterEvent.findOne({ eventName }).populate("items");
 
@@ -49,30 +62,29 @@ async function handler(req, res) {
             }
       
             if (existingEvent) {
-                
-                for (const oldItem of existingEvent.items) {
-                await Item.findByIdAndDelete(oldItem._id);
-                }
-      
-                
-                existingEvent.items = itemRefs; 
-                existingEvent.stakeholders = stakeholders;
-                existingEvent.category = category;
-                existingEvent.propertyBundles = propertyBundles;
-                existingEvent.groupProperty = groupProperty;
-                existingEvent.source = source;
-                existingEvent.action = action;
-                await existingEvent.save();
+              for (const oldItem of existingEvent.items) {
+              await Item.findByIdAndDelete(oldItem._id);
+              }    
+              
+              existingEvent.items = itemRefs; 
+              existingEvent.stakeholders = stakeholders;
+              existingEvent.category = category;
+              existingEvent.source = source;
+              existingEvent.action = action;
+              existingEvent.event_definition = event_definition;
+              existingEvent.platform = platform;
+              await existingEvent.save();
             } else {
+              console.log("Creating new MasterEvent");
                 await MasterEvent.create({
-                eventName,
-                items: itemRefs,
-                stakeholders,
-                category,
-                propertyBundles,
-                groupProperty,
-                source,
-                action,
+                  eventName,
+                  items: itemRefs,
+                  stakeholders,
+                  category,
+                  source,
+                  action,
+                  event_definition,
+                  platform,
                 });
             }
 

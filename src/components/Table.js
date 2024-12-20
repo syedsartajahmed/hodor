@@ -4,9 +4,15 @@ import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import React from "react";
 import DeleteCellRenderer from "@/components/DeleteCellRenderer";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-const Table = ({ page }) => {
+const Table = ({ page, isShowCopy }) => {
   const { tableData, toggleDrawer } = useAppContext();
+
+  const handleCopy = (rowData) => {
+    console.log("Copied row data:", rowData);
+    //add api call
+  };
 
   const enhancedColumns = [
     ...columns,
@@ -16,6 +22,21 @@ const Table = ({ page }) => {
       renderCell: (params) => <DeleteCellRenderer params={params} page={page} />,
       width: 100,
     },
+    ...(isShowCopy
+      ? [
+          {
+            field: "copy",
+            headerName: "Copy to Organization",
+            renderCell: (params) => (
+              <ContentCopyIcon
+                onClick={() => handleCopy(params.row)}
+                style={{ cursor: "pointer" }}
+              />
+            ),
+            width: 150,
+          },
+        ]
+      : []),
   ];
 
   return (
