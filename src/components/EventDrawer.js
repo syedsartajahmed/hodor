@@ -47,18 +47,47 @@ const EventDrawer = () => {
     if (pathname === '/master-event') { 
       const payload = {
         eventName: selectedEvent?.name || "Unnamed Event", 
+        event_definition: selectedEvent?.description || "description",
         items: [
-          { property: "cta_text", value: cta_text },
-          { property: "cta_type", value: cta_type },
-          { property: "cta_color", value: cta_color },
-          { property: "cta_class", value: cta_class },
+          {
+            property_name: "cta_text",
+            sample_value: cta_text,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_type",
+            sample_value: cta_type,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_color",
+            sample_value: cta_color,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_class",
+            sample_value: cta_class,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
         ],
+        
         stakeholders: "Marketing Team", 
-        category: "CTA Tracking", 
-        propertyBundles: "Default Bundle", 
-        groupProperty: "CTA Group", 
+        category: "CTA Category", 
         source: "Web App", 
         action: "CTA Clicked", 
+        platform: "Web",
       };
       
       try {
@@ -71,10 +100,9 @@ const EventDrawer = () => {
         eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
         stakeholders: event.stakeholders,
         category: event.category,
-        propertyBundles: event.propertyBundles,
-        groupProperty: event.groupProperty,
         source: event.source,
         action: event.action,
+        platform : event.platform,
         }));
     
         setTableData(updatedRows);
@@ -91,19 +119,51 @@ const EventDrawer = () => {
         organization_name: currentOrganization.name,
         application_id: currentOrganization.applicationId || "default_application_id", 
         eventName: selectedEvent?.name || "Unnamed Event", 
+        event_definition: selectedEvent?.description || "description",
         items: [
-          { property: "cta_text", value: cta_text },
-          { property: "cta_type", value: cta_type },
-          { property: "cta_color", value: cta_color },
-          { property: "cta_class", value: cta_class },
+          {
+            property_name: "cta_text",
+            sample_value: cta_text,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_type",
+            sample_value: cta_type,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_color",
+            sample_value: cta_color,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
+          {
+            property_name: "cta_class",
+            sample_value: cta_class,
+            data_type: "string",
+            property_type: "track",
+            property_definition: "property definition",
+            method_call: "method call",
+          },
         ],
         stakeholders: "Marketing Team", 
         category: "CTA Tracking", 
-        propertyBundles: "Default Bundle", 
-        groupProperty: "CTA Group", 
         source: "Web App", 
         action: "CTA Clicked", 
+        platform: "Web",
       };
+
+      if (selectedEvent?._id) {
+        payload.event_id = selectedEvent._id;
+      }
     
       console.log("Payload being sent:", payload);
   

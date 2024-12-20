@@ -1,7 +1,9 @@
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
+import { useRouter } from "next/router";
 
 const Navbar = () => {
+  const router = useRouter();
   return (
     <Box
       sx={{
@@ -13,15 +15,15 @@ const Navbar = () => {
         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
       }}
     >
-      <Typography variant="h5" fontWeight="bold">
+      <Typography variant="h5" fontWeight="bold" sx={{ cursor: "pointer" }} onClick={() => router.push("/welcome")}>
         Optiblack
       </Typography>
-      <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      {/* <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
         <Typography>Welcome Back!</Typography>
         <Button variant="outlined" size="small">
           Log out
         </Button>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

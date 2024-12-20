@@ -17,6 +17,7 @@ const Index = () => {
       setTableData,
       showList,
       currentOrganization,
+      setCurrentOrganization,
     } = useAppContext();
 
     const router = useRouter();
@@ -33,6 +34,12 @@ const Index = () => {
         const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
         const organizationDetails = response.data;
         const events = organizationDetails.applications?.[0]?.events || [];
+
+        setCurrentOrganization({
+          id: organizationDetails._id, 
+          name: organizationDetails.name,
+          applicationId: organizationDetails.applications?.[0]['_id'] || null,
+        });
 
         const updatedRows = events.map((event) => ({
           id: event._id,
@@ -54,7 +61,7 @@ const Index = () => {
   return (
     <div>
       <Header isShowCopy={false} />
-      {showList ? <List /> : <Table />}
+      {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />
 
       {/* Main Table */}
