@@ -15,6 +15,10 @@ const EventDrawer = () => {
     cta_class: "",
   });
 
+  const [superProperty, setSuperProperty] = useState({
+    name: "",
+    value: ""
+  });
   const [generatedCode, setGeneratedCode] = useState("");
 
   const handleChange = (e) => {
@@ -135,7 +139,7 @@ const EventDrawer = () => {
    const generateFunctionName = (eventName) => {
     return eventName.trim().toLowerCase().replace(/\s+/g, '_') + '_event';
   };
-const handleSuperPropertyChange = (e) => {
+  const handleSuperPropertyChange = (e) => {
     const { name, value } = e.target;
     setSuperProperty({
       ...superProperty,
@@ -145,30 +149,36 @@ const handleSuperPropertyChange = (e) => {
 
   const generateCode = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
+    const { name: superPropertyName, value: superPropertyValue } = superProperty;
 
     if (!validRequest()) {
       alert("Please fill in all fields to generate the code.");
       return;
     }
 
+    if (!superPropertyName || !superPropertyValue) {
+      alert("Please provide a super property name and value.");
+      return;
+    }
+
     const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
 
     const code = `
-    function ${functionName}() {
-      mixpanel.register({
-        super_property: "Super Property Value"
-      });
-    
-      mixpanel.track("${selectedEvent?.name}", {
-        cta_text: "${cta_text.toLowerCase()}",
-        cta_type: "${cta_type}",
-        cta_color: "${cta_color}",
-        cta_class: "${cta_class}"
-      });
-    }
-        `;
-        setGeneratedCode(code);
-      };
+function ${functionName}() {
+  mixpanel.register({
+    ${JSON.stringify(superPropertyName)}: ${JSON.stringify(superPropertyValue)}
+  });
+
+  mixpanel.track("${selectedEvent?.name}", {
+    cta_text: "${cta_text.toLowerCase()}",
+    cta_type: "${cta_type}",
+    cta_color: "${cta_color}",
+    cta_class: "${cta_class}"
+  });
+}
+    `;
+    setGeneratedCode(code);
+  };
     
    
 
@@ -260,6 +270,34 @@ const handleSuperPropertyChange = (e) => {
               </select>
             </div>
           </div>
+          <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Super Property Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={superProperty.name}
+                onChange={handleSuperPropertyChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter Super Property Name"
+              />
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Super Property Value
+              </label>
+              <input
+                type="text"
+                name="value"
+                value={superProperty.value}
+                onChange={handleSuperPropertyChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter Super Property Value"
+              />
+            </div>
+          
+
 
           {generatedCode && (
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
