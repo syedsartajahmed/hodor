@@ -62,7 +62,7 @@ const Index = () => {
     };
 
   return (
-    <div>
+    <>
       <Header isShowCopy={true} isShowMasterEvents={true}/>
       {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />
@@ -75,7 +75,7 @@ const Index = () => {
           Please select an organization to view events.
         </div>
       )} */}
-    </div>
+    </>
   );
 };
 
