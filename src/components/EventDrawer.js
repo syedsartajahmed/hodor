@@ -176,6 +176,42 @@ function ${functionName}() {
     cta_class: "${cta_class}"
   });
 }
+  export function trackLoginPageView(app) {
+    trackToMixpanel(EVENTS.NAMES.PAGE_VIEWED, {
+        page: PAGES.LOGIN,
+        app: app
+    });
+}
+    `;
+    setGeneratedCode(code);
+  };
+
+
+    const generateCodeSecond = () => {
+    const { cta_text, cta_type, cta_color, cta_class } = formData;
+    const { name: superPropertyName, value: superPropertyValue } = superProperty;
+
+    if (!validRequest()) {
+      alert("Please fill in all fields to generate the code.");
+      return;
+    }
+
+    if (!superPropertyName || !superPropertyValue) {
+      alert("Please provide a super property name and value.");
+      return;
+    }
+
+    const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
+
+    const code = `
+function ${functionName}() {
+{
+    cta_text: "${cta_text.toLowerCase()}",
+    cta_type: "${cta_type}",
+    cta_color: "${cta_color}",
+    cta_class: "${cta_class}"
+  });
+}
     `;
     setGeneratedCode(code);
   };
@@ -307,6 +343,16 @@ function ${functionName}() {
               </pre>
             </div>
           )}
+
+{generatedCode && (
+            <div className="mt-6 p-4 bg-gray-100 rounded-md">
+              <h3 className="text-sm font-semibold mb-2">Generated Code:</h3>
+              <pre className="text-sm bg-gray-200 p-2 rounded-md overflow-x-auto">
+                {generatedCode}
+              </pre>
+            </div>
+          )}
+
 
           {/* DrawerProperties Component */}
           <div className="mt-6">
