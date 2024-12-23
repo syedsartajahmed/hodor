@@ -19,6 +19,14 @@ const EventDrawer = () => {
     name: "",
     value: ""
   });
+  const [eventProperties, setEventProperties] = useState([{
+    name: "",
+    value: "",
+    type: "String", // Default type
+    propertyType: "Event Property", // Default type
+    sampleValue: ""
+  }]);
+
   const [generatedCode, setGeneratedCode] = useState("");
 
   const handleChange = (e) => {
@@ -196,6 +204,22 @@ const EventDrawer = () => {
   
     
   };
+
+  const handleEventPropertyChange = (index, field, value) => {
+    const updatedProperties = [...eventProperties];
+    updatedProperties[index][field] = value;
+    setEventProperties(updatedProperties);
+  };
+
+  const addEventProperty = () => {
+    setEventProperties([...eventProperties, {
+      name: "",
+      value: "",
+      type: "String",
+      propertyType: "Event Property",
+      sampleValue: ""
+    }]);
+  };
    const generateFunctionName = (eventName) => {
     return eventName.trim().toLowerCase().replace(/\s+/g, '_') + '_event';
   };
@@ -207,40 +231,34 @@ const EventDrawer = () => {
     });
   };
 
-  const generateCode = () => {
-    const { cta_text, cta_type, cta_color, cta_class } = formData;
-    const { name: superPropertyName, value: superPropertyValue } = superProperty;
 
-    if (!validRequest()) {
-      alert("Please fill in all fields to generate the code.");
-      return;
-    }
+  const generateCode = () => {
+    const { name: superPropertyName, value: superPropertyValue } = superProperty;
 
     if (!superPropertyName || !superPropertyValue) {
       alert("Please provide a super property name and value.");
       return;
     }
 
+    if (eventProperties.some(prop => !prop.name || !prop.value)) {
+      alert("Please complete all event properties.");
+      return;
+    }
+
     const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
 
-    const code = `
-function ${functionName}() {
-  mixpanel.register({
-    ${JSON.stringify(superPropertyName)}: ${JSON.stringify(superPropertyValue)}
-  });
+    const eventPropsCode = eventProperties.map(prop => `		"${prop.name}": product.${prop.name}, // data type:${prop.type}, property_type: ${prop.propertyType}, sample value: ${prop.sampleValue}`).join(",\n");
 
-  mixpanel.track("${selectedEvent?.name}", {
-    cta_text: "${cta_text.toLowerCase()}",
-    cta_type: "${cta_type}",
-    cta_color: "${cta_color}",
-    cta_class: "${cta_class}"
-  });
-}
-  export function trackLoginPageView(app) {
-    trackToMixpanel(EVENTS.NAMES.PAGE_VIEWED, {
-        page: PAGES.LOGIN,
-        app: app
-    });
+    const code = `
+// Initiated when a user starts the ${selectedEvent?.name || "event"} process
+function ${functionName}(product) {
+	mixpanel.track("${selectedEvent?.name || "event"}_triggered", {
+${eventPropsCode}
+	});
+
+	mixpanel.people.set({
+		"${superPropertyName}": product.${superPropertyName} // data type:Incremental, property_type: User Property, sample value: ${superPropertyValue}
+	});
 }
     `;
     setGeneratedCode(code);
@@ -304,68 +322,46 @@ function ${functionName}() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 relative scrollbar-hidden">
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                CTA Text
-              </label>
-              <input
-                type="text"
-                name="cta_text"
-                value={formData.cta_text}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter CTA text (e.g., recharge_now)"
-              />
+          {eventProperties.map((property, index) => (
+              <div key={index} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Event Property {index + 1}</label>
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={property.name}
+                  onChange={(e) => handleEventPropertyChange(index, "name", e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Value"
+                  value={property.value}
+                  onChange={(e) => handleEventPropertyChange(index, "value", e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Type (e.g., String)"
+                  value={property.type}
+                  onChange={(e) => handleEventPropertyChange(index, "type", e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Sample Value"
+                  value={property.sampleValue}
+                  onChange={(e) => handleEventPropertyChange(index, "sampleValue", e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+            ))}
+            <button
+              onClick={addEventProperty}
+              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 mt-4"
+            >
+              Add Event Property
+            </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                CTA Type
-              </label>
-              <select
-                name="cta_type"
-                value={formData.cta_type}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="">Select Type</option>
-                <option value="drawer">Drawer</option>
-                <option value="static">Static</option>
-                <option value="popup">Popup</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                CTA Color
-              </label>
-              <select
-                name="cta_color"
-                value={formData.cta_color}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="">Select Color</option>
-                <option value="red">Red</option>
-                <option value="green">Green</option>
-                <option value="blue">Blue</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                CTA Class
-              </label>
-              <select
-                name="cta_class"
-                value={formData.cta_class}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="">Select Class</option>
-                <option value="primary">Primary</option>
-                <option value="secondary">Secondary</option>
-                <option value="tertiary">Tertiary</option>
-              </select>
-            </div>
-          </div>
           <div className="mt-3">
               <label className="block text-sm font-medium text-gray-700">
                 Super Property Name
@@ -394,7 +390,7 @@ function ${functionName}() {
             </div>
           
 
-
+{/* 
           {generatedCode && (
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
               <h3 className="text-sm font-semibold mb-2">Generated Code:</h3>
@@ -402,7 +398,7 @@ function ${functionName}() {
                 {generatedCode}
               </pre>
             </div>
-          )}
+          )} */}
 
 {generatedCode && (
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
