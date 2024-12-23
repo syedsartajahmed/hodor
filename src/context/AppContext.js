@@ -26,12 +26,14 @@ export const AppProvider = ({ children }) => {
   const toggleEventDrawer = (open, event = null) => {
     setIsEventDrawerOpen(open); // Ensure this toggles the drawer's visibility
     setSelectedEvent(event); // Set the selected event data
+    //if (!open) setSelectedEvent([]);
   };
 
   const toggleDrawer = (open, event = null) => {
     setIsDrawerOpen(open);
     setIsEventDrawerOpen(open);
     setSelectedEvent(event);
+    //if (!open) setSelectedEvent([]);
   };
 
   const selectOrganization = (organization) => {
@@ -77,6 +79,7 @@ export const AppProvider = ({ children }) => {
     selectOrganization,
     showList,
     setShowList,
+    setSelectedEvent,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

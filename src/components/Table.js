@@ -5,13 +5,39 @@ import { DataGrid } from "@mui/x-data-grid";
 import React from "react";
 import DeleteCellRenderer from "@/components/DeleteCellRenderer";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import axios from "axios";
+import { useRouter } from 'next/router';
 
 const Table = ({ page, isShowCopy }) => {
-  const { tableData, toggleDrawer } = useAppContext();
+  const { tableData, toggleDrawer, setSelectedEvent } = useAppContext();
+  const router = useRouter();
+  const { pathname } = router;
 
-  const handleCopy = (rowData) => {
-    console.log("Copied row data:", rowData);
-    //add api call
+  const handleCopy = async (rowData) => {
+    const { query } = router; 
+    const organizationId = query.id;
+    const masterEventId = rowData.id;
+    const payload = {
+      organizationId,
+      masterEventId,
+    };
+
+    try {
+      const response = await axios.post("/api/copyMasterEvents", payload);
+      if (response.status === 201) {
+        alert('Copied successfully to your organization!');
+      }
+    } catch (err) {
+      console.error("Error saving event:", err.message);
+    } finally {
+      
+    }
+  };
+
+  const handleRowClick = (rowData) => {
+    console.log(rowData.row); 
+    setSelectedEvent(rowData.row);
+    toggleDrawer(true, rowData.row); 
   };
 
   const enhancedColumns = [
@@ -45,6 +71,7 @@ const Table = ({ page, isShowCopy }) => {
         <DataGrid
           rows={tableData}
           columns={enhancedColumns}
+          //onRowClick={handleRowClick}
           disableColumnFilter
           hideFooterPagination
           hideFooter

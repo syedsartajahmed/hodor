@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from 'next/router';
@@ -14,6 +14,25 @@ const EventDrawer = () => {
     cta_color: "",
     cta_class: "",
   });
+
+
+  useEffect(() => {
+    const propertyPairs = selectedEvent?.eventProperties?.split(', ') || [];
+    const parsedProperties = {};
+    
+    propertyPairs.forEach(pair => {
+      const [key, value] = pair.split(':');
+      parsedProperties[key] = value;
+    });
+
+    setFormData({
+      cta_text: parsedProperties.cta_text || "",
+      cta_type: parsedProperties.cta_type || "",
+      cta_color: parsedProperties.cta_color || "",
+      cta_class: parsedProperties.cta_class || "",
+    });
+  
+  }, [selectedEvent]);
 
   const [superProperty, setSuperProperty] = useState({
     name: "",
@@ -43,8 +62,7 @@ const EventDrawer = () => {
       alert("Please fill in all fields to save.");
       return;
     }
-  
-    if (pathname === '/master-event') { 
+    if (pathname === '/master-event' || pathname === '/dashboard/[id]/master-events') {
       const payload = {
         eventName: selectedEvent?.name || "Unnamed Event", 
         event_definition: selectedEvent?.description || "description",
