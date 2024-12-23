@@ -12,13 +12,14 @@ import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
 import AddEventModal from "./AddEventModal";
 import { useAppContext } from "@/context/AppContext";
 import NewCategoryModal from "./NewCategory";
+import { useRouter } from "next/router";
 
-const Header = ({ isShowCopy = false }) => {
+const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
   const [view, setView] = useState("category");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const { tableData, setShowList, currentOrganization } = useAppContext();
-
+  const router = useRouter();
   const eventSize = tableData.length;
 
   const handleViewChange = (event, newView) => {
@@ -42,6 +43,10 @@ const Header = ({ isShowCopy = false }) => {
       console.error("Failed to copy URL to clipboard:", err);
     });
   }
+
+  const handleMasterEvents = () => {
+    router.push(`${window.location.pathname}/master-events`);
+  };
 
   return (
     <>
@@ -98,7 +103,7 @@ const Header = ({ isShowCopy = false }) => {
         </Box>
 
         <Box display="flex" alignItems="center" gap={2}>
-          <IconButton
+          {/* <IconButton
             aria-label="customize"
             sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
           >
@@ -111,12 +116,18 @@ const Header = ({ isShowCopy = false }) => {
           >
             <FilterListIcon />
             <Typography variant="body2">Filter</Typography>
-          </IconButton>
+          </IconButton> */}
           {isShowCopy && (
             <Button variant="outlined" onClick={handleCopy}>
               Copy URL
             </Button>
           )}
+          {isShowMasterEvents &&
+            (<Button variant="outlined" onClick={handleMasterEvents}>
+              Master Events
+            </Button>
+            )
+          }
         </Box>
       </Box>
 
