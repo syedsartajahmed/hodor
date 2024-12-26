@@ -34,8 +34,8 @@ const Welcome = () => {
   // ];
 
   const cards = [
-    { title: "Events", count: counts.events, initials: "WB", route: "/master-event" },
-    { title: "Organizations", count: counts.totalOrganizations, initials: "WB", route: "/organizations" },
+    { title: "Events", count: counts.events, initials: "", route: "/master-event" },
+    { title: "Organizations", count: counts.totalOrganizations, initials: "", route: "/organizations" },
   ];
 
   const handleCardClick = (route) => {
@@ -87,7 +87,7 @@ const Welcome = () => {
                 <Typography color="text.secondary">
                   Count - {card.count}
                 </Typography>
-                <Avatar
+                {/* <Avatar
                   sx={{
                     width: 24,
                     height: 24,
@@ -98,7 +98,7 @@ const Welcome = () => {
                   }}
                 >
                   {card.initials}
-                </Avatar>
+                </Avatar> */}
               </Box>
             </CardContent>
           </Card>
