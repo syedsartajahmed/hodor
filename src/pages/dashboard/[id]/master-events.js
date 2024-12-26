@@ -37,7 +37,8 @@ const MasterEvents = () => {
             propertyBundles: event.propertyBundles,
             groupProperty: event.groupProperty,
             source: event.source,
-            action: event.action,
+                action: event.action,
+                ...event,
             }));
         
             setTableData(updatedRows);
