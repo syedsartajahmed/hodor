@@ -175,7 +175,7 @@ const Organizations = () => {
                 <Typography color="text.secondary">
                   Applications Count - {org.applications.length}
                 </Typography>
-                <Avatar
+                {/* <Avatar
                   sx={{
                     width: 32,
                     height: 32,
@@ -186,7 +186,7 @@ const Organizations = () => {
                   }}
                 >
                   {org.name.slice(0, 2).toUpperCase()}
-                </Avatar>
+                </Avatar> */}
                 <IconButton
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent navigation
