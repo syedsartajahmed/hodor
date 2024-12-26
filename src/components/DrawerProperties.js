@@ -459,10 +459,13 @@ const DrawerProperties = () => {
   
 
   const generateCode = () => {
-  
     const eventName = selectedEvent?.name?.trim()
-    ? selectedEvent.name.trim().replace(/\s+/g, "_").toLowerCase()
-      : "unnamed_event";
+    ? selectedEvent.name
+        .trim()
+        .replace(/[_\s]+(.)/g, (_, char) => char.toUpperCase()) 
+        .replace(/^(.)/, (_, char) => char.toLowerCase())       
+    : "unnamedEvent";
+  
     
   // Filter out invalid properties with empty name or value
   const validSuperProperties = superProperties.filter(
