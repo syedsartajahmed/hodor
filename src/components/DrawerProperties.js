@@ -458,15 +458,15 @@ const DrawerProperties = () => {
 //   };
   
 
-  const generateCode = () => {
-    const eventName = selectedEvent?.name?.trim()
+const generateCode = () => {
+  const eventName = selectedEvent?.name?.trim()
     ? selectedEvent.name
         .trim()
-        .replace(/[_\s]+(.)/g, (_, char) => char.toUpperCase()) 
-        .replace(/^(.)/, (_, char) => char.toLowerCase())       
-    : "unnamedEvent";
-  
-    
+        .replace(/([a-z])([A-Z])/g, '$1_$2') // Convert camelCase to snake_case
+        .replace(/[_\s]+/g, '_') // Replace spaces or multiple underscores with a single underscore
+        .toLowerCase() // Ensure all lowercase
+    : "unnamed_event"; // Default to "unnamed_event" if no name is provided
+
   // Filter out invalid properties with empty name or value
   const validSuperProperties = superProperties.filter(
     (prop) => prop.name?.trim() && prop.value?.trim()
@@ -507,54 +507,48 @@ const DrawerProperties = () => {
   // Build the function dynamically based on the available properties
   const codeParts = [];
 
-      if (superPropsCode) {
-        codeParts.push(`
-          mixpanel.register({
-    ${superPropsCode}
-          });
-        `);
-      }
+  if (superPropsCode) {
+    codeParts.push(`
+      mixpanel.register({
+        ${superPropsCode}
+      });
+    `);
+  }
 
-      if (userPropsCode) {
-        codeParts.push(`
-          mixpanel.people.set({
-    ${userPropsCode}
-          });
-        `);
-      }
+  if (userPropsCode) {
+    codeParts.push(`
+      mixpanel.people.set({
+        ${userPropsCode}
+      });
+    `);
+  }
 
-      if (eventPropsCode) {
-        codeParts.push(`
-          mixpanel.track("event_triggered", {
-    ${eventPropsCode}
-          });
-        `);
-      }
+  if (eventPropsCode) {
+    codeParts.push(`
+      mixpanel.track("${eventName}", {
+        ${eventPropsCode}
+      });
+    `);
+  }
 
-      // Combine all parts into the final function code
-      const code = codeParts.length > 0
-      ? `
-    function ${eventName}(product) {
-    ${codeParts.join("\n")}
-    }
-    
-    ${eventName}({
-      ${[...validSuperProperties, ...validEventProperties]
-        .map((prop) => {
-          const sampleValue = prop.sampleValue || "test_value"; 
-          return `"${prop.name}": "${sampleValue}"`;
-        })
-        .join(",\n      ")}
-    });
-      `
-      : `
-    function ${eventName}(product) {
-      // No properties to log
-    }
-    `;
+  const code = `
+function log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}(product) {
+${codeParts.join("\n")}
+}
 
-      setGeneratedCode(code);
-  };
+log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
+  ${[...validSuperProperties, ...validUserProperties, ...validEventProperties]
+    .map((prop) => {
+      const sampleValue = prop.sampleValue || "test_value";
+      return `"${prop.name || prop.property_name}": "${sampleValue}"`;
+    })
+    .join(",\n  ")}
+});
+  `;
+
+  setGeneratedCode(code);
+};
+
   
 
   const removeSuperPropertySet = (index) => {
