@@ -533,16 +533,25 @@ const DrawerProperties = () => {
 
       // Combine all parts into the final function code
       const code = codeParts.length > 0
-        ? `
+      ? `
     function ${eventName}(product) {
     ${codeParts.join("\n")}
     }
-        `
-        : `
+    
+    ${eventName}({
+      ${[...validSuperProperties, ...validEventProperties]
+        .map((prop) => {
+          const sampleValue = prop.sampleValue || "test_value"; 
+          return `"${prop.name}": "${sampleValue}"`;
+        })
+        .join(",\n      ")}
+    });
+      `
+      : `
     function ${eventName}(product) {
       // No properties to log
     }
-        `;
+    `;
 
       setGeneratedCode(code);
   };
