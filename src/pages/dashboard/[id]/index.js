@@ -48,21 +48,39 @@ const Index = () => {
           id: event._id,
           name: event.eventName,
           eventProperties: event.items
-          .filter(
-            (item) =>
-              (item.event_property && item.event_property.length > 0) ||
-              (item.super_property && item.super_property.length > 0) ||
-              (item.user_property && item.user_property.length > 0)
-          )
           .map((item) => {
-            const eventProps = item.event_property?.length ? 'Event Property' : '';
-            const superProps = item.super_property?.length ? 'Super Property' : '';
-            const userProps = item.user_property?.length ? 'User Property' : '';
+            // Format Event Properties
+            const eventProps = item.event_property?.map((prop) =>
+              `Property Name: ${prop.property_name || 'N/A'}, Value: ${
+                prop.sample_value || 'N/A'
+              }, Data Type: ${prop.data_type || 'N/A'}, Method Call: ${
+                prop.method_call || 'N/A'
+              }`
+            ).join('; ') || '';
         
-            return [eventProps, userProps, superProps].filter(Boolean).join(', ');
+            // Format Super Properties
+            const superProps = item.super_property?.map((prop) =>
+              `Name: ${prop.name || 'N/A'}, Value: ${prop.value || 'N/A'}`
+            ).join('; ') || '';
+        
+            // Format User Properties
+            const userProps = item.user_property?.map((prop) =>
+              `Name: ${prop.name || 'N/A'}, Value: ${prop.value || 'N/A'}`
+            ).join('; ') || '';
+        
+            // Combine all properties into a single formatted string
+            return [
+              eventProps ? `Event Properties: { ${eventProps} }` : '',
+              superProps ? `Super Properties: { ${superProps} }` : '',
+              userProps ? `User Properties: { ${userProps} }` : '',
+            ]
+              .filter(Boolean)
+              .join(', ');
           })
           .join('; '),
-        
+         // Combine all items into a single string for eventProperties
+
+  ...event, // Spread remaining event properties
         
           ...event,
         }));
