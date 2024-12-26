@@ -22,6 +22,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRef } from "react";
+import DeleteIcon from '@mui/icons-material/Delete';
+
 
 
 
@@ -364,62 +366,221 @@ const DrawerProperties = () => {
     console.log(userProperties);
   };
 
+//   const generateCode = () => {
+//       // if (eventProperties.some((prop) => !prop.name || !prop.value)) {
+//     //   alert("Please complete all event properties.");
+//     //   return;
+//     // }
+
+//     // if (superProperties.some((prop) => !prop.name || !prop.value)) {
+//     //   alert("Please complete all super properties.");
+//     //   return;
+//     // }
+
+//     // if (userProperties.some((prop) => !prop.name || !prop.value)) {
+//     //   alert("Please complete all user properties.");
+//     //   return;
+//     // }
+
+//     // const eventPropsCode = eventProperties
+//     //   .map(
+//     //     (prop) =>
+//     //       `\t\t"${prop.name}": product.${prop.name}, // data type: ${prop.type}, sample value: ${prop.sampleValue}`
+//     //   )
+//     //   .join(",\n");
+    
+//     const eventPropsCode = eventProperties.length > 0
+//     ? eventProperties
+//         .map(
+//           (prop) =>
+//             `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
+//         )
+//         .join(",\n")
+//     : "";
+
+//     // Generate super properties code only if superProperties is not empty
+    
+//     console.log(superProperties)
+//   const superPropsCode = superProperties.length > 0
+//     ? superProperties
+//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+//         .join(",\n")
+//     : "";
+
+//   // Generate user properties code only if userProperties is not empty
+//   const userPropsCode = userProperties.length > 0
+//     ? userProperties
+//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+//         .join(",\n")
+//     : "";
+
+//   // Build the function dynamically based on the available properties
+//   const codeParts = [];
+
+//   if (superPropsCode) {
+//     codeParts.push(`
+//       mixpanel.register({
+// ${superPropsCode}
+//       });
+//     `);
+//   }
+
+//   if (userPropsCode) {
+//     codeParts.push(`
+//       mixpanel.people.set({
+// ${userPropsCode}
+//       });
+//     `);
+//   }
+
+//   if (eventPropsCode) {
+//     codeParts.push(`
+//       mixpanel.track("event_triggered", {
+// ${eventPropsCode}
+//       });
+//     `);
+//   }
+
+//   // Combine all parts into the final function code
+//   const code = codeParts.length > 0
+//     ? `
+// function logEvent(product) {
+// ${codeParts.join("\n")}
+// }
+//   `
+//     : `
+// function logEvent(product) {
+//   // No properties to log
+// }
+//   `;
+
+//   setGeneratedCode(code);
+//   };
+  
+
   const generateCode = () => {
-    if (eventProperties.some((prop) => !prop.name || !prop.value)) {
-      alert("Please complete all event properties.");
-      return;
-    }
-
-    if (superProperties.some((prop) => !prop.name || !prop.value)) {
-      alert("Please complete all super properties.");
-      return;
-    }
-
-    if (userProperties.some((prop) => !prop.name || !prop.value)) {
-      alert("Please complete all user properties.");
-      return;
-    }
-
-    // const eventPropsCode = eventProperties
-    //   .map(
-    //     (prop) =>
-    //       `\t\t"${prop.name}": product.${prop.name}, // data type: ${prop.type}, sample value: ${prop.sampleValue}`
-    //   )
-    //   .join(",\n");
+  
+    const eventName = selectedEvent?.name?.trim()
+    ? selectedEvent.name.trim().replace(/\s+/g, "_").toLowerCase()
+      : "unnamed_event";
     
-    const eventPropsCode = eventProperties
-    .map(
-      (prop) =>
-        `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
-    )
-      .join(",\n");
-    
-    
-    const superPropsCode = superProperties
-      .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-      .join(",\n");
+  // Filter out invalid properties with empty name or value
+  const validSuperProperties = superProperties.filter(
+    (prop) => prop.name?.trim() && prop.value?.trim()
+  );
 
-    const userPropsCode = userProperties
-      .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-      .join(",\n");
+  const validUserProperties = userProperties.filter(
+    (prop) => prop.name?.trim() && prop.value?.trim()
+  );
 
-    const code = `
-function logEvent(product) {
-  mixpanel.track("event_triggered", {
-${eventPropsCode}
-  });
+  const validEventProperties = eventProperties.filter(
+    (prop) => prop.name?.trim() && prop.value?.trim()
+  );
 
-  mixpanel.people.set({
-${userPropsCode}
-  });
+  // Generate event properties code only if validEventProperties is not empty
+  const eventPropsCode = validEventProperties.length > 0
+    ? validEventProperties
+        .map(
+          (prop) =>
+            `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
+        )
+        .join(",\n")
+    : "";
 
-  mixpanel.register({
-${superPropsCode}
-  });
-}
-    `;
-    setGeneratedCode(code);
+  // Generate super properties code only if validSuperProperties is not empty
+  const superPropsCode = validSuperProperties.length > 0
+    ? validSuperProperties
+        .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+        .join(",\n")
+    : "";
+
+  // Generate user properties code only if validUserProperties is not empty
+  const userPropsCode = validUserProperties.length > 0
+    ? validUserProperties
+        .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+        .join(",\n")
+    : "";
+
+  // Build the function dynamically based on the available properties
+  const codeParts = [];
+
+      if (superPropsCode) {
+        codeParts.push(`
+          mixpanel.register({
+    ${superPropsCode}
+          });
+        `);
+      }
+
+      if (userPropsCode) {
+        codeParts.push(`
+          mixpanel.people.set({
+    ${userPropsCode}
+          });
+        `);
+      }
+
+      if (eventPropsCode) {
+        codeParts.push(`
+          mixpanel.track("event_triggered", {
+    ${eventPropsCode}
+          });
+        `);
+      }
+
+      // Combine all parts into the final function code
+      const code = codeParts.length > 0
+        ? `
+    function ${eventName}(product) {
+    ${codeParts.join("\n")}
+    }
+        `
+        : `
+    function ${eventName}(product) {
+      // No properties to log
+    }
+        `;
+
+      setGeneratedCode(code);
   };
+  
+
+  const removeSuperPropertySet = (index) => {
+    const updatedProperties = [...superProperties];
+    updatedProperties.splice(index, 1); // Remove the specific set
+    setSuperProperties(updatedProperties);
+  
+    // If all super properties are deleted, handle visibility
+    if (updatedProperties.length === 0) {
+      setShowLogEvent(false); // Hide log event when no super properties are left
+    }
+  };
+  
+  const removeUserPropertySet = (index) => {
+    console.log(userProperties)
+    const updatedProperties = [...userProperties];
+    updatedProperties.splice(index, 1); // Remove the specific set
+    setUserProperties(updatedProperties);
+  
+    // If all user properties are deleted, handle visibility
+    if (updatedProperties.length === 0) {
+      setShowUserProperties(false); // Hide user properties section
+    }
+  };
+  
+  const removeEventPropertySet = (index) => {
+    const updatedProperties = [...eventProperties];
+    updatedProperties.splice(index, 1); // Remove the specific set
+    setEventProperties(updatedProperties);
+  
+    // If all event properties are deleted, handle visibility
+    if (updatedProperties.length === 0) {
+      setShowLogEvent(false); // Hide log event section
+    }
+  };
+  
+
+  
   useEffect(() => {
     if (selectedEvent && isInitialLoad.current) {
       isInitialLoad.current = false;
@@ -682,6 +843,14 @@ ${superPropsCode}
                   fullWidth
                   margin="dense"
                 />
+                    {/* <IconButton
+                  color="secondary"
+                  onClick={() => removeUserPropertySet(index)}
+                >
+                  <DeleteIcon />
+                </IconButton> */}
+
+                
               </Box>
             ))}
             <Button variant="text" color="primary" onClick={addUserProperty}>
@@ -768,8 +937,15 @@ ${superPropsCode}
       }
       fullWidth
       margin="dense"
-    />
-  </Box>
+                  />
+                  {/* <IconButton
+                  color="secondary"
+                  onClick={() => removeEventPropertySet(index)}
+                >
+                  <DeleteIcon />
+                </IconButton> */}
+                </Box>
+                
 ))}
 <Button variant="text" color="primary" onClick={addEventProperty}>
   + Add Event Property
@@ -800,8 +976,16 @@ ${superPropsCode}
       }
       fullWidth
       margin="dense"
-    />
-  </Box>
+                  />
+                  {/* <IconButton
+              color="secondary"
+              onClick={() => removeSuperPropertySet(index)}
+            >
+              <DeleteIcon />
+            </IconButton> */}
+
+                </Box>
+                
 ))}
 <Button variant="text" color="primary" onClick={addSuperProperty}>
   + Add System Property

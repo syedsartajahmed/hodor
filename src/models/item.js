@@ -3,7 +3,7 @@ import { Schema, model, models } from 'mongoose';
 const ItemSchema = new Schema({
   user_property: [
     {
-      name: { type: String, required: true },
+      name: { type: String,  },
       value: { type: Schema.Types.Mixed }, 
     },
   ], 
@@ -21,7 +21,7 @@ const ItemSchema = new Schema({
 
   super_property: [
     {
-      name: { type: String, required: true }, 
+      name: { type: String, }, 
       value: { type: Schema.Types.Mixed }, 
     },
   ], 
