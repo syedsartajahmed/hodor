@@ -53,7 +53,8 @@ const MasterEvents = () => {
             groupProperty: event.groupProperty,
             source: event.source,
                 action: event.action,
-            platform: event.platform,
+                platform: event.platform,
+                ...event,
             }));
             console.log(updatedRows)
         
