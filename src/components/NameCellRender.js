@@ -5,7 +5,6 @@ const NameCellRenderer = ({ params }) => {
   const { tableData, toggleDrawer } = useAppContext();
 
   const handleClick = () => {
-    console.log('----')
     const event = tableData.find((row) => row.id === params.row.id);
     toggleDrawer(true, event);
   };

@@ -1,39 +1,104 @@
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router"; // Import useRouter
-import { Box, Typography, Card, CardContent, Avatar } from "@mui/material";
+import { useRouter } from "next/router";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Avatar,
+  IconButton,
+  TextField,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
+import { Add, Delete } from "@mui/icons-material"; // Import Add and Delete Icons
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
 
 const Organizations = () => {
   const router = useRouter();
-      const {setCurrentOrganization} = useAppContext();
+  const { setCurrentOrganization } = useAppContext();
 
-  // State to store organizations fetched from the API
   const [organizations, setOrganizations] = useState([]);
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [newOrganizationName, setNewOrganizationName] = useState("");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
 
-  // Fetch organizations from the API on component mount
   useEffect(() => {
     fetchOrganizations();
   }, []);
 
   const fetchOrganizations = async () => {
     try {
-      const response = await axios.get("/api/organizations"); // Replace with your API endpoint
-      setOrganizations(response.data); // Set API response data into state
+      const response = await axios.get("/api/organizations");
+      setOrganizations(response.data);
     } catch (err) {
       console.error("Failed to fetch organizations", err);
     }
   };
 
-  // Navigate to route dynamically
   const handleCardClick = (organization) => {
     setCurrentOrganization({
-      id: organization._id, 
+      id: organization._id,
       name: organization.name,
       applicationId: organization.applications?.[0] || null,
     });
-    router.push(`/dashboard/${organization._id}`); 
+    router.push(`/dashboard/${organization._id}`);
+  };
+
+  const handleAddOrganization = () => {
+    setOpenAddDialog(true);
+  };
+
+  const handleAddDialogClose = () => {
+    setOpenAddDialog(false);
+    setNewOrganizationName("");
+  };
+
+  const handleAddOrganizationSubmit = async () => {
+    if (!newOrganizationName.trim()) {
+      alert("Organization name is required.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/organizations", { name: newOrganizationName });
+      const newOrganization = response.data.organization;
+
+      setOrganizations((prev) => [...prev, newOrganization]);
+      handleAddDialogClose();
+    } catch (err) {
+      console.error("Failed to add organization", err);
+      alert("Failed to add organization. Please try again.");
+    }
+  };
+
+  const handleDeleteOrganization = (organization) => {
+    setSelectedOrganization(organization);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteDialogClose = () => {
+    setOpenDeleteDialog(false);
+    setSelectedOrganization(null);
+  };
+
+  const handleDeleteOrganizationSubmit = async () => {
+    try {
+      await axios.delete(`/api/organizations?organization_id=${selectedOrganization._id}`);
+      setOrganizations((prev) =>
+        prev.filter((org) => org._id !== selectedOrganization._id)
+      );
+      handleDeleteDialogClose();
+    } catch (err) {
+      console.error("Failed to delete organization", err);
+      alert("Failed to delete organization. Please try again.");
+    }
   };
 
   return (
@@ -54,10 +119,34 @@ const Organizations = () => {
       </Typography>
 
       <Box sx={{ display: "flex", gap: "2rem", marginTop: "2rem", flexWrap: "wrap" }}>
+        {/* Add Organization Card */}
+        <Card
+          onClick={handleAddOrganization}
+          sx={{
+            minWidth: 275,
+            textAlign: "center",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            cursor: "pointer",
+            "&:hover": { boxShadow: "0 6px 12px rgba(0,0,0,0.2)" },
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "1.5rem",
+          }}
+        >
+          <IconButton sx={{ color: "#1976d2", fontSize: "3rem" }}>
+            <Add />
+          </IconButton>
+          <Typography variant="h6" fontWeight="bold" marginTop="0.5rem">
+            Add Organization
+          </Typography>
+        </Card>
+
+        {/* Existing Organization Cards */}
         {organizations.map((org) => (
           <Card
             key={org._id}
-            onClick={() => handleCardClick(org)}
             sx={{
               minWidth: 275,
               textAlign: "center",
@@ -66,8 +155,13 @@ const Organizations = () => {
               "&:hover": { boxShadow: "0 6px 12px rgba(0,0,0,0.2)" },
             }}
           >
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold">
+            <CardContent onClick={() => handleCardClick(org)}>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                //onClick={() => handleCardClick(org)} // Route to a new page when clicked
+                style={{ cursor: "pointer" }}
+              >
                 {org.name}
               </Typography>
               <Box
@@ -91,13 +185,63 @@ const Organizations = () => {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {org.name.slice(0, 2).toUpperCase()} {/* Extract initials */}
+                  {org.name.slice(0, 2).toUpperCase()}
                 </Avatar>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent navigation
+                    handleDeleteOrganization(org);
+                  }}
+                  sx={{ color: "#d32f2f", marginLeft: "0.5rem" }}
+                >
+                  <Delete />
+                </IconButton>
               </Box>
             </CardContent>
           </Card>
         ))}
       </Box>
+
+      {/* Dialog for Adding Organization */}
+      <Dialog open={openAddDialog} onClose={handleAddDialogClose}>
+        <DialogTitle>Add New Organization</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Organization Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={newOrganizationName}
+            onChange={(e) => setNewOrganizationName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAddDialogClose}>Cancel</Button>
+          <Button onClick={handleAddOrganizationSubmit} variant="contained" color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog for Deleting Organization */}
+      <Dialog open={openDeleteDialog} onClose={handleDeleteDialogClose}>
+        <DialogTitle>Delete Organization</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete the organization &quot;{selectedOrganization?.name}&quot;? This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
+          <Button
+            onClick={handleDeleteOrganizationSubmit}
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

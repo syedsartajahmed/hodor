@@ -30,15 +30,32 @@ const MasterEvents = () => {
             const totalEvents = masterEventsDetails.totalEvents || [];
             const updatedRows = totalEvents.map((event) => ({
             id: event._id,
-            name: event.eventName,
-            eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
+                name: event.eventName,
+            
+                eventProperties: event.items
+                .filter(
+                  (item) =>
+                    (item.event_property && item.event_property.length > 0) ||
+                    (item.super_property && item.super_property.length > 0) ||
+                    (item.user_property && item.user_property.length > 0)
+                )
+                .map((item) => {
+                  const eventProps = item.event_property?.length ? 'Event Property' : '';
+                  const superProps = item.super_property?.length ? 'Super Property' : '';
+                  const userProps = item.user_property?.length ? 'User Property' : '';
+              
+                  return [eventProps, userProps, superProps].filter(Boolean).join(', ');
+                })
+                .join('; '),
             stakeholders: event.stakeholders,
             category: event.category,
             propertyBundles: event.propertyBundles,
             groupProperty: event.groupProperty,
             source: event.source,
-            action: event.action,
+                action: event.action,
+            platform: event.platform,
             }));
+            console.log(updatedRows)
         
             setTableData(updatedRows);
         } catch (err) {
