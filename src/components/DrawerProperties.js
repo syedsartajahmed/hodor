@@ -602,6 +602,7 @@ const DrawerProperties = () => {
             value: prop.sample_value || "",
             type: prop.data_type || "String",
             sampleValue: prop.sample_value || "",
+            methodCall: prop.method_call || "",
           }))
         );
         setEventProperties(eventProps);
@@ -917,7 +918,7 @@ const DrawerProperties = () => {
     <FormControl fullWidth margin="dense">
       <InputLabel>Data Type</InputLabel>
       <Select
-        value={property.dataType}
+        value={property.type}
         onChange={(e) =>
           handleEventPropertyChange(index, "dataType", e.target.value)
         }
