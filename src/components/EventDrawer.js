@@ -64,57 +64,38 @@ const EventDrawer = () => {
 
 
   const handleSave = async () => {
-    const { cta_text, cta_type, cta_color, cta_class } = formData;
+    // const { cta_text, cta_type, cta_color, cta_class } = formData;
 
-    if (!cta_text || !cta_type || !cta_color || !cta_class) {
-      alert("Please fill in all fields to save.");
-      return;
-    }
+    // if (!cta_text || !cta_type || !cta_color || !cta_class) {
+    //   alert("Please fill in all fields to save.");
+    //   return;
+    // }
+    console.log(selectedEvent);
+
     if (pathname === '/master-event' || pathname === '/dashboard/[id]/master-events') {
       const payload = {
-        eventName: selectedEvent?.name || "Unnamed Event", 
-        event_definition: selectedEvent?.description || "description",
-        items: [
-          {
-            property_name: "cta_text",
-            sample_value: cta_text,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_type",
-            sample_value: cta_type,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_color",
-            sample_value: cta_color,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_class",
-            sample_value: cta_class,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-        ],
-        
-        stakeholders: "Marketing Team", 
-        category: "CTA Category", 
-        source: "Web App", 
-        action: "CTA Clicked", 
-        platform: "Web",
+        eventName: selectedEvent?.name || "Unnamed Event",
+        event_definition: selectedEvent?.description || "No description provided",
+        platform: selectedEvent.platform || [],
+        stakeholders: selectedEvent.stakeholders || [],
+        category: selectedEvent.category || "Uncategorized",
+        source: selectedEvent.source || [],
+        action: selectedEvent.action || "No action",
+        items: selectedEvent.items.map((item) => ({
+          user_property: item.user_property || [],
+          event_property: item.event_property?.map((prop) => ({
+            property_name: prop.property_name || prop.name,
+            sample_value: prop.sample_value || prop.value,
+            data_type: prop.data_type || prop.type,
+            property_type: prop.property_type,
+            property_definition: prop.property_definition || "Event property definition",
+            method_call: prop.method_call || "Track",
+          })) || [],
+          super_property: item.super_property || [],
+        })),
       };
+      
+      console.log("Payload being sent:", payload);
       
       try {
         const response = await axios.post("/api/master-events", payload);
@@ -132,7 +113,7 @@ const EventDrawer = () => {
         }));
     
         setTableData(updatedRows);
-        setSelectedOrganization(organizationDetails);
+        //setSelectedOrganization(organizationDetails);
       } catch (err) {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", err.message);
@@ -140,58 +121,89 @@ const EventDrawer = () => {
         // setLoading(false);
       }
     } else {
+      if (!selectedEvent) {
+        alert("No event data to save.");
+        return;
+      }
       const payload = {
-        organization_id: currentOrganization.id, 
-        organization_name: currentOrganization.name,
-        application_id: currentOrganization.applicationId || "default_application_id", 
-        eventName: selectedEvent?.name || "Unnamed Event", 
-        event_definition: selectedEvent?.description || "description",
-        items: [
-          {
-            property_name: "cta_text",
-            sample_value: cta_text,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_type",
-            sample_value: cta_type,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_color",
-            sample_value: cta_color,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-          {
-            property_name: "cta_class",
-            sample_value: cta_class,
-            data_type: "string",
-            property_type: "track",
-            property_definition: "property definition",
-            method_call: "method call",
-          },
-        ],
-        stakeholders: "Marketing Team", 
-        category: "CTA Tracking", 
-        source: "Web App", 
-        action: "CTA Clicked", 
-        platform: "Web",
+        organization_id: currentOrganization.id,
+        application_id: currentOrganization.applicationId || "default_application_id",
+        eventName: selectedEvent.name || "Unnamed Event",
+        event_definition: selectedEvent.description || "No description provided",
+        stakeholders: selectedEvent.stakeholders || [],
+        category: selectedEvent.category || "Uncategorized",
+        source: selectedEvent.source || [],
+        action: selectedEvent.action || "No action",
+        platform: selectedEvent.platform || [],
+        identify: selectedEvent.identify || false,
+        unidentify: selectedEvent.unidentify || false,
+        items: [], // Include existing items
       };
+      
+      // Add or update user properties
+      console.log(selectedEvent.items[0]);
+      if (selectedEvent.items[0].user_property && selectedEvent.items[0].user_property.length > 0) {
+        const userPropertyItems = selectedEvent.items[0].user_property.map((userProperty) => ({
+          user_property: [
+            {
+              name: userProperty.name,
+              value: userProperty.value,
+            },
+          ],
+        }));
+      
+        // Replace or add user property items
+        payload.items = payload.items.filter((item) => !item.user_property); // Remove existing user_property items
+        payload.items.push(...userPropertyItems);
+      }
+      
+      // Add or update event properties
+      if (selectedEvent.items[0].event_property && selectedEvent.items[0].event_property.length > 0) {
+        console.log(selectedEvent.items[0].event_property);
 
-      if (selectedEvent?._id) {
+        const eventPropertyItems = selectedEvent.items[0].event_property.map((eventProperty) => ({
+          event_property: {
+            property_name: eventProperty.name || eventProperty.property_name, 
+            sample_value: eventProperty.sampleValue|| eventProperty.sample_value,
+            data_type: eventProperty.dataType|| eventProperty.data_type,
+            property_type: eventProperty.type|| eventProperty.property_type,
+            property_definition: eventProperty.description || eventProperty.property_definition,
+            method_call: eventProperty.methodCall || eventProperty.method_call,
+          },
+        }));
+        
+        console.log(eventPropertyItems);
+        
+      
+        // Replace or add event property items
+        payload.items = payload.items.filter((item) => !item.event_property); // Remove existing event_property items
+        payload.items.push(...eventPropertyItems);
+      }
+      
+      // Add or update system (super) properties
+      if (selectedEvent.items[0].super_property && selectedEvent.items[0].super_property.length > 0) {
+        const superPropertyItems = selectedEvent.items[0].super_property.map((superProperty) => ({
+          super_property: [
+            {
+              name: superProperty.name,
+              value: superProperty.value,
+            },
+          ],
+        }));
+      
+        // Replace or add super property items
+        payload.items = payload.items.filter((item) => !item.super_property); // Remove existing super_property items
+        payload.items.push(...superPropertyItems);
+      }
+      
+      // Include event ID for updates
+      if (selectedEvent._id) {
         payload.event_id = selectedEvent._id;
       }
-    
+      console.log("selectedEvent being sent:", selectedEvent);
       console.log("Payload being sent:", payload);
+
+
   
       try {
         // setLoading(true);

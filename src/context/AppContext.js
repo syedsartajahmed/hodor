@@ -32,7 +32,13 @@ export const AppProvider = ({ children }) => {
   const toggleDrawer = (open, event = null) => {
     setIsDrawerOpen(open);
     setIsEventDrawerOpen(open);
-    setSelectedEvent(event);
+    //setSelectedEvent(event);
+    if (event) {
+      setSelectedEvent(event); 
+    } else {
+      setSelectedEvent(null); 
+    }
+    console.log("Selected Event:", event);
     //if (!open) setSelectedEvent([]);
   };
 
@@ -46,6 +52,7 @@ export const AppProvider = ({ children }) => {
   
 
   const addEvent = (event) => {
+    console.log("Adding event:", event);
     setTableData((prev) => [
       ...prev,
       {
@@ -53,12 +60,12 @@ export const AppProvider = ({ children }) => {
         ...event,
         stakeholders: "",
         category: "",
-        propertyBundles: "",
-        groupProperties: "",
         source: "",
         action: "",
+        platform: "",
       },
     ]);
+    console.log(tableData);
   };
 
   const value = {
