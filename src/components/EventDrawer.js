@@ -81,7 +81,7 @@ const EventDrawer = () => {
         category: selectedEvent.category || "Uncategorized",
         source: selectedEvent.source || [],
         action: selectedEvent.action || "No action",
-        items: selectedEvent.items.map((item) => ({
+        items: selectedEvent?.items?.map((item) => ({
           user_property: item.user_property || [],
           event_property: item.event_property?.map((prop) => ({
             property_name: prop.property_name || prop.name,
@@ -92,7 +92,9 @@ const EventDrawer = () => {
             method_call: prop.method_call || "Track",
           })) || [],
           super_property: item.super_property || [],
-        })),
+        })) || [],
+        identify: selectedEvent.identify || false,
+        unidentify: selectedEvent.unidentify || false,
       };
       
       console.log("Payload being sent:", payload);
@@ -114,6 +116,7 @@ const EventDrawer = () => {
     
         setTableData(updatedRows);
         //setSelectedOrganization(organizationDetails);
+        alert("Data saved successfully!");
       } catch (err) {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", err.message);
@@ -126,28 +129,27 @@ const EventDrawer = () => {
         return;
       }
       const payload = {
-        organization_id: currentOrganization.id,
-        application_id: currentOrganization.applicationId || "default_application_id",
-        eventName: selectedEvent.name || "Unnamed Event",
-        event_definition: selectedEvent.description || "No description provided",
-        stakeholders: selectedEvent.stakeholders || [],
-        category: selectedEvent.category || "Uncategorized",
-        source: selectedEvent.source || [],
-        action: selectedEvent.action || "No action",
-        platform: selectedEvent.platform || [],
-        identify: selectedEvent.identify || false,
-        unidentify: selectedEvent.unidentify || false,
+        organization_id: currentOrganization?.id || null,
+        application_id: currentOrganization?.applicationId || "default_application_id",
+        eventName: selectedEvent?.name || "Unnamed Event",
+        event_definition: selectedEvent?.description || "No description provided",
+        stakeholders: selectedEvent?.stakeholders || [],
+        category: selectedEvent?.category || "Uncategorized",
+        source: selectedEvent?.source || [],
+        action: selectedEvent?.action || "No action",
+        platform: selectedEvent?.platform || [],
+        identify: selectedEvent?.identify || false,
+        unidentify: selectedEvent?.unidentify || false,
         items: [], // Include existing items
       };
       
       // Add or update user properties
-      console.log(selectedEvent.items[0]);
-      if (selectedEvent.items[0].user_property && selectedEvent.items[0].user_property.length > 0) {
+      if (selectedEvent?.items?.[0]?.user_property?.length > 0) {
         const userPropertyItems = selectedEvent.items[0].user_property.map((userProperty) => ({
           user_property: [
             {
-              name: userProperty.name,
-              value: userProperty.value,
+              name: userProperty?.name || null,
+              value: userProperty?.value || null,
             },
           ],
         }));
@@ -158,22 +160,17 @@ const EventDrawer = () => {
       }
       
       // Add or update event properties
-      if (selectedEvent.items[0].event_property && selectedEvent.items[0].event_property.length > 0) {
-        console.log(selectedEvent.items[0].event_property);
-
+      if (selectedEvent?.items?.[0]?.event_property?.length > 0) {
         const eventPropertyItems = selectedEvent.items[0].event_property.map((eventProperty) => ({
           event_property: {
-            property_name: eventProperty.name || eventProperty.property_name, 
-            sample_value: eventProperty.sampleValue|| eventProperty.sample_value,
-            data_type: eventProperty.dataType|| eventProperty.data_type,
-            property_type: eventProperty.type|| eventProperty.property_type,
-            property_definition: eventProperty.description || eventProperty.property_definition,
-            method_call: eventProperty.methodCall || eventProperty.method_call,
+            property_name: eventProperty?.name || eventProperty?.property_name || null,
+            sample_value: eventProperty?.sampleValue || eventProperty?.sample_value || null,
+            data_type: eventProperty?.dataType || eventProperty?.data_type || null,
+            property_type: eventProperty?.type || eventProperty?.property_type || null,
+            property_definition: eventProperty?.description || eventProperty?.property_definition || null,
+            method_call: eventProperty?.methodCall || eventProperty?.method_call || null,
           },
         }));
-        
-        console.log(eventPropertyItems);
-        
       
         // Replace or add event property items
         payload.items = payload.items.filter((item) => !item.event_property); // Remove existing event_property items
@@ -181,12 +178,12 @@ const EventDrawer = () => {
       }
       
       // Add or update system (super) properties
-      if (selectedEvent.items[0].super_property && selectedEvent.items[0].super_property.length > 0) {
+      if (selectedEvent?.items?.[0]?.super_property?.length > 0) {
         const superPropertyItems = selectedEvent.items[0].super_property.map((superProperty) => ({
           super_property: [
             {
-              name: superProperty.name,
-              value: superProperty.value,
+              name: superProperty?.name || null,
+              value: superProperty?.value || null,
             },
           ],
         }));
@@ -197,9 +194,10 @@ const EventDrawer = () => {
       }
       
       // Include event ID for updates
-      if (selectedEvent._id) {
+      if (selectedEvent?._id) {
         payload.event_id = selectedEvent._id;
       }
+      
       console.log("selectedEvent being sent:", selectedEvent);
       console.log("Payload being sent:", payload);
 
@@ -221,7 +219,7 @@ const EventDrawer = () => {
           eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
           ...event,
         }));
-  
+        alert("Data saved successfully!");
         setTableData(updatedRows);
         setSelectedOrganization(organizationDetails);
       } catch (err) {
