@@ -13,6 +13,9 @@ async function handler(req, res) {
       category,
       source,
       action,
+      identify,
+      unidentify,
+      id,
     } = req.body;
 
     // Validate required fields
@@ -35,7 +38,7 @@ async function handler(req, res) {
 
     try {
       // Find existing master event
-      let existingEvent = await MasterEvent.findOne({ eventName }).populate("items");
+      let existingEvent = await MasterEvent.findOne({ _id: id }).populate("items");
 
       const itemRefs = [];
       if (items && items.length > 0) {
@@ -55,7 +58,7 @@ async function handler(req, res) {
         for (const oldItem of existingEvent.items) {
           await Item.findByIdAndDelete(oldItem._id);
         }
-
+        existingEvent.eventName = eventName;
         existingEvent.items = itemRefs;
         existingEvent.event_definition = event_definition;
         existingEvent.platform = platform;
@@ -63,6 +66,8 @@ async function handler(req, res) {
         existingEvent.category = category;
         existingEvent.source = source;
         existingEvent.action = action;
+        existingEvent.identify = identify;
+        existingEvent.unidentify = unidentify;
         await existingEvent.save();
       } else {
         // Create new master event
@@ -75,6 +80,8 @@ async function handler(req, res) {
           category,
           source,
           action,
+          identify,
+          unidentify,
         });
       }
 

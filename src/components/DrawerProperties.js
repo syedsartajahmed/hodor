@@ -532,6 +532,8 @@ const generateCode = () => {
   }
 
   const code = `
+// ${selectedEvent?.event_definition}
+
 function log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}(product) {
 ${codeParts.join("\n")}
 }
@@ -588,7 +590,11 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
 
   
   useEffect(() => {
-    if (selectedEvent && isInitialLoad.current) {
+    // if (selectedEvent && isInitialLoad.current) {
+    if (selectedEvent) {
+      generateCode();
+
+      
       isInitialLoad.current = false;
   
       // Initialize values from `selectedEvent`
@@ -646,20 +652,36 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
       } else {
         setUserProperties([{ name: "", value: "" }]);
         setShowUserProperties(false);
-      }
+        }
+        console.log(selectedEvent.identify)
   
       setShowIdentifyMessage(selectedEvent.identify || false);
       setShowUnidentifyMessage(selectedEvent.unidentify || false);
     }
-  }, [selectedEvent]);
+  }, [selectedEvent?.id]);
+
+  const handleEventNameChange = (event) => {
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      name: event.target.value
+    }));
+  };
   
   return (
     <Box
       sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
     >
+      <TextField
+  label="Event Name"
+  value={selectedEvent?.name || ''}
+  onChange={handleEventNameChange}
+  fullWidth
+  margin="normal"
+  sx={{ mb: 2 }}
+/>
             <TextField
         label="Description"
-        value={description}
+        value={selectedEvent?.event_definition}
         onChange={handleDescriptionChange}
         fullWidth
         margin="normal"

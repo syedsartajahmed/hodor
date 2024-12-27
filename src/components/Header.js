@@ -15,7 +15,7 @@ import NewCategoryModal from "./NewCategory";
 import { useRouter } from "next/router";
 
 const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
-  const [view, setView] = useState("category");
+  const [view, setView] = useState("list");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const { tableData, setShowList, currentOrganization } = useAppContext();
@@ -58,9 +58,9 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
         borderBottom="1px solid #e0e0e0"
         gap={2}
         sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
+          // position: "fixed",
+          // top: 0,
+          // left: 0,
           width: "100%",
           backgroundColor: "white",
           zIndex: 1000,
@@ -73,9 +73,9 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
           <Button variant="contained" color="secondary" onClick={handleOpen}>
             + New Event
           </Button>
-          <Button variant="outlined" onClick={() => setCategoryOpen(true)}>
+          {/* <Button variant="outlined" onClick={() => setCategoryOpen(true)}>
             + New Category
-          </Button>
+          </Button> */}
         </Box>
 
         <Box display="flex" alignItems="center">
@@ -88,14 +88,14 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
             <ToggleButton
               value="category"
               aria-label="category view"
-              onClick={() => setShowList(false)}
+              onClick={() => setShowList(true)}
             >
               Category
             </ToggleButton>
             <ToggleButton
               value="list"
               aria-label="list view"
-              onClick={() => setShowList(true)}
+              onClick={() => setShowList(false)}
             >
               List
             </ToggleButton>
@@ -131,12 +131,12 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false }) => {
         </Box>
       </Box>
 
-      <Box sx={{ marginTop: "72px" }}></Box>
+      <Box sx={{ marginTop: "10px" }}></Box>
 
       {open && <AddEventModal open={open} setOpen={setOpen} />}
-      {categoryOpen && (
+      {/* {categoryOpen && (
         <NewCategoryModal open={categoryOpen} setOpen={setCategoryOpen} />
-      )}
+      )} */}
     </>
   );
 };

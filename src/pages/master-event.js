@@ -6,6 +6,7 @@ import Table from "@/components/Table";
 import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
+import Navbar from "@/components/Navbar";
 
 const MasterEvents = () => {
     const {
@@ -100,7 +101,11 @@ const MasterEvents = () => {
     };
 
     return (
-        <div>
+      <>
+        {/* <div className="my-1">
+
+        <Navbar />
+        </div> */}
           <Header/>
           {showList ? <List /> : <Table page="master-events"/>}
           <EventDrawer />
@@ -113,7 +118,7 @@ const MasterEvents = () => {
               Please select an organization to view events.
           </div>
           )} */}
-        </div>
+        </>
     );
 };
 

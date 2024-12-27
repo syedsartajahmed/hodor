@@ -3,17 +3,18 @@ import { Box, Button, Modal, TextField, Typography } from "@mui/material";
 import { useAppContext } from "@/context/AppContext";
 
 const AddEventModal = ({ open, setOpen }) => {
-  const [eventData, setEventData] = useState({ name: "", description: "" });
+  const [eventData, setEventData] = useState({ name: "", event_definition: "" });
   const { addEvent, tableData } = useAppContext();
 
   const handleClose = () => {
     setOpen(false);
-    setEventData({ name: "", description: "" });
+    setEventData({ name: "", event_definition: "" });
   };
 
   const handleSubmit = () => {
-    if (eventData.name && eventData.description) {
+    if (eventData.name && eventData.event_definition) {
       addEvent(eventData);
+      console.log(eventData);
       handleClose();
     }
   };
@@ -58,9 +59,9 @@ const AddEventModal = ({ open, setOpen }) => {
           margin="normal"
           multiline
           rows={3}
-          value={eventData.description}
+          value={eventData.event_definition}
           onChange={(e) =>
-            setEventData((prev) => ({ ...prev, description: e.target.value }))
+            setEventData((prev) => ({ ...prev, event_definition: e.target.value }))
           }
         />
         <Box display="flex" justifyContent="flex-end" mt={2} gap={1}>

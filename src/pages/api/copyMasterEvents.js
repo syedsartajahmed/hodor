@@ -23,33 +23,35 @@ async function handler(req, res) {
       return res.status(404).json({ success: false, error: "Master Event not found." });
     }
 
+    // Copy items based on their existing structure
     const copiedItems = await Promise.all(
       masterEvent.items.map(async (item) => {
         const newItem = new Item({
-          property_type: item.property_type || "default_type",
-          property_name: item.property_name || "default_name",
-          property_definition: item.property_definition || "default_definition",
-          data_type: item.data_type || "default_data_type",
-          sample_value: item.sample_value || "null",
-          method_call: item.method_call || "null",
+          user_property: item.user_property || [],
+          event_property: item.event_property || [],
+          super_property: item.super_property || [],
         });
         await newItem.save();
         return newItem._id;
       })
     );
 
+    // Create a new Event, replicating the structure from the provided payload
     const newEvent = new Event({
       eventName: masterEvent.eventName || "default_event_name",
       items: copiedItems,
-      event_definition: masterEvent.event_definition || "default_event_definition",
-      stakeholders: masterEvent.stakeholders || ["default_stakeholder"],
-      category: masterEvent.category || "default_category",
-      source: masterEvent.source || "default_source",
-      action: masterEvent.action || "default_action",
-      platform: masterEvent.platform || "default_platform",
+      event_definition: masterEvent.event_definition || "No description provided",
+      stakeholders: masterEvent.stakeholders || [],
+      category: masterEvent.category || "Uncategorized",
+      source: masterEvent.source || ["Default Source"],
+      action: masterEvent.action || "No action",
+      platform: masterEvent.platform || ["Default Platform"],
+      identify: masterEvent.identify || false,
+      unidentify: masterEvent.unidentify || false,
     });
     await newEvent.save();
 
+    // Find or create the web application for the organization
     const organization = await Organization.findById(organizationId).populate("applications");
     if (!organization) {
       return res.status(404).json({ success: false, error: "Organization not found." });
@@ -63,6 +65,7 @@ async function handler(req, res) {
       await organization.save();
     }
 
+    // Link the new event to the web application
     webApplication.events.push(newEvent._id);
     await webApplication.save();
 

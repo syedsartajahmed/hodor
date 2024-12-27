@@ -62,7 +62,7 @@ const EventDrawer = () => {
     return true;
   };
 
-
+  const [loading, setLoading] = useState(false);
   const handleSave = async () => {
     // const { cta_text, cta_type, cta_color, cta_class } = formData;
 
@@ -71,9 +71,11 @@ const EventDrawer = () => {
     //   return;
     // }
     console.log(selectedEvent);
+    setLoading(true);
 
     if (pathname === '/master-event' || pathname === '/dashboard/[id]/master-events') {
       const payload = {
+        id: selectedEvent?._id,
         eventName: selectedEvent?.name || "Unnamed Event",
         event_definition: selectedEvent?.description || "No description provided",
         platform: selectedEvent.platform || [],
@@ -142,7 +144,8 @@ const EventDrawer = () => {
         category: event.category,
         source: event.source,
         action: event.action,
-        platform : event.platform,
+          platform: event.platform,
+          ...event,
         }));
     
         setTableData(updatedRows);
@@ -152,7 +155,7 @@ const EventDrawer = () => {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", err.message);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     } else {
       if (!selectedEvent) {
@@ -288,7 +291,7 @@ const EventDrawer = () => {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", err.message);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     }
   
@@ -518,12 +521,37 @@ function ${functionName}() {
             </button> */}
           </div>
           <div className="p-4 border-t flex items-center gap-7 justify-center">
-            <button
+          <button
               onClick={handleSave}
-              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
+              disabled={loading} // Disable button when loading
             >
-              Save
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+                  ></path>
+                </svg>
+              ) : (
+                "Save"
+              )}
             </button>
+
             <button
               onClick={() => toggleEventDrawer(false)}
               className="text-gray-500 hover:text-gray-800"
