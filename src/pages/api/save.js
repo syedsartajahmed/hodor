@@ -4,6 +4,11 @@ import Item from "@/models/item";
 import Application from "@/models/application";
 
 async function handler(req, res) {
+
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache'); 
+  res.setHeader('Expires', '0');
+  
   const { method } = req;
 
   switch (method) {
