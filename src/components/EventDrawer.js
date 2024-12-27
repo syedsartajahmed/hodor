@@ -77,7 +77,7 @@ const EventDrawer = () => {
       const payload = {
         id: selectedEvent?._id,
         eventName: selectedEvent?.name || "Unnamed Event",
-        event_definition: selectedEvent?.description || "No description provided",
+        event_definition: selectedEvent?.event_definition || "No description provided",
         platform: selectedEvent.platform || [],
         stakeholders: selectedEvent.stakeholders || [],
         category: selectedEvent.category || "Uncategorized",
@@ -166,7 +166,7 @@ const EventDrawer = () => {
         organization_id: currentOrganization?.id || null,
         application_id: currentOrganization?.applicationId || "default_application_id",
         eventName: selectedEvent?.name || "Unnamed Event",
-        event_definition: selectedEvent?.description || "No description provided",
+        event_definition: selectedEvent?.event_definition || "No description provided",
         stakeholders: selectedEvent?.stakeholders || [],
         category: selectedEvent?.category || "Uncategorized",
         source: selectedEvent?.source || [],

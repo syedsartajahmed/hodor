@@ -23,6 +23,7 @@ import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRef } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
+import DrawerPropertiesWithEnvironment from './DrawerPropertiesWithEnvironment';
 
 
 
@@ -35,6 +36,7 @@ const DrawerProperties = () => {
   const [showIdentifyMessage, setShowIdentifyMessage] = useState(false);
   const [showUnidentifyMessage, setShowUnidentifyMessage] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+  const [triggerCode, setTriggerCode] = useState("");
 
    const { isEventDrawerOpen,tabledata, toggleEventDrawer, selectedEvent, setSelectedEvent , currentOrganization, setTableData,setSelectedOrganization } = useAppContext();
 
@@ -473,100 +475,264 @@ const DrawerProperties = () => {
 //   };
   
 
+// const generateCode = () => {
+//   const eventName = selectedEvent?.name?.trim()
+//     ? selectedEvent.name
+//         .trim()
+//         .replace(/([a-z])([A-Z])/g, '$1_$2') // Convert camelCase to snake_case
+//         .replace(/[_\s]+/g, '_') // Replace spaces or multiple underscores with a single underscore
+//         .toLowerCase() // Ensure all lowercase
+//     : "unnamed_event"; // Default to "unnamed_event" if no name is provided
+
+//   // Filter out invalid properties with empty name or value
+//   const validSuperProperties = superProperties.filter(
+//     (prop) => prop.name?.trim() && prop.value?.trim()
+//   );
+
+//   const validUserProperties = userProperties.filter(
+//     (prop) => prop.name?.trim() && prop.value?.trim()
+//   );
+
+//   const validEventProperties = eventProperties.filter(
+//     (prop) => prop.name?.trim() && prop.value?.trim()
+//   );
+
+//   // Generate event properties code only if validEventProperties is not empty
+//   const eventPropsCode = validEventProperties.length > 0
+//     ? validEventProperties
+//         .map(
+//           (prop) =>
+//             `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
+//         )
+//         .join(",\n")
+//     : "";
+
+//   // Generate super properties code only if validSuperProperties is not empty
+//   const superPropsCode = validSuperProperties.length > 0
+//     ? validSuperProperties
+//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+//         .join(",\n")
+//     : "";
+
+//   // Generate user properties code only if validUserProperties is not empty
+//   const userPropsCode = validUserProperties.length > 0
+//     ? validUserProperties
+//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
+//         .join(",\n")
+//     : "";
+
+//   // Build the function dynamically based on the available properties
+//   const codeParts = [];
+
+//   if (superPropsCode) {
+//     codeParts.push(`
+//       mixpanel.register({
+//         ${superPropsCode}
+//       });
+//     `);
+//   }
+
+//   if (userPropsCode) {
+//     codeParts.push(`
+//       mixpanel.people.set({
+//         ${userPropsCode}
+//       });
+//     `);
+//   }
+
+//   if (eventPropsCode) {
+//     codeParts.push(`
+//       mixpanel.track("${eventName}", {
+//         ${eventPropsCode}
+//       });
+//     `);
+//   }
+
+//   const code = `
+// // ${selectedEvent?.event_definition}
+
+// function log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}(product) {
+// ${codeParts.join("\n")}
+// }
+
+// log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
+//   ${[...validSuperProperties, ...validUserProperties, ...validEventProperties]
+//     .map((prop) => {
+//       const sampleValue = prop.sampleValue || "test_value";
+//       return `"${prop.name || prop.property_name}": "${sampleValue}"`;
+//     })
+//     .join(",\n  ")}
+// });
+//   `;
+
+//   setGeneratedCode(code);
+  // };
+  const [functionName, setFunctionName] = useState('');
 const generateCode = () => {
+  // Convert event name to proper format (camelCase for functions, snake_case for events)
   const eventName = selectedEvent?.name?.trim()
     ? selectedEvent.name
         .trim()
-        .replace(/([a-z])([A-Z])/g, '$1_$2') // Convert camelCase to snake_case
-        .replace(/[_\s]+/g, '_') // Replace spaces or multiple underscores with a single underscore
-        .toLowerCase() // Ensure all lowercase
-    : "unnamed_event"; // Default to "unnamed_event" if no name is provided
+        .replace(/([a-z])([A-Z])/g, '$1_$2')
+        .replace(/[_\s]+/g, '_')
+        .toLowerCase()
+    : "unnamed_event";
+    
+  const callFunctionName = eventName
+    .split('_')
+    .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+    setFunctionName(callFunctionName);
+  // Group properties by method call
+  const methodGroups = {};
+  eventProperties.forEach(prop => {
+    if (!methodGroups[prop.methodCall]) {
+      methodGroups[prop.methodCall] = [];
+    }
+    methodGroups[prop.methodCall].push(prop);
+  });
 
-  // Filter out invalid properties with empty name or value
-  const validSuperProperties = superProperties.filter(
-    (prop) => prop.name?.trim() && prop.value?.trim()
-  );
+  // Generate code for each method type
+  const generateMethodCode = (properties, methodType) => {
+    console.log(properties, methodType);
+    switch (methodType) {
+      case 'Track':
+        return `mixpanel.track("${eventName}", {
+    ${properties.map(prop => 
+      `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name} // ${prop.type}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'Register':
+        return `mixpanel.register({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'Register Once':
+        return `mixpanel.register_once({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'People Set':
+        return `mixpanel.people.set({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'People Set Once':
+        return `mixpanel.people.set_once({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'People Increment':
+        return `mixpanel.people.increment(${
+          properties.length === 1 
+            ? `"${properties[0].name}", data.${properties[0].sampleValue}`
+            : `{
+    ${properties.map(prop => `"${prop.name}": data.${prop.sampleValue}`).join(',\n    ')}
+  }`
+        });`;
+      
+      case 'People Unset':
+        return `mixpanel.people.unset([
+    ${properties.map(prop => `"${prop.name}"`).join(',\n    ')}
+  ]);`;
+      
+      case 'People Append':
+        return `mixpanel.people.append({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `"${prop.sampleValue}"`}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'People Union':
+        return `mixpanel.people.union({
+    ${properties.map(prop => 
+      `"${prop.name}": data.${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `["${prop.sampleValue}"]`}`
+    ).join(',\n    ')}
+  });`;
+      
+      case 'Time Event':
+        return `mixpanel.time_event("${eventName}");`;
+      
+      case 'Opt In Tracking':
+        return 'mixpanel.opt_in_tracking();';
+      
+      case 'Opt Out Tracking':
+        return 'mixpanel.opt_out_tracking();';
+        
+      default:
+        return '';
+    }
+  };
 
-  const validUserProperties = userProperties.filter(
-    (prop) => prop.name?.trim() && prop.value?.trim()
-  );
+  // Generate code for each method group
+  const methodCalls = Object.entries(methodGroups)
+    .map(([method, props]) => generateMethodCode(props, method))
+    .filter(code => code)
+    .join('\n\n  ');
 
-  const validEventProperties = eventProperties.filter(
-    (prop) => prop.name?.trim() && prop.value?.trim()
-  );
+  // Generate identify/unidentify code if needed
+  const identifyCode = selectedEvent?.identify 
+    ? '\n  mixpanel.identify(userId);' 
+    : '';
+  const unidentifyCode = selectedEvent?.unidentify 
+    ? '\n  mixpanel.reset();' 
+    : '';
 
-  // Generate event properties code only if validEventProperties is not empty
-  const eventPropsCode = validEventProperties.length > 0
-    ? validEventProperties
-        .map(
-          (prop) =>
-            `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
-        )
-        .join(",\n")
-    : "";
+  // Generate super properties code
+const superPropsCode = superProperties.filter(
+  (prop) => prop.name?.trim() && prop.value?.trim()
+).length > 0
+  ? `\n  mixpanel.register({
+    ${superProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name}`)
+      .join(',\n    ')}
+  });`
+  : '';
 
-  // Generate super properties code only if validSuperProperties is not empty
-  const superPropsCode = validSuperProperties.length > 0
-    ? validSuperProperties
-        .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-        .join(",\n")
-    : "";
+// Generate user properties code
+const userPropsCode = userProperties.filter(
+  (prop) => prop.name?.trim() && prop.value?.trim()
+).length > 0
+  ? `\n  mixpanel.people.set({
+    ${userProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `"${prop.value}"` : prop.value}`)
+      .join(',\n    ')}
+  });`
+    : '';
+    const exampleSuperProps = superProperties
+    .filter((prop) => prop.name?.trim() && prop.value?.trim())
+    .map((prop) => `${prop.name}: "${prop.value}"`)
+    .join(",\n  ");
 
-  // Generate user properties code only if validUserProperties is not empty
-  const userPropsCode = validUserProperties.length > 0
-    ? validUserProperties
-        .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-        .join(",\n")
-    : "";
-
-  // Build the function dynamically based on the available properties
-  const codeParts = [];
-
-  if (superPropsCode) {
-    codeParts.push(`
-      mixpanel.register({
-        ${superPropsCode}
-      });
-    `);
-  }
-
-  if (userPropsCode) {
-    codeParts.push(`
-      mixpanel.people.set({
-        ${userPropsCode}
-      });
-    `);
-  }
-
-  if (eventPropsCode) {
-    codeParts.push(`
-      mixpanel.track("${eventName}", {
-        ${eventPropsCode}
-      });
-    `);
-  }
-
-  const code = `
-// ${selectedEvent?.event_definition}
-
-function log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}(product) {
-${codeParts.join("\n")}
+  // Combine all code parts
+  const code = `// ${selectedEvent?.event_definition || 'Track user interaction'}
+export function ${callFunctionName}(${selectedEvent?.identify && userProperties.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
+  ${methodCalls}
 }
-
-log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
-  ${[...validSuperProperties, ...validUserProperties, ...validEventProperties]
-    .map((prop) => {
-      const sampleValue = prop.sampleValue || "test_value";
-      return `"${prop.name || prop.property_name}": "${sampleValue}"`;
-    })
-    .join(",\n  ")}
-});
-  `;
+`;
+  
+  
+   const secondCode = `${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
+    ${[...eventProperties].map(prop => 
+    `${prop.name}: ${prop.type === 'String' ? `"${prop.sampleValue}"` : `"${prop.sampleValue}"`}`
+    ).join(',\n  ')}${eventProperties.length > 0 ? ', ' : ''}
+    ${exampleSuperProps} 
+});`
 
   setGeneratedCode(code);
+  setTriggerCode(secondCode);
 };
-
-  
 
   const removeSuperPropertySet = (index) => {
     const updatedProperties = [...superProperties];
@@ -1100,9 +1266,15 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
               <Button variant="contained" color="primary" onClick={generateCode}>
                 Generate Code
               </Button>
+              <DrawerPropertiesWithEnvironment
+                generatedCode={generatedCode}
+                functionName={functionName}
+                setGeneratedCode={setGeneratedCode}
+                triggerCode={triggerCode}
+      />
             </Box>
 
-            {generatedCode && (
+            {/* {generatedCode && (
               <Box mt={3}>
                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                   GENERATED CODE
@@ -1118,7 +1290,7 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
                   <pre>{generatedCode}</pre>
                 </Box>
               </Box>
-            )}
+            )} */}
           </AccordionDetails>
         </Accordion>
       )}
