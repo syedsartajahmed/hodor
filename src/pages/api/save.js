@@ -8,7 +8,7 @@ async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache'); 
   res.setHeader('Expires', '0');
-  
+
   const { method } = req;
 
   switch (method) {
@@ -57,29 +57,51 @@ async function handler(req, res) {
         const aggregatedEventProperties = [];
         const aggregatedSuperProperties = [];
 
+        // if (items && items.length > 0) {
+        //   for (const item of items) {
+        //     // Handle user properties
+        //     if (item.user_property && Array.isArray(item.user_property)) {
+        //       aggregatedUserProperties.push(...item.user_property);
+        //     }
+
+        //     // Validate and handle event properties
+        //     if (
+        //       item.event_property &&
+        //       item.event_property.property_name &&
+        //       item.event_property.data_type &&
+        //       item.event_property.property_type
+        //     ) {
+        //       console.log("Valid event_property:", );
+        //       aggregatedEventProperties.push(item.event_property);
+        //     } else if (item.event_property) {
+        //       console.warn(
+        //         "Skipping invalid event_property:",
+        //         JSON.stringify(item.event_property)
+        //       );
+        //     }
+
+        //     // Handle super properties
+        //     if (item.super_property && Array.isArray(item.super_property)) {
+        //       aggregatedSuperProperties.push(...item.super_property);
+        //     }
+        //   }
+        // }
         if (items && items.length > 0) {
           for (const item of items) {
             // Handle user properties
             if (item.user_property && Array.isArray(item.user_property)) {
               aggregatedUserProperties.push(...item.user_property);
             }
-
+        
             // Validate and handle event properties
-            if (
-              item.event_property &&
-              item.event_property.property_name &&
-              item.event_property.data_type &&
-              item.event_property.property_type
-            ) {
-              console.log("Valid event_property:", );
-              aggregatedEventProperties.push(item.event_property);
-            } else if (item.event_property) {
-              console.warn(
-                "Skipping invalid event_property:",
-                JSON.stringify(item.event_property)
-              );
+            if (item.event_property) {
+              if (Array.isArray(item.event_property)) {
+                aggregatedEventProperties.push(...item.event_property);
+              } else if (item.event_property.property_name) {
+                aggregatedEventProperties.push(item.event_property); // Handle single object
+              }
             }
-
+        
             // Handle super properties
             if (item.super_property && Array.isArray(item.super_property)) {
               aggregatedSuperProperties.push(...item.super_property);

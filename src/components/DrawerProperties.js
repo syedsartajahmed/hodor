@@ -122,7 +122,18 @@ const DrawerProperties = () => {
 
   const handleEventPropertyChange = (index, field, value) => {
     const updatedProperties = [...eventProperties];
-    updatedProperties[index][field] = value;
+    if (field === 'methodCall') {
+      updatedProperties[index]['method_call'] = value;
+      updatedProperties[index][field] = value;
+    } else if (field === 'type') {
+      updatedProperties[index]['data_type'] = value;
+      updatedProperties[index][field] = value;
+    } else {
+      updatedProperties[index][field] = value;
+    }
+
+    
+    console.log(updatedProperties)
     setEventProperties(updatedProperties);
 
     setSelectedEvent((prevEvent) => {
@@ -131,12 +142,15 @@ const DrawerProperties = () => {
   
       // Check if the first item exists
       if (updatedItems[0]) {
+        console.log('----------1')
         // Update the event_property of the first item
         updatedItems[0] = {
           ...updatedItems[0], // Spread existing properties
           event_property: updatedProperties, // Update event_property
         };
+        console.log(updatedItems[0])
       } else {
+        console.log('----------2')
         // If items[0] does not exist, initialize it
         updatedItems[0] = {
           user_property: [],
@@ -151,6 +165,7 @@ const DrawerProperties = () => {
         items: updatedItems,
       };
     });
+    console.log(selectedEvent)
   };
   
 
@@ -821,6 +836,23 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
         >
           Unidentify
         </Button>
+        {(showIdentifyMessage || showUnidentifyMessage ) && (
+    <IconButton
+      onClick={() => {
+              setShowIdentifyMessage(false);
+              setShowUnidentifyMessage(false);
+        setSelectedEvent((prevEvent) => ({
+          ...prevEvent,
+          identify: false,
+          unidentify: false,
+        }));
+      }}
+      sx={{ color: "error.main" }}
+      size="small"
+    >
+      <DeleteIcon />
+    </IconButton>
+  )}
       </Box>
 
       {showIdentifyMessage && (
@@ -872,12 +904,26 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
                   fullWidth
                   margin="dense"
                 />
-                    {/* <IconButton
-                  color="secondary"
-                  onClick={() => removeUserPropertySet(index)}
-                >
-                  <DeleteIcon />
-                </IconButton> */}
+                    <IconButton 
+                    //onClick={deleteEventPropertyGroup}
+                    onClick={() => {
+                      const updatedProperties = [...userProperties];
+                      updatedProperties.splice(index, 1); 
+                      setUserProperties(updatedProperties);
+          
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].user_property = updatedProperties; 
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                sx={{ color: 'error.main' }}
+                size="small"
+              >
+      <DeleteIcon />
+    </IconButton>
 
                 
               </Box>
@@ -948,7 +994,7 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
       <Select
         value={property.type}
         onChange={(e) =>
-          handleEventPropertyChange(index, "dataType", e.target.value)
+          handleEventPropertyChange(index, "type", e.target.value)
         }
       >
         {dataTypeOptions.map((option) => (
@@ -967,12 +1013,26 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
       fullWidth
       margin="dense"
                   />
-                  {/* <IconButton
-                  color="secondary"
-                  onClick={() => removeEventPropertySet(index)}
-                >
-                  <DeleteIcon />
-                </IconButton> */}
+                    <IconButton 
+                    //onClick={deleteEventPropertyGroup}
+                    onClick={() => {
+                      const updatedProperties = [...eventProperties];
+                      updatedProperties.splice(index, 1); 
+                      setEventProperties(updatedProperties);
+        
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].event_property = updatedProperties; 
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                sx={{ color: 'error.main' }}
+                size="small"
+              >
+      <DeleteIcon />
+    </IconButton>
                 </Box>
                 
 ))}
@@ -1006,12 +1066,26 @@ log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
       fullWidth
       margin="dense"
                   />
-                  {/* <IconButton
-              color="secondary"
-              onClick={() => removeSuperPropertySet(index)}
-            >
-              <DeleteIcon />
-            </IconButton> */}
+                  <IconButton 
+                    //onClick={deleteEventPropertyGroup}
+                    onClick={() => {
+                      const updatedProperties = [...superProperties];
+                      updatedProperties.splice(index, 1); 
+                      setSuperProperties(updatedProperties);
+          
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].super_property = updatedProperties; 
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                sx={{ color: 'error.main' }}
+                size="small"
+              >
+      <DeleteIcon />
+    </IconButton>
 
                 </Box>
                 
