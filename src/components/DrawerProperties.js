@@ -853,22 +853,27 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
       sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
     >
       <TextField
-  label="Event Name"
-  value={selectedEvent?.name || ''}
-  onChange={handleEventNameChange}
-  fullWidth
-  margin="normal"
-  sx={{ mb: 2 }}
-/>
-            <TextField
+        label="Event Name"
+        value={selectedEvent?.name || ''}
+        onChange={handleEventNameChange}
+        fullWidth
+        margin="normal"
+        sx={{ mb: 2 }}
+      />
+      <TextField
         label="Description"
-        value={selectedEvent?.event_definition}
+        value={selectedEvent?.event_definition || ""}
         onChange={handleDescriptionChange}
         fullWidth
         margin="normal"
-        
+        variant="outlined" 
+        InputLabelProps={{
+          shrink: true, 
+        }}
+        sx={{
+          mb: 2, 
+        }}
       />
-
       <FormControl fullWidth margin="normal">
         <InputLabel>Stakeholders</InputLabel>
         <Select
@@ -894,8 +899,14 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
         onChange={handleCategoryChange}
         fullWidth
         margin="normal"
+        variant="outlined" 
+        InputLabelProps={{
+          shrink: true, 
+        }}
+        sx={{
+          mb: 2, 
+        }}
       />
-
       <FormControl fullWidth margin="normal">
         <InputLabel>Platforms</InputLabel>
         <Select
