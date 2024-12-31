@@ -6,6 +6,12 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
@@ -14,14 +20,17 @@ import { useAppContext } from "@/context/AppContext";
 import NewCategoryModal from "./NewCategory";
 import { useRouter } from "next/router";
 import DownloadIcon from '@mui/icons-material/Download';
+import axios from "axios";
 
-const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload = false }) => {
+const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload = false, isShowFilter = false }) => {
   const [view, setView] = useState("list");
   const [open, setOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const { tableData, setShowList, currentOrganization, allEvents } = useAppContext();
+  const { tableData, setShowList, currentOrganization, allEvents, setTableData } = useAppContext();
   const router = useRouter();
   const eventSize = tableData.length;
+  const [selectedOrganizations, setSelectedOrganizations] = useState([]);
+
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -57,44 +66,7 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
     a.remove();
   };
 
-  // const handleDownload = () => {
-  //   // Mixpanel initialization token from localStorage
-  //   const mixpanelToken = localStorage.getItem("mixpanelToken") || 'YOUR_PROJECT_TOKEN';
   
-  //   // Fetch generated Mixpanel event tracking code
-  //   const generatedCode = generateAllEventsCode(allEvents);
-  
-  //   // Final code with import and initialization
-  //   const finalCode = `// Place this file in your "lib" or "utils" folder and import these functions wherever needed to trigger Mixpanel events.
-    
-  // // Import Mixpanel SDK
-  // import mixpanel from "mixpanel-browser";
-  
-  // // Initialize Mixpanel
-  // mixpanel.init("${mixpanelToken}", {
-  //   debug: true, // Set to true for debugging in development
-    
-  // });
-  
-  // // Mixpanel Event Tracking Implementation
-  // ${generatedCode}
-  
-  
-  // `;
-  
-  //   // Create and trigger download of the file
-  //   const blob = new Blob([finalCode], { type: "text/javascript" });
-  //   const url = window.URL.createObjectURL(blob);
-  //   const a = document.createElement("a");
-  //   a.href = url;
-  //   a.download = "mixpanel.js";
-  //   document.body.appendChild(a);
-  //   a.click();
-  //   a.remove();
-  
-  //   // Clean up the URL after download
-  //   window.URL.revokeObjectURL(url);
-  // };
   const handleDownload = () => {
     const mixpanelToken = localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
   
@@ -280,6 +252,62 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
     router.push(`${window.location.pathname}/master-events`);
   };
 
+  const handleOrganizationSelection = async (selected, setSelectedOrganizations, setTableData, tableData) => {
+    setSelectedOrganizations(selected);
+  
+    try {
+      const response = await axios.get(`/api/master-events`, {
+        params: { organization: selected.join(",") },
+      });
+  
+      const updatedRows = response.data.totalEvents.map((event) => ({
+        id: event._id,
+        name: event.eventName,
+        organization: event.organization,
+        eventProperties: event.items
+          .map((item) => {
+            const eventProps = item.event_property
+              ?.map(
+                (prop) =>
+                  `${prop.property_name || "N/A"}: ${
+                    prop.sample_value || "N/A"
+                  }, method call: ${prop.method_call || "N/A"}`
+              )
+              .join("; ") || "";
+  
+            const superProps = item.super_property
+              ?.map(
+                (prop) =>
+                  `${prop.name || "N/A"}: ${prop.value || "N/A"}`
+              )
+              .join("; ") || "";
+  
+            const userProps = item.user_property
+              ?.map(
+                (prop) =>
+                  `${prop.name || "N/A"}: ${prop.value || "N/A"}`
+              )
+              .join("; ") || "";
+  
+            return [
+              eventProps ? `Event Properties: { ${eventProps} }` : "",
+              superProps ? `Super Properties: { ${superProps} }` : "",
+              userProps ? `User Properties: { ${userProps} }` : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+          })
+          .join("; "),
+        ...event,
+      }));
+  
+      setTableData(updatedRows);
+    } catch (error) {
+      console.error("Error fetching filtered data:", error);
+    }
+  };
+  
+
   return (
     <>
       <Box
@@ -369,6 +397,46 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
               Download
             </Button>
           )}
+
+          {isShowFilter && (
+            <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="organization-filter-label">Organizations</InputLabel>
+            <Select
+              labelId="organization-filter-label"
+              multiple
+              value={selectedOrganizations}
+              onChange={(e) =>
+                handleOrganizationSelection(
+                  e.target.value,
+                  setSelectedOrganizations,
+                  setTableData,
+                  tableData
+                )
+              }
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {Array.from(
+                new Set(
+                  tableData
+                    .map((event) => event.organization)
+                    .filter((org) => org && org.trim() !== "")
+                )
+              )
+                .concat(
+                  selectedOrganizations.filter(
+                    (org) => !tableData.some((e) => e.organization === org)
+                  )
+                )
+                .map((org) => (
+                  <MenuItem key={org} value={org}>
+                    <Checkbox checked={selectedOrganizations.includes(org)} />
+                    <ListItemText primary={org} />
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+          )}
+          
         </Box>
       </Box>
 

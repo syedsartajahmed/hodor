@@ -20,6 +20,7 @@ async function handler(req, res) {
       identify,
       unidentify,
       id,
+      organization,
     } = req.body;
 
     // Validate required fields
@@ -31,6 +32,7 @@ async function handler(req, res) {
       "category",
       "source",
       "action",
+      "organization",
     ];
 
     const missingFields = requiredFields.filter((field) => !req.body[field]);
@@ -72,6 +74,8 @@ async function handler(req, res) {
         existingEvent.action = action;
         existingEvent.identify = identify;
         existingEvent.unidentify = unidentify;
+        existingEvent.organization = organization;
+
         await existingEvent.save();
       } else {
         // Create new master event
@@ -102,12 +106,16 @@ async function handler(req, res) {
       return res.status(500).json({ success: false, error: "Internal server error" });
     }
   } else if (req.method === "GET") {
-    try {
-      const totalEvents = await MasterEvent.find().populate("items");
-      res.status(200).json({ totalEvents });
-    } catch (error) {
-      console.error("Error fetching Master Events:", error);
-      res.status(500).json({ success: false, error: "Internal server error" });
+      try {
+        const { organization } = req.query;
+        const query = organization
+          ? { organization: { $in: organization.split(",").map((org) => org.trim()) } }
+          : {};
+        const totalEvents = await MasterEvent.find(query).populate("items");
+        res.status(200).json({ totalEvents });
+      } catch (error) {
+        console.error("Error fetching Master Events:", error);
+        res.status(500).json({ success: false, error: "Internal server error" });
     }
   } else if (req.method === "DELETE") {
     const { id } = req.query;

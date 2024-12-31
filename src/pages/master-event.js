@@ -111,8 +111,8 @@ const MasterEvents = () => {
 
         <Navbar />
         </div> */}
-          <Header/>
-          {showList ? <List /> : <Table page="master-events"/>}
+          <Header isShowFilter={true}/>
+          {showList ? <List /> : <Table isShowOrganization={true} page="master-events"/>}
           <EventDrawer />
 
           {/* Main Table */}

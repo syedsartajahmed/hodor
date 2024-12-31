@@ -64,13 +64,6 @@ const EventDrawer = () => {
 
   const [loading, setLoading] = useState(false);
   const handleSave = async () => {
-    // const { cta_text, cta_type, cta_color, cta_class } = formData;
-
-    // if (!cta_text || !cta_type || !cta_color || !cta_class) {
-    //   alert("Please fill in all fields to save.");
-    //   return;
-    // }
-    console.log(selectedEvent);
     setLoading(true);
 
     if (pathname === '/master-event' || pathname === '/dashboard/[id]/master-events') {
@@ -97,6 +90,7 @@ const EventDrawer = () => {
         })) || [],
         identify: selectedEvent.identify || false,
         unidentify: selectedEvent.unidentify || false,
+        organization: selectedEvent.organization ,
       };
       
       console.log("Payload being sent:", payload);
@@ -401,95 +395,10 @@ function ${functionName}() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 relative scrollbar-hidden">
           <div className="space-y-4">
-          {/* {eventProperties.map((property, index) => (
-              <div key={index} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Event Property {index + 1}</label>
-                <input
-                  type="text"
-                  placeholder="Name"
-                  value={property.name}
-                  onChange={(e) => handleEventPropertyChange(index, "name", e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Value"
-                  value={property.value}
-                  onChange={(e) => handleEventPropertyChange(index, "value", e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Type (e.g., String)"
-                  value={property.type}
-                  onChange={(e) => handleEventPropertyChange(index, "type", e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Sample Value"
-                  value={property.sampleValue}
-                  onChange={(e) => handleEventPropertyChange(index, "sampleValue", e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
-            ))} */}
-            {/* <button
-              onClick={addEventProperty}
-              disabled
-              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 mt-4"
-            >
-              Add Event Property
-            </button> */}
+       
             </div>
           <div className="mt-3">
-              {/* <label className="block text-sm font-medium text-gray-700">
-                Super Property Name
-              </label> */}
-              {/* <input
-                type="text"
-                name="name"
-                value={superProperty.name}
-                onChange={handleSuperPropertyChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter Super Property Name"
-              /> */}
             </div>
-            {/* <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Super Property Value
-              </label>
-              <input
-                type="text"
-                name="value"
-                value={superProperty.value}
-                onChange={handleSuperPropertyChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter Super Property Value"
-              />
-            </div>
-           */}
-
-{/* 
-          {generatedCode && (
-            <div className="mt-6 p-4 bg-gray-100 rounded-md">
-              <h3 className="text-sm font-semibold mb-2">Generated Code:</h3>
-              <pre className="text-sm bg-gray-200 p-2 rounded-md overflow-x-auto">
-                {generatedCode}
-              </pre>
-            </div>
-          )} */}
-
-{/* {generatedCode && (
-            <div className="mt-6 p-4 bg-gray-100 rounded-md">
-              <h3 className="text-sm font-semibold mb-2">Generated Code:</h3>
-              <pre className="text-sm bg-gray-200 p-2 rounded-md overflow-x-auto">
-                {generatedCode}
-              </pre>
-            </div>
-          )} */}
-
-
           {/* DrawerProperties Component */}
           <div className="mt-6">
             <DrawerProperties />
@@ -499,12 +408,6 @@ function ${functionName}() {
         {/* Footer */}
         <div className="flex flex-row items-center mx-5">
           <div className="flex-1">
-            {/* <button
-              onClick={generateCode}
-              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
-            >
-              Generate Code
-            </button> */}
           </div>
           <div className="p-4 border-t flex items-center gap-7 justify-center">
           <button

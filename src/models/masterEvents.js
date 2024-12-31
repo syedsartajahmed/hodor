@@ -11,7 +11,8 @@ const MasterEventSchema = new Schema({
   action: { type: String, required: true },
   platform: [{ type: String, required: true }], 
   identify: { type: Boolean, default: false }, 
-  unidentify: { type: Boolean, default: false }, 
+  unidentify: { type: Boolean, default: false },
+  organization: { type: String, },
 });
 
 const MasterEvent = models.MasterEvent || model('MasterEvent', MasterEventSchema);

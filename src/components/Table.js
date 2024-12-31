@@ -8,7 +8,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import axios from "axios";
 import { useRouter } from 'next/router';
 
-const Table = ({ page, isShowCopy }) => {
+const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
   const { tableData, toggleDrawer, setSelectedEvent } = useAppContext();
   const router = useRouter();
   const { pathname } = router;
@@ -63,7 +63,27 @@ const Table = ({ page, isShowCopy }) => {
           },
         ]
       : []),
+      ...(isShowOrganization
+        ? [
+            // {
+            //   field: "organization",
+            //   headerName: "Organization",
+            //   renderCell: (params) => (
+            //     <Box>
+            //       {params.row.organization || "N/A"}
+            //     </Box>
+            //   ),
+            //   width: 150,
+          // },
+          {
+            field: "organization",
+            headerName: "ORGANIZATION",
+            flex: 1,
+          },
+          ]
+        : []),
   ];
+  // console.log(tableData)
 
   return (
     <div className="m-5">

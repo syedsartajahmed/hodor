@@ -59,6 +59,19 @@ const DrawerProperties = () => {
   const [action, setAction] = useState("");
   const [platforms, setPlatforms] = useState([]);
   const [source, setSource] = useState([]);
+  const [organization, setOrganization] = useState("");
+  const [isMasterEventPage, setIsMasterEventPage] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMasterEventPage(
+        window.location.pathname.includes("master-event") ||
+        window.location.pathname.includes("master-events")
+      );
+    }
+  }, []);
+  
+
 
   const stakeholderOptions = [
     "Executive Sponsor",
@@ -108,19 +121,6 @@ const DrawerProperties = () => {
   ];
   
   const dataTypeOptions = ["String", "Numeric", "Boolean", "Date", "List", "Incremental"];
-  
-
-  // const handleEventPropertyChange = (index, field, value) => {
-  //   const updatedProperties = [...eventProperties];
-  //   updatedProperties[index][field] = value;
-  //   setEventProperties(updatedProperties);
-  
-  //   // Sync with selectedEvent
-  //   setSelectedEvent((prevEvent) => ({
-  //     ...prevEvent,
-  //     add_event_properties: updatedProperties,
-  //   }));
-  // };
 
   const handleEventPropertyChange = (index, field, value) => {
     const updatedProperties = [...eventProperties];
@@ -354,192 +354,6 @@ const DrawerProperties = () => {
     
   };
 
-
-
-//   const generateCode = () => {
-//       // if (eventProperties.some((prop) => !prop.name || !prop.value)) {
-//     //   alert("Please complete all event properties.");
-//     //   return;
-//     // }
-
-//     // if (superProperties.some((prop) => !prop.name || !prop.value)) {
-//     //   alert("Please complete all super properties.");
-//     //   return;
-//     // }
-
-//     // if (userProperties.some((prop) => !prop.name || !prop.value)) {
-//     //   alert("Please complete all user properties.");
-//     //   return;
-//     // }
-
-//     // const eventPropsCode = eventProperties
-//     //   .map(
-//     //     (prop) =>
-//     //       `\t\t"${prop.name}": product.${prop.name}, // data type: ${prop.type}, sample value: ${prop.sampleValue}`
-//     //   )
-//     //   .join(",\n");
-    
-//     const eventPropsCode = eventProperties.length > 0
-//     ? eventProperties
-//         .map(
-//           (prop) =>
-//             `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
-//         )
-//         .join(",\n")
-//     : "";
-
-//     // Generate super properties code only if superProperties is not empty
-    
-//     console.log(superProperties)
-//   const superPropsCode = superProperties.length > 0
-//     ? superProperties
-//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-//         .join(",\n")
-//     : "";
-
-//   // Generate user properties code only if userProperties is not empty
-//   const userPropsCode = userProperties.length > 0
-//     ? userProperties
-//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-//         .join(",\n")
-//     : "";
-
-//   // Build the function dynamically based on the available properties
-//   const codeParts = [];
-
-//   if (superPropsCode) {
-//     codeParts.push(`
-//       mixpanel.register({
-// ${superPropsCode}
-//       });
-//     `);
-//   }
-
-//   if (userPropsCode) {
-//     codeParts.push(`
-//       mixpanel.people.set({
-// ${userPropsCode}
-//       });
-//     `);
-//   }
-
-//   if (eventPropsCode) {
-//     codeParts.push(`
-//       mixpanel.track("event_triggered", {
-// ${eventPropsCode}
-//       });
-//     `);
-//   }
-
-//   // Combine all parts into the final function code
-//   const code = codeParts.length > 0
-//     ? `
-// function logEvent(product) {
-// ${codeParts.join("\n")}
-// }
-//   `
-//     : `
-// function logEvent(product) {
-//   // No properties to log
-// }
-//   `;
-
-//   setGeneratedCode(code);
-//   };
-  
-
-// const generateCode = () => {
-//   const eventName = selectedEvent?.name?.trim()
-//     ? selectedEvent.name
-//         .trim()
-//         .replace(/([a-z])([A-Z])/g, '$1_$2') // Convert camelCase to snake_case
-//         .replace(/[_\s]+/g, '_') // Replace spaces or multiple underscores with a single underscore
-//         .toLowerCase() // Ensure all lowercase
-//     : "unnamed_event"; // Default to "unnamed_event" if no name is provided
-
-//   // Filter out invalid properties with empty name or value
-//   const validSuperProperties = superProperties.filter(
-//     (prop) => prop.name?.trim() && prop.value?.trim()
-//   );
-
-//   const validUserProperties = userProperties.filter(
-//     (prop) => prop.name?.trim() && prop.value?.trim()
-//   );
-
-//   const validEventProperties = eventProperties.filter(
-//     (prop) => prop.name?.trim() && prop.value?.trim()
-//   );
-
-//   // Generate event properties code only if validEventProperties is not empty
-//   const eventPropsCode = validEventProperties.length > 0
-//     ? validEventProperties
-//         .map(
-//           (prop) =>
-//             `\t\t"${prop.name}": product.${prop.name}, // Method: ${prop.methodCall}, Data type: ${prop.dataType}, Sample value: ${prop.sampleValue}`
-//         )
-//         .join(",\n")
-//     : "";
-
-//   // Generate super properties code only if validSuperProperties is not empty
-//   const superPropsCode = validSuperProperties.length > 0
-//     ? validSuperProperties
-//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-//         .join(",\n")
-//     : "";
-
-//   // Generate user properties code only if validUserProperties is not empty
-//   const userPropsCode = validUserProperties.length > 0
-//     ? validUserProperties
-//         .map((prop) => `\t\t"${prop.name}": product.${prop.name}`)
-//         .join(",\n")
-//     : "";
-
-//   // Build the function dynamically based on the available properties
-//   const codeParts = [];
-
-//   if (superPropsCode) {
-//     codeParts.push(`
-//       mixpanel.register({
-//         ${superPropsCode}
-//       });
-//     `);
-//   }
-
-//   if (userPropsCode) {
-//     codeParts.push(`
-//       mixpanel.people.set({
-//         ${userPropsCode}
-//       });
-//     `);
-//   }
-
-//   if (eventPropsCode) {
-//     codeParts.push(`
-//       mixpanel.track("${eventName}", {
-//         ${eventPropsCode}
-//       });
-//     `);
-//   }
-
-//   const code = `
-// // ${selectedEvent?.event_definition}
-
-// function log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}(product) {
-// ${codeParts.join("\n")}
-// }
-
-// log${eventName.replace(/_/g, '').replace(/^\w/, (c) => c.toUpperCase())}({
-//   ${[...validSuperProperties, ...validUserProperties, ...validEventProperties]
-//     .map((prop) => {
-//       const sampleValue = prop.sampleValue || "test_value";
-//       return `"${prop.name || prop.property_name}": "${sampleValue}"`;
-//     })
-//     .join(",\n  ")}
-// });
-//   `;
-
-//   setGeneratedCode(code);
-  // };
   const [functionName, setFunctionName] = useState('');
   const generateCode = () => {
   // Convert event name to proper format (camelCase for functions, snake_case for events)
@@ -901,6 +715,30 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           ))}
         </Select>
       </FormControl>
+      {isMasterEventPage && (
+        <TextField
+          label="Organization"
+          value={selectedEvent?.organization || ""} 
+          onChange={(e) => {
+            const value = e.target.value;
+            setOrganization(value);
+            setSelectedEvent((prevEvent) => ({
+              ...prevEvent,
+              organization: value,
+            }));
+          }}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          sx={{
+            mb: 2,
+          }}
+        />
+      )}
+
 
       {/* Actions Heading */}
       <Typography variant="h6" fontWeight="bold" gutterBottom>
