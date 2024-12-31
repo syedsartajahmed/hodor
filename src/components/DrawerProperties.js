@@ -1270,7 +1270,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
 
             </Box>
 
-            <Box mt={3}>
+            {/* <Box mt={3}>
               <Button variant="contained" color="primary" onClick={generateCode}>
                 Generate Code
               </Button>
@@ -1280,7 +1280,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
                 setGeneratedCode={setGeneratedCode}
                 triggerCode={triggerCode}
       />
-            </Box>
+            </Box> */}
 
             {/* {generatedCode && (
               <Box mt={3}>
