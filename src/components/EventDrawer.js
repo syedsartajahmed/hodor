@@ -299,21 +299,6 @@ const EventDrawer = () => {
     
   };
 
-  const handleEventPropertyChange = (index, field, value) => {
-    const updatedProperties = [...eventProperties];
-    updatedProperties[index][field] = value;
-    setEventProperties(updatedProperties);
-  };
-
-  const addEventProperty = () => {
-    setEventProperties([...eventProperties, {
-      name: "",
-      value: "",
-      type: "String",
-      propertyType: "Event Property",
-      sampleValue: ""
-    }]);
-  };
    const generateFunctionName = (eventName) => {
     return eventName.trim().toLowerCase().replace(/\s+/g, '_') + '_event';
   };

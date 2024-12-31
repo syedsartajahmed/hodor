@@ -572,44 +572,44 @@ const DrawerProperties = () => {
       case 'Track':
         return `mixpanel.track("${eventName}", {
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name}, // ${prop.type}`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.name}` : prop.name}"], // ${prop.type}`
     ).join(',\n    ')}
   });`;
       
       case 'Register':
         return `mixpanel.register({
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
     ).join(',\n    ')}
   });`;
       
       case 'Register Once':
         return `mixpanel.register_once({
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Set':
         return `mixpanel.people.set({
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Set Once':
         return `mixpanel.people.set_once({
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `"${prop.sampleValue}"` : prop.sampleValue}`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Increment':
         return `mixpanel.people.increment(${
           properties.length === 1 
-            ? `"${properties[0].name}", data.${properties[0].sampleValue}`
+            ? `"${properties[0].name}", data["${properties[0].sampleValue}"]`
             : `{
-    ${properties.map(prop => `"${prop.name}": data.${prop.sampleValue}`).join(',\n    ')}
+    ${properties.map(prop => `"${prop.name}": data["${prop.sampleValue}"]`).join(',\n    ')}
   }`
         });`;
       
@@ -621,7 +621,7 @@ const DrawerProperties = () => {
       case 'People Append':
         return `mixpanel.people.append({
     ${properties.map(prop => 
-      `"${prop.name}": data.${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `"${prop.sampleValue}"`}`
+      `"${prop.name}": data["${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `${prop.sampleValue}`}"]`
     ).join(',\n    ')}
   });`;
       
@@ -667,7 +667,7 @@ const superPropsCode = superProperties.filter(
   ? `\n  mixpanel.register({
     ${superProperties
       .filter((prop) => prop.name?.trim() && prop.value?.trim())
-      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name},`)
+      .map((prop) => `"${prop.name}": data["${prop.type === 'String' ? `${prop.name}` : prop.name}"],`)
       .join('\n    ')}
   });`
   : '';
@@ -679,7 +679,7 @@ const userPropsCode = userProperties.filter(
   ? `\n  mixpanel.people.set({
     ${userProperties
       .filter((prop) => prop.name?.trim() && prop.value?.trim())
-      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `"${prop.value}"` : prop.value}`)
+      .map((prop) => `"${prop.name}": data["${prop.type === 'String' ? `${prop.value}` : prop.value}"]`)
       .join(',\n    ')}
   });`
     : '';

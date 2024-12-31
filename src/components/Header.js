@@ -96,9 +96,11 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   //   window.URL.revokeObjectURL(url);
   // };
   const handleDownload = () => {
-    // Mixpanel initialization token from localStorage
     const mixpanelToken = localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
   
+  
+    // Fetch generated Mixpanel event tracking code
+
     // Fetch generated Mixpanel event tracking code
     const generatedCode = generateAllEventsCode(allEvents);
   
@@ -118,7 +120,7 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
     const importComment = `// Import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
   
     // Final code with import, initialization, and function implementations
-    const finalCode = `// Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+    const finalCode = `  // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
   ${importComment}
   
   // Import Mixpanel SDK
@@ -127,9 +129,10 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   // Initialize Mixpanel
   mixpanel.init("${mixpanelToken}", {
     debug: true, // Set to true for debugging in development
+    track_pageview: true,
   });
   
-  // Mixpanel Event Tracking Implementation
+
   ${generatedCode}
   `;
   
@@ -148,7 +151,6 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   };
   
   const generateAllEventsCode = (events) => {
-    // Helper function to convert event name to proper format
     const formatEventName = (name) => {
       const eventName = name?.trim()
         ? name
@@ -167,14 +169,13 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
       };
     };
   
-    // Helper function to generate method-specific code
     const generateMethodCode = (properties, methodType, eventName) => {
       switch (methodType) {
         case 'Track':
           return `mixpanel.track("${eventName}", {
       ${properties.map(prop => 
-        `"${prop.property_name}": data.${prop.property_type === 'String' ? `${prop.property_name}` : prop.property_name} // ${prop.property_type}`
-      ).join(',\n    ')}
+        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.property_name}` : prop.property_name}"], // ${prop.property_type}`
+      ).join('\n      ')}
     });`;
         
         case 'Register':
@@ -182,8 +183,8 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
           const registerMethod = methodType === 'Register' ? 'register' : 'register_once';
           return `mixpanel.${registerMethod}({
       ${properties.map(prop => 
-        `"${prop.property_name}": data.${prop.property_type === 'String' ? `"${prop.sample_value}"` : prop.sample_value}`
-      ).join(',\n    ')}
+        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.sample_value}` : prop.sample_value}"],`
+      ).join('\n      ')}
     });`;
         
         case 'People Set':
@@ -191,13 +192,13 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
           const setMethod = methodType === 'People Set' ? 'set' : 'set_once';
           return `mixpanel.people.${setMethod}({
       ${properties.map(prop => 
-        `"${prop.property_name}": data.${prop.property_type === 'String' ? `"${prop.sample_value}"` : prop.sample_value}`
-      ).join(',\n    ')}
+        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.sample_value}` : prop.sample_value}"],`
+      ).join('\n      ')}
     });`;
         
         case 'People Unset':
           return `mixpanel.people.unset([
-      ${properties.map(prop => `"${prop.property_name}"`).join(',\n    ')}
+      ${properties.map(prop => `"${prop.property_name}",`).join('\n      ')}}
     ]);`;
         
         case 'Opt Out Tracking':
@@ -229,25 +230,25 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   
       // Generate super properties code
       const superPropsCode = event.items[0].super_property.length > 0
-        ? `\n  mixpanel.register({
+        ? `\n    mixpanel.register({
       ${event.items[0].super_property
-        .map(prop => `"${prop.name}": data.${prop.name}`)
-        .join(',\n    ')}
+        .map(prop => `"${prop.name}": data["${prop.name}"],`)
+        .join('\n      ')}
     });`
         : '';
   
       // Generate user properties code
       const userPropsCode = event.items[0].user_property.length > 0
-        ? `\n  mixpanel.people.set({
+        ? `\n    mixpanel.people.set({
       ${event.items[0].user_property
-        .map(prop => `"${prop.name}": data.${prop.value}`)
-        .join(',\n    ')}
+        .map(prop => `"${prop.name}": data["${prop.value}"],`)
+        .join('\n      ')}
     });`
         : '';
   
       // Generate identify/unidentify code
-      const identifyCode = event.identify ? '\n  mixpanel.identify(userId);' : '';
-      const unidentifyCode = event.unidentify ? '\n  mixpanel.reset();' : '';
+      const identifyCode = event.identify ? '\n    mixpanel.identify(userId);' : '';
+      const unidentifyCode = event.unidentify ? '\n    mixpanel.reset();' : '';
   
       // Generate example data for function call
       const exampleData = {
@@ -266,20 +267,11 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   export function ${functionName}(${event.identify && event.items[0].user_property.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
     ${methodCalls}
   }`,
-        example: `${functionName}(${event.identify ? '"user123", ' : ''}{
-    ${Object.entries(exampleData)
-      .map(([key, value]) => `${key}: "${value}"`)
-      .join(',\n  ')}
-  });`
       };
     });
   
     // Combine all implementations and examples
-    const finalCode = `// Mixpanel Event Tracking Implementation
-  ${allEventsCode.map(code => code.implementation).join('\n\n')}
-  
-  // Example Usage
-  ${allEventsCode.map(code => code.example).join('\n\n')}`;
+    const finalCode = `${allEventsCode.map(code => code.implementation).join('\n\n')}`;
   
     return finalCode;
   };

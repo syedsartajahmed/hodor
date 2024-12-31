@@ -65,21 +65,21 @@ const Index = () => {
           .map((item) => {
             // Format Event Properties
             const eventProps = item.event_property?.map((prop) =>
-              `Property Name: ${prop.property_name || 'N/A'}, Value: ${
+              `${prop.property_name || 'N/A'}: ${
                 prop.sample_value || 'N/A'
-              }, Data Type: ${prop.data_type || 'N/A'}, Method Call: ${
+              }, method call: ${
                 prop.method_call || 'N/A'
               }`
             ).join('; ') || '';
         
             // Format Super Properties
             const superProps = item.super_property?.map((prop) =>
-              `Name: ${prop.name || 'N/A'}, Value: ${prop.value || 'N/A'}`
+              `${prop.name || 'N/A'}: ${prop.value || 'N/A'}`
             ).join('; ') || '';
         
             // Format User Properties
             const userProps = item.user_property?.map((prop) =>
-              `Name: ${prop.name || 'N/A'}, Value: ${prop.value || 'N/A'}`
+              `${prop.name || 'N/A'}: ${prop.value || 'N/A'}`
             ).join('; ') || '';
         
             // Combine all properties into a single formatted string
