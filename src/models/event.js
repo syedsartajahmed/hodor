@@ -12,6 +12,11 @@ const EventSchema = new Schema({
   platform: [{ type: String, required: true }], 
   identify: { type: Boolean, default: false }, 
   unidentify: { type: Boolean, default: false }, 
+  status: {
+    type: String,
+    enum: ['completed', 'not started', 'in progress'], 
+    default: 'not started', 
+  },
 });
 
 const Event = models.Event || model('Event', EventSchema);

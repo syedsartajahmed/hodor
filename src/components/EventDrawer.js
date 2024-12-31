@@ -168,6 +168,7 @@ const EventDrawer = () => {
         platform: selectedEvent?.platform || [],
         identify: selectedEvent?.identify || false,
         unidentify: selectedEvent?.unidentify || false,
+        status: selectedEvent?.status || "not_started",
         items: [], // Include existing items
       };
       

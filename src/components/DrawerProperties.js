@@ -622,7 +622,16 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
       name: event.target.value
     }));
   };
-  
+
+  const statusOptions = ["not started", "in progress", "completed"]; 
+
+  const handleStatusChange = (event) => {
+    const newStatus = event.target.value;
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      status: newStatus, 
+    }));
+  };
   return (
     <Box
       sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
@@ -715,10 +724,26 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           ))}
         </Select>
       </FormControl>
-      {isMasterEventPage && (
+
+      {/* <FormControl fullWidth margin="normal">
+        <InputLabel>Status</InputLabel>
+        <Select
+          value={selectedEvent?.status || "not_started"}
+          onChange={handleStatusChange}
+          fullWidth
+        >
+          {statusOptions.map((status) => (
+            <MenuItem key={status} value={status}>
+              {status.replace("_", " ").toUpperCase()}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl> */}
+
+      {isMasterEventPage ? (
         <TextField
           label="Organization"
-          value={selectedEvent?.organization || ""} 
+          value={selectedEvent?.organization || ""}
           onChange={(e) => {
             const value = e.target.value;
             setOrganization(value);
@@ -737,7 +762,23 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
             mb: 2,
           }}
         />
-      )}
+      ) : (
+        <FormControl fullWidth margin="normal">
+        <InputLabel>Status</InputLabel>
+        <Select
+          value={selectedEvent?.status || "not started"}
+          onChange={handleStatusChange}
+          fullWidth
+        >
+           {statusOptions.map((status) => (
+            <MenuItem key={status} value={status}>
+              {status} 
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      )
+    }
 
 
       {/* Actions Heading */}

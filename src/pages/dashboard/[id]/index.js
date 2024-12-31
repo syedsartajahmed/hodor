@@ -80,7 +80,7 @@ const Index = () => {
               .join(', ');
           })
           .join('; '),
-        
+        status: event.status,
           ...event,
         }));
   

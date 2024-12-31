@@ -28,6 +28,7 @@ async function handler(req, res) {
           action,
           identify,
           unidentify,
+          status,
         } = req.body;
 
         // Validate required fields
@@ -129,6 +130,7 @@ async function handler(req, res) {
           existingEvent.platform = platform;
           existingEvent.identify = identify;
           existingEvent.unidentify = unidentify;
+          existingEvent.status = status;
           await existingEvent.save();
         } else {
           // Create a new event
@@ -143,6 +145,7 @@ async function handler(req, res) {
             action,
             identify,
             unidentify,
+            status,
           });
 
           // Add event to application

@@ -81,6 +81,26 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
             flex: 1,
           },
           ]
+      : []),
+      ...(!isShowOrganization
+        ? [
+            // {
+            //   field: "organization",
+            //   headerName: "Organization",
+            //   renderCell: (params) => (
+            //     <Box>
+            //       {params.row.organization || "N/A"}
+            //     </Box>
+            //   ),
+            //   width: 150,
+          // },
+          {
+            field: "status",
+            headerName: "STATUS",
+            // flex: 1,
+            width: 150,
+          },
+          ]
         : []),
   ];
   // console.log(tableData)
