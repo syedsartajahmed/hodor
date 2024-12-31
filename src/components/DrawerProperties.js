@@ -1047,6 +1047,42 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
         </Typography>
       )}
 
+
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Typography fontWeight="bold">Code Generator</Typography>
+              <Tooltip title="Info about Code Generator">
+                <IconButton sx={{ ml: 1 }}>
+                  <InfoIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
+          </AccordionSummary>
+          <AccordionDetails>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <Button
+              variant="contained"
+              style={{
+                backgroundColor: 'black',
+                color: 'white',
+                marginBottom: '20px',
+              }}
+              onClick={generateCode}
+            >
+              Get Code
+              </Button>
+              <DrawerPropertiesWithEnvironment
+                generatedCode={generatedCode}
+                functionName={functionName}
+                setGeneratedCode={setGeneratedCode}
+                triggerCode={triggerCode}
+      />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      
+
       {showUserProperties && (
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
