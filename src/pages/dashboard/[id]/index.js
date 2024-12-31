@@ -18,6 +18,7 @@ const Index = () => {
       showList,
       setCurrentOrganization,
       currentOrganization,
+      setAllEvents
     } = useAppContext();
 
     const router = useRouter();
@@ -36,6 +37,7 @@ const Index = () => {
     
         console.log("Fetched organization details:", organizationDetails.applications?.[0]?.events);
         const events = organizationDetails.applications?.[0]?.events || [];
+        setAllEvents(events)
         console.log("Fetched organization details:", events);
         console.log(organizationDetails.applications?.[0]['_id'] || null)
         setCurrentOrganization({
@@ -97,7 +99,7 @@ const Index = () => {
 
   return (
     <>
-      <Header isShowCopy={true} isShowMasterEvents={true}/>
+      <Header isShowCopy={true} isShowMasterEvents={true} isShowDownload={true}/>
       {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />
 

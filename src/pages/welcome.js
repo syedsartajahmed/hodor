@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Box, Typography, Card, CardContent, Avatar } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
+import { sceenLoaded, categoryClicked  } from '../utils/mixpanel';
 
 const Welcome = () => {
   const router = useRouter();
@@ -15,6 +16,10 @@ const Welcome = () => {
         console.log("Counts:", response.data);
         setCounts(response.data);
         console.log("Counts:", counts);
+      //   sceenLoaded({
+      //     screen_name: "home", 
+      //     user_channel: "web" 
+      // });
       } catch (error) {
         console.error("Error fetching counts:", error);
       }
@@ -39,6 +44,25 @@ const Welcome = () => {
   ];
 
   const handleCardClick = (route) => {
+    console.log(route)
+    // if (typeof mixpanel !== "undefined") {
+    //   console.log('inside:::')
+    //  window.mixpanel.track("Button Clicked", { button: "My Button" });
+    // }
+    if (route == '/master-event') {
+    //   categoryClicked({
+    //     category_count: counts.events || 0, 
+    //     category_name: "master-events",
+    //     user_channel: "web" 
+    // });
+      
+    } else {
+    //   categoryClicked({
+    //     category_count: counts.totalOrganizations || 0,
+    //     category_name: "organization", 
+    //     user_channel: "web" 
+    // });
+    }
     router.push(route);
   };
 

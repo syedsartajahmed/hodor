@@ -8,6 +8,7 @@ const OrganizationDrawer = () => {
     toggleOrgDrawer,
     setSelectedOrganization,
     selectOrganization,
+    setAllEvents,
   } = useAppContext();
   
   const [organizations, setOrganizations] = useState([]);
@@ -63,7 +64,10 @@ const OrganizationDrawer = () => {
       setError(null);
   
       const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
-      const organizationDetails = response.data;
+
+      const organizationDetails = response.data;  
+      const events = organizationDetails.applications?.[0]?.events || [];
+      setAllEvents(events);
   
       // Handle the fetched data (e.g., update the state)
       console.log("Fetched organization details:", organizationDetails);

@@ -18,6 +18,7 @@ import { Add, Delete } from "@mui/icons-material"; // Import Add and Delete Icon
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
+import { sceenLoaded } from '../utils/mixpanel';
 
 const Organizations = () => {
   const router = useRouter();
@@ -31,6 +32,10 @@ const Organizations = () => {
 
   useEffect(() => {
     fetchOrganizations();
+  //   sceenLoaded({
+  //     screen_name: "organization", 
+  //     user_channel: "web" 
+  // });
   }, []);
 
   const fetchOrganizations = async () => {
@@ -203,7 +208,7 @@ const Organizations = () => {
       </Box>
 
       {/* Dialog for Adding Organization */}
-      <Dialog open={openAddDialog} onClose={handleAddDialogClose}>
+      <Dialog open={openAddDialog} onClose={handleAddDialogClose} fullWidth maxWidth="sm">
         <DialogTitle>Add New Organization</DialogTitle>
         <DialogContent>
           <TextField

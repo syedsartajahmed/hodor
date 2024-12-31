@@ -66,10 +66,13 @@ const Table = ({ page, isShowCopy }) => {
   ];
 
   return (
-    <div>
+    <div className="m-5">
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}
+          getRowClassName={(params) =>
+            "bg-lightgray-50" 
+          }
           columns={enhancedColumns}
           //onRowClick={handleRowClick}
           disableColumnFilter
@@ -79,6 +82,7 @@ const Table = ({ page, isShowCopy }) => {
           disableRowSelectionOnClick
           sx={{
             "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "rgb(243 244 246)", 
               borderBottom: "1px solid rgba(224, 224, 224, 1)",
             },
             "& .MuiDataGrid-columnHeader, & .MuiDataGrid-cell": {

@@ -18,6 +18,7 @@ const Index = () => {
       showList,
       currentOrganization,
       setCurrentOrganization,
+      setAllEvents,
     } = useAppContext();
 
     const router = useRouter();
@@ -34,6 +35,7 @@ const Index = () => {
         const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
         const organizationDetails = response.data;
         const events = organizationDetails.applications?.[0]?.events || [];
+        setAllEvents(events);
 
         setCurrentOrganization({
           id: organizationDetails._id, 

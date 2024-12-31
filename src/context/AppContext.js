@@ -18,6 +18,7 @@ export const AppProvider = ({ children }) => {
     name: null,
     applicationId: null,
   }); 
+  const [allEvents, setAllEvents] = useState([]);
 
   const toggleOrgDrawer = (open) => {
     setIsOrgDrawerOpen(open);
@@ -87,6 +88,8 @@ export const AppProvider = ({ children }) => {
     showList,
     setShowList,
     setSelectedEvent,
+    setAllEvents,
+    allEvents
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

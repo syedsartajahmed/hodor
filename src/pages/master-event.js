@@ -7,6 +7,7 @@ import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import Navbar from "@/components/Navbar";
+import { sceenLoaded } from '../utils/mixpanel';
 
 const MasterEvents = () => {
     const {
@@ -21,7 +22,11 @@ const MasterEvents = () => {
 
 
     useEffect(() => {
-        fetchMasterEvents();
+      fetchMasterEvents();
+      // sceenLoaded({
+      //   screen_name: "events", 
+      //   user_channel: "web" 
+      // });
     }, []);
 
     const fetchMasterEvents = async () => {

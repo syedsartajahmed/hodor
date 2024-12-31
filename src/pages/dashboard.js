@@ -16,6 +16,7 @@ const Dashboard = () => {
       setTableData,
       showList,
       currentOrganization,
+      setAllEvents,
     } = useAppContext();
 
 
@@ -34,6 +35,7 @@ const Dashboard = () => {
         console.log("Fetched organization details:", organizationDetails.applications?.[0]?.events);
         const events = organizationDetails.applications?.[0]?.events || [];
         console.log("Fetched organization details:", events);
+        setAllEvents(events);
   
         // Map through events to structure them correctly
         const updatedRows = events.map((event) => ({

@@ -239,7 +239,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             Use this import statement to invoke the generated function.
           </SmallNote>
           <CodeBox>
-            {`import { ${functionName} } from './filePath';`}
+            {`import { ${functionName} } from '../utils/mixpanel';`}
             <IconButton
               onClick={() => copyToClipboard(`import { ${functionName} } from './filePath';`)}
               sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}

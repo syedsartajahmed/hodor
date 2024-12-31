@@ -274,7 +274,7 @@ const DrawerProperties = () => {
   
   const addEventProperty = () => {
     setEventProperties((prev) => {
-      const updated = [...prev, { name: "", value: "", type: "String", sampleValue: "", methodCall: "Track" }];
+      const updated = [...prev, { name: "", value: "", type: "String", sampleValue: "", method_call: "Track" }];
       setSelectedEvent((prevEvent) => ({
         ...prevEvent,
         add_event_properties: updated,
@@ -568,7 +568,7 @@ const DrawerProperties = () => {
 //   setGeneratedCode(code);
   // };
   const [functionName, setFunctionName] = useState('');
-const generateCode = () => {
+  const generateCode = () => {
   // Convert event name to proper format (camelCase for functions, snake_case for events)
   const eventName = selectedEvent?.name?.trim()
     ? selectedEvent.name
@@ -586,10 +586,10 @@ const generateCode = () => {
   // Group properties by method call
   const methodGroups = {};
   eventProperties.forEach(prop => {
-    if (!methodGroups[prop.methodCall]) {
-      methodGroups[prop.methodCall] = [];
+    if (!methodGroups[prop.method_call]) {
+      methodGroups[prop.method_call] = [];
     }
-    methodGroups[prop.methodCall].push(prop);
+    methodGroups[prop.method_call].push(prop);
   });
 
   // Generate code for each method type
@@ -599,7 +599,7 @@ const generateCode = () => {
       case 'Track':
         return `mixpanel.track("${eventName}", {
     ${properties.map(prop => 
-      `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name} // ${prop.type}`
+      `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name}, // ${prop.type}`
     ).join(',\n    ')}
   });`;
       
@@ -674,7 +674,7 @@ const generateCode = () => {
   };
 
   // Generate code for each method group
-  const methodCalls = Object.entries(methodGroups)
+  const method_call = Object.entries(methodGroups)
     .map(([method, props]) => generateMethodCode(props, method))
     .filter(code => code)
     .join('\n\n  ');
@@ -718,7 +718,7 @@ const userPropsCode = userProperties.filter(
   // Combine all code parts
   const code = `// ${selectedEvent?.event_definition || 'Track user interaction'}
 export function ${callFunctionName}(${selectedEvent?.identify && userProperties.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
-  ${methodCalls}
+  ${method_call}
 }
 `;
   
@@ -795,7 +795,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
             value: prop.sample_value || "",
             type: prop.data_type || "String",
             sampleValue: prop.sample_value || "",
-            methodCall: prop.method_call || "",
+            method_call: prop.method_call || "",
           }))
         );
         setEventProperties(eventProps);
@@ -1136,7 +1136,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
     <FormControl fullWidth margin="dense">
       <InputLabel>Method Call</InputLabel>
       <Select
-        value={property.methodCall}
+        value={property.method_call}
         onChange={(e) =>
           handleEventPropertyChange(index, "methodCall", e.target.value)
         }
