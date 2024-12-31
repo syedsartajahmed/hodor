@@ -42,7 +42,7 @@ const DrawerProperties = () => {
 
 
   const [eventProperties, setEventProperties] = useState([
-    { name: "", value: "", type: "String", sampleValue: "" },
+    { name: "", value: "", property_definition: "", type: "String", sampleValue: "" },
   ]);
 
   const [superProperties, setSuperProperties] = useState([
@@ -274,7 +274,7 @@ const DrawerProperties = () => {
   
   const addEventProperty = () => {
     setEventProperties((prev) => {
-      const updated = [...prev, { name: "", value: "", type: "String", sampleValue: "", method_call: "Track" }];
+      const updated = [...prev, { name: "", value: "",property_definition: "", type: "String", sampleValue: "", method_call: "Track" }];
       setSelectedEvent((prevEvent) => ({
         ...prevEvent,
         add_event_properties: updated,
@@ -354,34 +354,7 @@ const DrawerProperties = () => {
     
   };
 
-  const addEventProperty1 = () => {
-    setEventProperties([
-      ...eventProperties,
-      { name: "", value: "", type: "String", sampleValue: "" },
-    ]);
-    setSelectedEvent((prevEvent) => ({
-      ...prevEvent,
-      add_event_properties: eventProperties,
-    }));
-  };
 
-  const addSuperProperty2 = () => {
-    setSuperProperties([...superProperties, { name: "", value: "" }]);
-    setSelectedEvent((prevEvent) => ({
-      ...prevEvent,
-      system_properties: superProperties,
-    }));
-  };
-
-  const addUserProperty3 = () => {
-    setUserProperties([...userProperties, { name: "", value: "" }]);
-      setSelectedEvent((prevEvent) => ({
-        ...prevEvent,
-        user_properties: userProperties,
-      }));
-
-    console.log(userProperties);
-  };
 
 //   const generateCode = () => {
 //       // if (eventProperties.some((prop) => !prop.name || !prop.value)) {
@@ -694,8 +667,8 @@ const superPropsCode = superProperties.filter(
   ? `\n  mixpanel.register({
     ${superProperties
       .filter((prop) => prop.name?.trim() && prop.value?.trim())
-      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name}`)
-      .join(',\n    ')}
+      .map((prop) => `"${prop.name}": data.${prop.type === 'String' ? `${prop.name}` : prop.name},`)
+      .join('\n    ')}
   });`
   : '';
 
@@ -712,8 +685,14 @@ const userPropsCode = userProperties.filter(
     : '';
     const exampleSuperProps = superProperties
     .filter((prop) => prop.name?.trim() && prop.value?.trim())
-    .map((prop) => `${prop.name}: "${prop.value}"`)
-    .join(",\n  ");
+    .map((prop) => `${prop.name}: "${prop.value}",`)
+    .join("\n    ");
+    
+
+    const exampleUserProps = userProperties
+    .filter((prop) => prop.name?.trim() && prop.value?.trim())
+    .map((prop) => `${prop.name}: "${prop.value}",`)
+    .join("\n    ");
 
   // Combine all code parts
   const code = `// ${selectedEvent?.event_definition || 'Track user interaction'}
@@ -724,50 +703,31 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
   
   
    const secondCode = `${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
-    ${[...eventProperties].map(prop => 
+    ${[...eventProperties].map(prop =>
     `${prop.name}: ${prop.type === 'String' ? `"${prop.sampleValue}"` : `"${prop.sampleValue}"`}`
-    ).join(',\n  ')}${eventProperties.length > 0 ? ', ' : ''}
-    ${exampleSuperProps} 
+    ).join(',\n    ')}${eventProperties.length > 0 ? ', ' : ''}
+    ${exampleSuperProps}
+    ${exampleUserProps}
 });`
+    
+// const secondCode = `${callFunctionName}(
+//   ${selectedEvent?.identify ? '"user123", ' : ''}{
+//     ${[...eventProperties]
+//       .map(
+//         (prop) => `${prop.name}: ${
+//           prop.type === 'String' ? `"${prop.sampleValue}"` : `"${prop.sampleValue}"`
+//         }`
+//       )
+//       .join(',\n    ')}${eventProperties.length > 0 ? ',' : ''}
+//     ${exampleSuperProps}
+//   }
+// );`;
+
+    
 
   setGeneratedCode(code);
   setTriggerCode(secondCode);
 };
-
-  const removeSuperPropertySet = (index) => {
-    const updatedProperties = [...superProperties];
-    updatedProperties.splice(index, 1); // Remove the specific set
-    setSuperProperties(updatedProperties);
-  
-    // If all super properties are deleted, handle visibility
-    if (updatedProperties.length === 0) {
-      setShowLogEvent(false); // Hide log event when no super properties are left
-    }
-  };
-  
-  const removeUserPropertySet = (index) => {
-    console.log(userProperties)
-    const updatedProperties = [...userProperties];
-    updatedProperties.splice(index, 1); // Remove the specific set
-    setUserProperties(updatedProperties);
-  
-    // If all user properties are deleted, handle visibility
-    if (updatedProperties.length === 0) {
-      setShowUserProperties(false); // Hide user properties section
-    }
-  };
-  
-  const removeEventPropertySet = (index) => {
-    const updatedProperties = [...eventProperties];
-    updatedProperties.splice(index, 1); // Remove the specific set
-    setEventProperties(updatedProperties);
-  
-    // If all event properties are deleted, handle visibility
-    if (updatedProperties.length === 0) {
-      setShowLogEvent(false); // Hide log event section
-    }
-  };
-  
 
   
   useEffect(() => {
@@ -796,13 +756,14 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
             type: prop.data_type || "String",
             sampleValue: prop.sample_value || "",
             method_call: prop.method_call || "",
+            property_definition: prop.property_definition || "",
           }))
         );
         setEventProperties(eventProps);
         setShowLogEvent(true);
       } else {
         console.log('nnononn')
-        setEventProperties([{ name: "", value: "", type: "String", sampleValue: "" }]);
+        setEventProperties([{ name: "", value: "", type: "String", sampleValue: "" , method_call: "Track", property_definition: ""}]);
         setShowLogEvent(false);
       }
   
@@ -1194,10 +1155,10 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
       margin="dense"
     />
     <TextField
-      label="Property Value"
-      value={property.value}
+      label="Property Description"
+      value={property.property_definition || ""}
       onChange={(e) =>
-        handleEventPropertyChange(index, "value", e.target.value)
+        handleEventPropertyChange(index, "property_definition", e.target.value)
       }
       fullWidth
       margin="dense"

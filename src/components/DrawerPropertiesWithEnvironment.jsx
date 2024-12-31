@@ -40,7 +40,26 @@ const DrawerPropertiesWithEnvironment = ({
   const [environment, setEnvironment] = useState("Frontend");
   const [instructions, setInstructions] = useState("");
   const [initCode, setInitCode] = useState("");
-  const [token, setToken] = useState(localStorage.getItem("mixpanelToken") || "");
+  const [token, setToken] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("mixpanelToken");
+      if (storedToken) {
+        setToken(storedToken);
+        updateInitCode(storedToken);
+      }
+    }
+  }, []);
+  
+  const handleTokenChange = (event) => {
+    const newToken = event.target.value;
+    setToken(newToken);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mixpanelToken", newToken);
+    }
+    updateInitCode(newToken);
+  };
 
   const handleEnvironmentChange = (event) => {
     const value = event.target.value;
@@ -86,12 +105,12 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
 `);
   };
 
-  const handleTokenChange = (event) => {
-    const newToken = event.target.value;
-    setToken(newToken);
-    localStorage.setItem("mixpanelToken", newToken);
-    updateInitCode(newToken);
-  };
+  // const handleTokenChange = (event) => {
+  //   const newToken = event.target.value;
+  //   setToken(newToken);
+  //   localStorage.setItem("mixpanelToken", newToken);
+  //   updateInitCode(newToken);
+  // };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
