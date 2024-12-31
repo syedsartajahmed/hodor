@@ -78,7 +78,7 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   
     // Extract function names for the comment
     const functionNames = allEvents.map((event) => {
-      const name = event.eventName
+      const name = event?.eventName
         ?.trim()
         .replace(/([a-z])([A-Z])/g, "$1_$2")
         .replace(/[_\s]+/g, "_")
@@ -145,8 +145,8 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
       switch (methodType) {
         case 'Track':
           return `mixpanel.track("${eventName}", {
-      ${properties.map(prop => 
-        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.property_name}` : prop.property_name}"], // ${prop.property_type}`
+      ${properties?.map(prop => 
+        `"${prop?.property_name}": data["${prop?.property_type === 'String' ? `${prop?.property_name}` : prop?.property_name}"], // ${prop?.property_type}`
       ).join('\n      ')}
     });`;
         
@@ -154,8 +154,8 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
         case 'Register Once':
           const registerMethod = methodType === 'Register' ? 'register' : 'register_once';
           return `mixpanel.${registerMethod}({
-      ${properties.map(prop => 
-        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.sample_value}` : prop.sample_value}"],`
+      ${properties?.map(prop => 
+        `"${prop?.property_name}": data["${prop?.property_type === 'String' ? `${prop?.sample_value}` : prop?.sample_value}"],`
       ).join('\n      ')}
     });`;
         
@@ -163,14 +163,14 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
         case 'People Set Once':
           const setMethod = methodType === 'People Set' ? 'set' : 'set_once';
           return `mixpanel.people.${setMethod}({
-      ${properties.map(prop => 
-        `"${prop.property_name}": data["${prop.property_type === 'String' ? `${prop.sample_value}` : prop.sample_value}"],`
+      ${properties?.map(prop => 
+        `"${prop?.property_name}": data["${prop?.property_type === 'String' ? `${prop?.sample_value}` : prop?.sample_value}"],`
       ).join('\n      ')}
     });`;
         
         case 'People Unset':
           return `mixpanel.people.unset([
-      ${properties.map(prop => `"${prop.property_name}",`).join('\n      ')}}
+      ${properties?.map(prop => `"${prop?.property_name}",`).join('\n      ')}}
     ]);`;
         
         case 'Opt Out Tracking':
@@ -183,15 +183,15 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
   
     // Generate code for all events
     const allEventsCode = events.map(event => {
-      const { snakeCase: eventName, camelCase: functionName } = formatEventName(event.eventName);
+      const { snakeCase: eventName, camelCase: functionName } = formatEventName(event?.eventName);
       
       // Group properties by method call
       const methodGroups = {};
-      event.items[0].event_property.forEach(prop => {
-        if (!methodGroups[prop.method_call]) {
-          methodGroups[prop.method_call] = [];
+      event.items[0]?.event_property?.forEach(prop => {
+        if (!methodGroups[prop?.method_call]) {
+          methodGroups[prop?.method_call] = [];
         }
-        methodGroups[prop.method_call].push(prop);
+        methodGroups[prop?.method_call].push(prop);
       });
   
       // Generate code for each method group
@@ -201,49 +201,49 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
         .join('\n\n  ');
   
       // Generate super properties code
-      const superPropsCode = event.items[0].super_property.length > 0
+      const superPropsCode = event.items[0]?.super_property?.length > 0
         ? `\n    mixpanel.register({
-      ${event.items[0].super_property
-        .map(prop => `"${prop.name}": data["${prop.name}"],`)
+      ${event?.items[0]?.super_property
+        .map(prop => `"${prop?.name}": data["${prop?.name}"],`)
         .join('\n      ')}
     });`
         : '';
   
       // Generate user properties code
-      const userPropsCode = event.items[0].user_property.length > 0
+      const userPropsCode = event.items[0]?.user_property.length > 0
         ? `\n    mixpanel.people.set({
-      ${event.items[0].user_property
-        .map(prop => `"${prop.name}": data["${prop.value}"],`)
+      ${event?.items[0]?.user_property
+        .map(prop => `"${prop?.name}": data["${prop?.value}"],`)
         .join('\n      ')}
     });`
         : '';
   
       // Generate identify/unidentify code
-      const identifyCode = event.identify ? '\n    mixpanel.identify(userId);' : '';
-      const unidentifyCode = event.unidentify ? '\n    mixpanel.reset();' : '';
+      const identifyCode = event?.identify ? '\n    mixpanel.identify(userId);' : '';
+      const unidentifyCode = event?.unidentify ? '\n    mixpanel.reset();' : '';
   
       // Generate example data for function call
       const exampleData = {
-        ...(event.items[0].event_property.reduce((acc, prop) => ({
+        ...(event.items[0]?.event_property.reduce((acc, prop) => ({
           ...acc,
-          [prop.property_name]: prop.sample_value
+          [prop?.property_name]: prop?.sample_value
         }), {})),
-        ...(event.items[0].super_property.reduce((acc, prop) => ({
+        ...(event.items[0]?.super_property.reduce((acc, prop) => ({
           ...acc,
-          [prop.name]: prop.value
+          [prop?.name]: prop?.value
         }), {}))
       };
   
       return {
-        implementation: `// ${event.event_definition || 'Track user interaction'}
-  export function ${functionName}(${event.identify && event.items[0].user_property.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
+        implementation: `// ${event?.event_definition || 'Track user interaction'}
+  export function ${functionName}(${event?.identify && event?.items[0]?.user_property.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
     ${methodCalls}
   }`,
       };
     });
   
     // Combine all implementations and examples
-    const finalCode = `${allEventsCode.map(code => code.implementation).join('\n\n')}`;
+    const finalCode = `${allEventsCode.map(code => code?.implementation).join('\n\n')}`;
   
     return finalCode;
   };
