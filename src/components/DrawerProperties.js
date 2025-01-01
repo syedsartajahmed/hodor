@@ -536,12 +536,13 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
 `;
   
   
-   const secondCode = `${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
-    ${[...eventProperties].map(prop =>
-    `${prop.name}: ${prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`}`
-    ).join(',\n    ')}${eventProperties.length > 0 ? ', ' : ''}
-    ${exampleSuperProps}
-    ${exampleUserProps}
+    const secondCode = `// ${selectedEvent?.event_definition || 'Track user interaction'}
+${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
+  ${[...eventProperties].map(prop =>
+  `${prop.name}: ${prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`}`
+  ).join(',\n  ')}${eventProperties.length > 0 ? ', ' : ''}
+  ${exampleSuperProps}
+  ${exampleUserProps}
 });`
     
 // const secondCode = `${callFunctionName}(
