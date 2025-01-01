@@ -47,6 +47,20 @@ async function handler(req, res) {
             .json({ success: false, message: "Missing required fields" });
         }
 
+        if (!event_id) { 
+          const duplicateEvent = await Event.findOne({
+            eventName,
+            organization_id, 
+          });
+    
+          if (duplicateEvent) {
+            return res.status(409).json({
+              success: false,
+              message: `An event with the name "${eventName}" already exists in this organization.`,
+            });
+          }
+        }
+
         // Check if event exists (for update)
         let existingEvent;
         if (event_id) {

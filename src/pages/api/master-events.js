@@ -43,8 +43,26 @@ async function handler(req, res) {
     }
 
     try {
-      // Find existing master event
-      let existingEvent = await MasterEvent.findOne({ _id: id }).populate("items");
+      if (!id) {
+        
+        const duplicateEvent = await MasterEvent.findOne({
+          eventName,
+        });
+  
+        if (duplicateEvent) {
+          return res.status(409).json({
+            success: false,
+            message: `An event with the name "${eventName}" already exists.`,
+          });
+        }
+      }
+  
+      let existingEvent;
+      if (id) {
+        // Fetch the existing event if updating
+        existingEvent = await MasterEvent.findOne({ _id: id }).populate("items");
+      }
+  
 
       const itemRefs = [];
       if (items && items.length > 0) {
