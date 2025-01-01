@@ -748,27 +748,46 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
       </FormControl> */}
 
       {isMasterEventPage ? (
-        <TextField
-          label="Organization"
+        // <TextField
+        //   label="Organization"
+        //   value={selectedEvent?.organization || ""}
+        //   onChange={(e) => {
+        //     const value = e.target.value;
+        //     setOrganization(value);
+        //     setSelectedEvent((prevEvent) => ({
+        //       ...prevEvent,
+        //       organization: value,
+        //     }));
+        //   }}
+        //   fullWidth
+        //   margin="normal"
+        //   variant="outlined"
+        //   InputLabelProps={{
+        //     shrink: true,
+        //   }}
+        //   sx={{
+        //     mb: 2,
+        //   }}
+        // />
+        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+        <InputLabel>Organization</InputLabel>
+        <Select
           value={selectedEvent?.organization || ""}
           onChange={(e) => {
             const value = e.target.value;
-            setOrganization(value);
             setSelectedEvent((prevEvent) => ({
               ...prevEvent,
               organization: value,
             }));
           }}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          sx={{
-            mb: 2,
-          }}
-        />
+        >
+          {["EdTech", "FinTech", "Consumer Tech", "Healthcare"].map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       ) : (
         <FormControl fullWidth margin="normal">
         <InputLabel>Status</InputLabel>
