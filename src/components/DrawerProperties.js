@@ -660,6 +660,14 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
       status: newStatus, 
     }));
   };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Copied to clipboard!");
+    });
+  };
+
+
   return (
     <Box
       sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
