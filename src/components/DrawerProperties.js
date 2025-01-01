@@ -62,7 +62,7 @@ const SmallNote = styled(Typography)`
 
 
   const [eventProperties, setEventProperties] = useState([
-    { name: "", value: "", property_definition: "", type: "String", sampleValue: "" },
+    { name: "", value: "", property_definition: "", type: "String", sample_value: "" },
   ]);
 
   const [superProperties, setSuperProperties] = useState([
@@ -294,7 +294,7 @@ const SmallNote = styled(Typography)`
   
   const addEventProperty = () => {
     setEventProperties((prev) => {
-      const updated = [...prev, { name: "", value: "",property_definition: "", type: "String", sampleValue: "", method_call: "Track" }];
+      const updated = [...prev, { name: "", value: "",property_definition: "", type: "String", sample_value: "", method_call: "Track" }];
       setSelectedEvent((prevEvent) => ({
         ...prevEvent,
         add_event_properties: updated,
@@ -413,37 +413,37 @@ const SmallNote = styled(Typography)`
       case 'Register':
         return `mixpanel.register({
     ${properties.map(prop => 
-      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sample_value}` : prop.sample_value}"]`
     ).join(',\n    ')}
   });`;
       
       case 'Register Once':
         return `mixpanel.register_once({
     ${properties.map(prop => 
-      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sample_value}` : prop.sample_value}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Set':
         return `mixpanel.people.set({
     ${properties.map(prop => 
-      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sample_value}` : prop.sample_value}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Set Once':
         return `mixpanel.people.set_once({
     ${properties.map(prop => 
-      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sampleValue}` : prop.sampleValue}"]`
+      `"${prop.name}": data["${prop.type === 'String' ? `${prop.sample_value}` : prop.sample_value}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Increment':
         return `mixpanel.people.increment(${
           properties.length === 1 
-            ? `"${properties[0].name}", data["${properties[0].sampleValue}"]`
+            ? `"${properties[0].name}", data["${properties[0].sample_value}"]`
             : `{
-    ${properties.map(prop => `"${prop.name}": data["${prop.sampleValue}"]`).join(',\n    ')}
+    ${properties.map(prop => `"${prop.name}": data["${prop.sample_value}"]`).join(',\n    ')}
   }`
         });`;
       
@@ -455,14 +455,14 @@ const SmallNote = styled(Typography)`
       case 'People Append':
         return `mixpanel.people.append({
     ${properties.map(prop => 
-      `"${prop.name}": data["${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `${prop.sampleValue}`}"]`
+      `"${prop.name}": data["${Array.isArray(prop.sample_value) ? JSON.stringify(prop.sample_value) : `${prop.sample_value}`}"]`
     ).join(',\n    ')}
   });`;
       
       case 'People Union':
         return `mixpanel.people.union({
     ${properties.map(prop => 
-      `"${prop.name}": data.${Array.isArray(prop.sampleValue) ? JSON.stringify(prop.sampleValue) : `["${prop.sampleValue}"]`}`
+      `"${prop.name}": data.${Array.isArray(prop.sample_value) ? JSON.stringify(prop.sample_value) : `["${prop.sample_value}"]`}`
     ).join(',\n    ')}
   });`;
       
@@ -538,7 +538,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
   
    const secondCode = `${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
     ${[...eventProperties].map(prop =>
-    `${prop.name}: ${prop.type === 'String' ? `"${prop.sampleValue}"` : `"${prop.sampleValue}"`}`
+    `${prop.name}: ${prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`}`
     ).join(',\n    ')}${eventProperties.length > 0 ? ', ' : ''}
     ${exampleSuperProps}
     ${exampleUserProps}
@@ -549,7 +549,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
 //     ${[...eventProperties]
 //       .map(
 //         (prop) => `${prop.name}: ${
-//           prop.type === 'String' ? `"${prop.sampleValue}"` : `"${prop.sampleValue}"`
+//           prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`
 //         }`
 //       )
 //       .join(',\n    ')}${eventProperties.length > 0 ? ',' : ''}
@@ -594,7 +594,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
             name: prop.property_name,
             value: prop.sample_value || "",
             type: prop.data_type || "String",
-            sampleValue: prop.sample_value || "",
+            sample_value: prop.sample_value || "",
             method_call: prop.method_call || "",
             property_definition: prop.property_definition || "",
           }))
@@ -603,7 +603,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
         setShowLogEvent(true);
       } else {
         console.log('nnononn')
-        setEventProperties([{ name: "", value: "", type: "String", sampleValue: "" , method_call: "Track", property_definition: ""}]);
+        setEventProperties([{ name: "", value: "", type: "String", sample_value: "" , method_call: "Track", property_definition: ""}]);
         setShowLogEvent(false);
       }
   
@@ -1182,9 +1182,9 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
     </FormControl>
     <TextField
       label="Sample Value"
-      value={property.sampleValue}
+      value={property.sample_value || ""}
       onChange={(e) =>
-        handleEventPropertyChange(index, "sampleValue", e.target.value)
+        handleEventPropertyChange(index, "sample_value", e.target.value)
       }
       fullWidth
       margin="dense"

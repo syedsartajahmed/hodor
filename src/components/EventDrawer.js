@@ -43,7 +43,7 @@ const EventDrawer = () => {
     value: "",
     type: "String", // Default type
     propertyType: "Event Property", // Default type
-    sampleValue: ""
+    sample_value: ""
   }]);
 
   const [generatedCode, setGeneratedCode] = useState("");
@@ -198,7 +198,7 @@ const EventDrawer = () => {
         const eventPropertyItems = selectedEvent.items[0].event_property.map((eventProperty) => ({
           event_property: {
             property_name: eventProperty?.name || eventProperty?.property_name || null,
-            sample_value: eventProperty?.sampleValue || eventProperty?.sample_value || null,
+            sample_value: eventProperty?.sample_value || eventProperty?.sample_value || null,
             data_type: eventProperty?.dataType || eventProperty?.data_type || null,
             property_type: eventProperty?.type || eventProperty?.property_type || null,
             property_definition: eventProperty?.description || eventProperty?.property_definition || null,
@@ -331,7 +331,7 @@ const EventDrawer = () => {
 
     const functionName = generateFunctionName(selectedEvent?.name || "Unnamed Event");
 
-    const eventPropsCode = eventProperties.map(prop => `		"${prop.name}": product.${prop.name}, // data type:${prop.type}, property_type: ${prop.propertyType}, sample value: ${prop.sampleValue}`).join(",\n");
+    const eventPropsCode = eventProperties.map(prop => `		"${prop.name}": product.${prop.name}, // data type:${prop.type}, property_type: ${prop.propertyType}, sample value: ${prop.sample_value}`).join(",\n");
 
     const code = `
 // Initiated when a user starts the ${selectedEvent?.name || "event"} process

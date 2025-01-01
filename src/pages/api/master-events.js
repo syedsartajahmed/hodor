@@ -32,7 +32,7 @@ async function handler(req, res) {
       "category",
       "source",
       "action",
-      "organization",
+      
     ];
 
     const missingFields = requiredFields.filter((field) => !req.body[field]);
