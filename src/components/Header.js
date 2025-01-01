@@ -12,6 +12,13 @@ import {
   MenuItem,
   Checkbox,
   ListItemText,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Dialog,
+  Radio,
+  FormControlLabel,
+  RadioGroup
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
@@ -65,16 +72,56 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
     a.click();
     a.remove();
   };
-
+  const [openSourceDialog, setOpenSourceDialog] = useState(false);
+  const [selectedSource, setSelectedSource] = useState("");
+  
+  // *** Extract unique sources from allEvents (assuming allEvents is an array) ***
+  const uniqueSources = [
+    ...new Set(allEvents?.flatMap((event) => event.source || [])),
+  ].filter(Boolean);
+  
+  // *** Updated handleDownloadButtonClick to open dialog instead of downloading directly ***
+  const handleDownloadButtonClick = () => {
+    setOpenSourceDialog(true);
+  };
+  
   
   const handleDownload = () => {
     const mixpanelToken = localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
   
-  
-    // Fetch generated Mixpanel event tracking code
 
-    // Fetch generated Mixpanel event tracking code
-    const generatedCode = generateAllEventsCode(allEvents);
+      if (!selectedSource) {
+        alert("Please select a source first.");
+        return;
+      }
+    
+      // 1) Filter events to only those containing the chosen source
+      const filteredEvents = allEvents.filter((event) =>
+        event.source.includes(selectedSource)
+      );
+    
+      // 2) Choose different import/init code based on Website vs. Backend
+      let importSection = "";
+      if (selectedSource === "Website") {
+        importSection = `
+import mixpanel from "mixpanel-browser";
+mixpanel.init("${mixpanelToken}", {
+  debug: true,
+  track_pageview: true,
+});
+        `;
+      } else if (selectedSource === "Backend") {
+        importSection = `
+const Mixpanel = require("mixpanel");
+const mixpanel = Mixpanel.init("${mixpanelToken}", {);
+        `;
+      }
+    
+      // 3) Generate event code only for the filtered events
+      const eventCode = generateAllEventsCode(filteredEvents); 
+    
+    
+
   
     // Extract function names for the comment
     const functionNames = allEvents.map((event) => {
@@ -92,34 +139,54 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
     const importComment = `// Import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
   
     // Final code with import, initialization, and function implementations
-    const finalCode = `  // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
-  ${importComment}
+  //   const finalCode = `  // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+  // ${importComment}
   
-  // Import Mixpanel SDK
-  import mixpanel from "mixpanel-browser";
+  // // Import Mixpanel SDK
+  // import mixpanel from "mixpanel-browser";
   
-  // Initialize Mixpanel
-  mixpanel.init("${mixpanelToken}", {
-    debug: true, // Set to true for debugging in development
-    track_pageview: true,
-  });
+  // // Initialize Mixpanel
+  // mixpanel.init("${mixpanelToken}", {
+  //   debug: true, // Set to true for debugging in development
+  //   track_pageview: true,
+  // });
   
 
-  ${generatedCode}
-  `;
-  
-    // Create and trigger download of the file
-    const blob = new Blob([finalCode], { type: "text/javascript" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "mixpanel.js";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  
-    // Clean up the URL after download
+  // ${generatedCode}
+  // `;
+    
+      // 4) Combine everything and trigger the download
+      const finalCode = `
+// Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+${importComment}
+${importSection}
+
+${eventCode}
+      `;
+    
+      const blob = new Blob([finalCode], { type: "text/javascript" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mixpanel.js";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     window.URL.revokeObjectURL(url);
+    setOpenSourceDialog(false);
+  
+    // // Create and trigger download of the file
+    // const blob = new Blob([finalCode], { type: "text/javascript" });
+    // const url = window.URL.createObjectURL(blob);
+    // const a = document.createElement("a");
+    // a.href = url;
+    // a.download = "mixpanel.js";
+    // document.body.appendChild(a);
+    // a.click();
+    // a.remove();
+  
+    // // Clean up the URL after download
+    // window.URL.revokeObjectURL(url);
   };
   
   const generateAllEventsCode = (events) => {
@@ -392,11 +459,43 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
             <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
-            onClick={handleDownload}
+            onClick={handleDownloadButtonClick}
             >
               Download
             </Button>
           )}
+
+<Dialog
+  open={openSourceDialog}
+  onClose={() => setOpenSourceDialog(false)}
+  fullWidth
+  maxWidth="sm"
+>
+  <DialogTitle>Select a Source</DialogTitle>
+  <DialogContent dividers>
+    <FormControl component="fieldset">
+      <RadioGroup
+        value={selectedSource}
+        onChange={(e) => setSelectedSource(e.target.value)}
+      >
+        {uniqueSources.map((source) => (
+          <FormControlLabel
+            key={source}
+            value={source}
+            control={<Radio />}
+            label={source}
+          />
+        ))}
+      </RadioGroup>
+    </FormControl>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenSourceDialog(false)}>Cancel</Button>
+    <Button variant="contained" onClick={handleDownload}>
+      Handle
+    </Button>
+  </DialogActions>
+</Dialog>
 
           {isShowFilter && (
             <FormControl sx={{ minWidth: 200 }}>
