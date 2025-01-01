@@ -541,7 +541,13 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
 
   setGeneratedCode(code);
   setTriggerCode(secondCode);
-};
+  };
+  
+  useEffect(() => {
+    if (selectedEvent) {
+      generateCode();  
+    }
+  }, [selectedEvent, eventProperties, superProperties, userProperties]);
 
   
   useEffect(() => {
@@ -613,6 +619,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
   
       setShowIdentifyMessage(selectedEvent.identify || false);
       setShowUnidentifyMessage(selectedEvent.unidentify || false);
+      generateCode();
     }
   }, [selectedEvent?.id]);
 
@@ -901,7 +908,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           </AccordionSummary>
           <AccordionDetails>
           <Box display="flex" flexDirection="column" alignItems="center">
-            <Button
+            {/* <Button
               variant="contained"
               style={{
                 backgroundColor: 'black',
@@ -911,7 +918,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
               onClick={generateCode}
             >
               Get Code
-              </Button>
+              </Button> */}
               <DrawerPropertiesWithEnvironment
                 generatedCode={generatedCode}
                 functionName={functionName}

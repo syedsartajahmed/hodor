@@ -51,7 +51,7 @@ const DrawerPropertiesWithEnvironment = ({
       }
     }
   }, []);
-  
+
   const handleTokenChange = (event) => {
     const newToken = event.target.value;
     setToken(newToken);
@@ -83,8 +83,8 @@ yarn add mixpanel
 `);
       setInitCode(`
 // Backend Initialization
-const mixpanel = require('mixpanel');
-const tracker = mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
+const Mixpanel = require('mixpanel');
+const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
 `);
     } else {
       setInstructions(`Chrome integration will be added later.`);
@@ -97,20 +97,12 @@ const tracker = mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
 // Add this to your common file before calling Mixpanel init:
 import mixpanel from 'mixpanel-browser';
 
-// Initialize Mixpanel with tracking options
 mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
   debug: true,
   track_pageview: true,
 });
 `);
   };
-
-  // const handleTokenChange = (event) => {
-  //   const newToken = event.target.value;
-  //   setToken(newToken);
-  //   localStorage.setItem("mixpanelToken", newToken);
-  //   updateInitCode(newToken);
-  // };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -121,6 +113,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
   useEffect(() => {
     // Initialize instructions and code on component load
     handleEnvironmentChange({ target: { value: environment } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   return (
@@ -134,7 +127,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
         </Select>
       </FormControl>
 
-      {["Frontend", "Backend"].includes(environment) && (  
+      {["Frontend", "Backend"].includes(environment) && (
         <Box mt={2}>
           <Typography
             sx={{
@@ -185,6 +178,25 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
         </Box>
       )}
 
+      {/* NEW STEP 2: Creating a separate file */}
+      <Box mt={2}>
+        <Typography
+          sx={{
+            textDecoration: "underline",
+            textDecorationColor: "#000000",
+            textDecorationThickness: "2px",
+          }}
+          variant="h6"
+          gutterBottom
+        >
+          2. Create a Separate File
+        </Typography>
+        <SmallNote>
+          For better organization, create a file such as <strong>utils/mixpanel.js</strong> (or 
+          <strong> lib/mixpanel.js</strong>) and place the initialization code there.
+        </SmallNote>
+      </Box>
+
       {initCode && (
         <Box mt={2}>
           <Typography
@@ -196,10 +208,10 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            2. Mixpanel Initialization
+            3. Mixpanel Initialization
           </Typography>
           <SmallNote>
-            Add this to your common file (e.g., mixpanel.js or mipanelUtils.js) before initializing Mixpanel.
+            Add this initialization code inside your newly created file (e.g., <strong>mixpanel.js</strong>) before using Mixpanel.
           </SmallNote>
           <CodeBox>
             {initCode}
@@ -224,10 +236,10 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            3. Generated Code
+            4. Generated Code
           </Typography>
           <SmallNote>
-            Place this code in a separate file and export it for reuse.
+            Place this code in the same file where you set up Mixpanel, or in another file if you prefer to keep it separate.
           </SmallNote>
           <CodeBox>
             {generatedCode}
@@ -252,7 +264,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            4. Function Import 
+            5. Function Import 
           </Typography>
           <SmallNote>
             Use this import statement to invoke the generated function.
@@ -260,7 +272,9 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
           <CodeBox>
             {`import { ${functionName} } from '../utils/mixpanel';`}
             <IconButton
-              onClick={() => copyToClipboard(`import { ${functionName} } from './filePath';`)}
+              onClick={() =>
+                copyToClipboard(`import { ${functionName} } from './filePath';`)
+              }
               sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
             >
               <ContentCopyIcon />
@@ -280,10 +294,10 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            5. Trigger Code
+            6. Trigger Code
           </Typography>
           <SmallNote>
-            Call this function where you want to trigger Mixpanel tracking.
+            Call this function wherever you want to trigger Mixpanel tracking.
           </SmallNote>
           <CodeBox>
             {triggerCode}
