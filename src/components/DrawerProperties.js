@@ -16,6 +16,7 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -24,11 +25,30 @@ import axios from "axios";
 import { useRef } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import DrawerPropertiesWithEnvironment from './DrawerPropertiesWithEnvironment';
+import styled from "@emotion/styled";
 
 
 
 
 const DrawerProperties = () => {
+
+  const CodeBox = styled(Box)`
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: "Courier New", Courier, monospace;
+  white-space: pre-wrap;
+  position: relative;
+  overflow-x: auto;
+`;
+
+const SmallNote = styled(Typography)`
+  font-size: 0.75rem;
+  color: #000000;
+  margin-top: 8px;
+  padding-bottom: 10px;
+`;
 
   const isInitialLoad  = useRef(true);
   const [showUserProperties, setShowUserProperties] = useState(false);
@@ -643,14 +663,111 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
     <Box
       sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
     >
-      <TextField
+
+{triggerCode && (
+        <Box mt={0} mb={3}>
+          <Typography
+            sx={{
+              textDecoration: "underline",
+              textDecorationColor: "#000000",
+              textDecorationThickness: "2px",
+            }}
+            variant="h6"
+            gutterBottom
+          >
+            Trigger Code
+          </Typography>
+          <CodeBox>
+            {triggerCode}
+            <IconButton
+              onClick={() => copyToClipboard(triggerCode)}
+              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
+            >
+              <ContentCopyIcon />
+            </IconButton>
+          </CodeBox>
+        </Box>
+      )}
+
+<Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Typography fontWeight="bold">Code Generator</Typography>
+              <Tooltip title="Info about Code Generator">
+                <IconButton sx={{ ml: 1 }}>
+                  <InfoIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
+          </AccordionSummary>
+          <AccordionDetails>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            {/* <Button
+              variant="contained"
+              style={{
+                backgroundColor: 'black',
+                color: 'white',
+                marginBottom: '20px',
+              }}
+              onClick={generateCode}
+            >
+              Get Code
+              </Button> */}
+              <DrawerPropertiesWithEnvironment
+                generatedCode={generatedCode}
+                functionName={functionName}
+                setGeneratedCode={setGeneratedCode}
+                triggerCode={triggerCode}
+      />
+            </Box>
+          </AccordionDetails>
+      </Accordion>
+      
+      
+
+<Box
+    sx={{
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2, 
+      mt: 5,
+      mb: 1
+    }}
+  >
+    <TextField
+      label="Event Name"
+      value={selectedEvent?.name || ''}
+      onChange={handleEventNameChange}
+      fullWidth
+    />
+    {!isMasterEventPage && (
+      <FormControl fullWidth>
+        <InputLabel>Status</InputLabel>
+        <Select
+          value={selectedEvent?.status || "not started"}
+          onChange={handleStatusChange}
+          fullWidth
+        >
+          {statusOptions.map((status) => (
+            <MenuItem key={status} value={status}>
+              {status}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    )}
+  </Box>
+
+      
+      {/* <TextField
         label="Event Name"
         value={selectedEvent?.name || ''}
         onChange={handleEventNameChange}
         fullWidth
         margin="normal"
-        sx={{ mb: 2 }}
-      />
+        sx={{ mb: 2, mt:5 }}
+      /> */}
       <TextField
         label="Description"
         value={selectedEvent?.event_definition || ""}
@@ -665,7 +782,19 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           mb: 2, 
         }}
       />
-      <FormControl fullWidth margin="normal">
+
+<Box
+    sx={{
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2, 
+      mt: 0,
+      mb: 1
+    }}
+      >
+
+<FormControl fullWidth margin="normal">
         <InputLabel>Stakeholders</InputLabel>
         <Select
           multiple
@@ -695,10 +824,23 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           shrink: true, 
         }}
         sx={{
-          mb: 2, 
+          mb: 1, 
         }}
       />
-      <FormControl fullWidth margin="normal">
+      </Box>
+      
+      <Box
+    sx={{
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2, 
+      mt: 0,
+      mb: 1
+    }}
+      >
+
+<FormControl fullWidth margin="normal">
         <InputLabel>Platforms</InputLabel>
         <Select
           multiple
@@ -731,6 +873,9 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           ))}
         </Select>
       </FormControl>
+        </Box>
+     
+      
 
       {/* <FormControl fullWidth margin="normal">
         <InputLabel>Status</InputLabel>
@@ -746,6 +891,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           ))}
         </Select>
       </FormControl> */}
+
 
       {isMasterEventPage ? (
         // <TextField
@@ -770,7 +916,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
         //   }}
         // />
         <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-        <InputLabel>Organization</InputLabel>
+        <InputLabel>Industry</InputLabel>
         <Select
           value={selectedEvent?.organization || ""}
           onChange={(e) => {
@@ -789,20 +935,7 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
         </Select>
       </FormControl>
       ) : (
-        <FormControl fullWidth margin="normal">
-        <InputLabel>Status</InputLabel>
-        <Select
-          value={selectedEvent?.status || "not started"}
-          onChange={handleStatusChange}
-          fullWidth
-        >
-           {statusOptions.map((status) => (
-            <MenuItem key={status} value={status}>
-              {status} 
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+       []
       )
     }
 
@@ -912,42 +1045,6 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
           anonymous user.
         </Typography>
       )}
-
-
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Typography fontWeight="bold">Code Generator</Typography>
-              <Tooltip title="Info about Code Generator">
-                <IconButton sx={{ ml: 1 }}>
-                  <InfoIcon />
-                </IconButton>
-              </Tooltip>
-            </div>
-          </AccordionSummary>
-          <AccordionDetails>
-          <Box display="flex" flexDirection="column" alignItems="center">
-            {/* <Button
-              variant="contained"
-              style={{
-                backgroundColor: 'black',
-                color: 'white',
-                marginBottom: '20px',
-              }}
-              onClick={generateCode}
-            >
-              Get Code
-              </Button> */}
-              <DrawerPropertiesWithEnvironment
-                generatedCode={generatedCode}
-                functionName={functionName}
-                setGeneratedCode={setGeneratedCode}
-                triggerCode={triggerCode}
-      />
-            </Box>
-          </AccordionDetails>
-        </Accordion>
-      
 
       {showUserProperties && (
         <Accordion>

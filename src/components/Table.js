@@ -77,7 +77,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
           // },
           {
             field: "organization",
-            headerName: "ORGANIZATION",
+            headerName: "INDUSTRY",
             flex: 1,
           },
           ]

@@ -401,7 +401,7 @@ function ${functionName}() {
           <div className="mt-3">
             </div>
           {/* DrawerProperties Component */}
-          <div className="mt-6">
+          <div className="">
             <DrawerProperties />
           </div>
         </div>
