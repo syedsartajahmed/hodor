@@ -22,6 +22,7 @@ const CodeBox = styled(Box)`
   white-space: pre-wrap;
   position: relative;
   overflow-x: auto;
+  font-size: 14px;
 `;
 
 const SmallNote = styled(Typography)`
@@ -94,7 +95,6 @@ const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
 
   const updateInitCode = (newToken) => {
     setInitCode(`
-// Add this to your common file before calling Mixpanel init:
 import mixpanel from 'mixpanel-browser';
 
 mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {

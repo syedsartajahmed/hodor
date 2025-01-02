@@ -392,18 +392,23 @@ const SmallNote = styled(Typography)`
     setFunctionName(callFunctionName);
   // Group properties by method call
   const methodGroups = {};
-  eventProperties.forEach(prop => {
+eventProperties.forEach(prop => {
+  if (prop.method_call?.trim()) { 
     if (!methodGroups[prop.method_call]) {
       methodGroups[prop.method_call] = [];
     }
     methodGroups[prop.method_call].push(prop);
-  });
+  }
+});
+
 
   // Generate code for each method type
   const generateMethodCode = (properties, methodType) => {
     console.log(properties, methodType);
     switch (methodType) {
       case 'Track':
+        const validProperties = properties.filter(prop => prop.name?.trim());
+      if (validProperties.length === 0) return '';
         return `mixpanel.track("${eventName}", {
     ${properties.map(prop => 
       `"${prop.name}": data["${prop.type === 'String' ? `${prop.name}` : prop.name}"], // ${prop.type}`
@@ -538,9 +543,11 @@ export function ${callFunctionName}(${selectedEvent?.identify && userProperties.
   
     const secondCode = `// ${selectedEvent?.event_definition || 'Track user interaction'}
 ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
-  ${[...eventProperties].map(prop =>
+  ${[...eventProperties]
+      .filter(prop => prop.name?.trim())
+      .map(prop =>
   `${prop.name}: ${prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`}`
-  ).join(',\n  ')}${eventProperties.length > 0 ? ', ' : ''}
+  ).join(',\n  ')}${eventProperties.filter(prop => prop.name?.trim()).length > 0 ? ', ' : ''}
   ${exampleSuperProps}
   ${exampleUserProps}
 });`
