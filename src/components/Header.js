@@ -104,13 +104,13 @@ const Header = ({ isShowCopy = false, isShowMasterEvents = false, isShowDownload
       let importSection = "";
       if (selectedSource === "Website") {
         importSection = `
-        
-# Installation Instructions
-# via npm
-npm install --save mixpanel-browser
 
-# via yarn
-yarn add mixpanel-browser
+//  # Installation Instructions
+//  # via npm
+//  npm install --save mixpanel-browser
+
+//  # via yarn
+//  yarn add mixpanel-browser
 
 
 import mixpanel from "mixpanel-browser";
@@ -122,9 +122,9 @@ mixpanel.init("${mixpanelToken}", {
       } else if (selectedSource === "Backend") {
         importSection = `
 
-# Installation Instructions for Backend
-npm install --save mixpanel
-yarn add mixpanel
+//  # Installation Instructions for Backend
+//  npm install --save mixpanel
+//  yarn add mixpanel
 
 
 const Mixpanel = require("mixpanel");
