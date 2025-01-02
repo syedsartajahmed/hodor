@@ -106,7 +106,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
   // console.log(tableData)
 
   return (
-    <div className="m-5">
+    <div className="mx-10 mt-5">
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}

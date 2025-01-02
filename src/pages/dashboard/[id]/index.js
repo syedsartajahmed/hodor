@@ -7,6 +7,7 @@ import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from "next/router";
+import Navbar from "@/components/Navbar";
 
 const Index = () => {
     const {
@@ -96,6 +97,7 @@ const Index = () => {
 
   return (
     <>
+        <Navbar />
       <Header isShowCopy={true} isShowMasterEvents={true} isShowDownload={true}/>
       {showList ? <List /> : <Table page={'dashboard'}/>}
       <EventDrawer />

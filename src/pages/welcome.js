@@ -1,9 +1,8 @@
-import React ,{ useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Box, Typography, Card, CardContent, Avatar } from "@mui/material";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
-import { sceenLoaded, categoryClicked  } from '../utils/mixpanel';
 
 const Welcome = () => {
   const router = useRouter();
@@ -13,13 +12,7 @@ const Welcome = () => {
     const fetchCounts = async () => {
       try {
         const response = await axios.get("/api/getCounts");
-        console.log("Counts:", response.data);
         setCounts(response.data);
-        console.log("Counts:", counts);
-      //   sceenLoaded({
-      //     screen_name: "home", 
-      //     user_channel: "web" 
-      // });
       } catch (error) {
         console.error("Error fetching counts:", error);
       }
@@ -28,41 +21,20 @@ const Welcome = () => {
     fetchCounts();
   }, []);
 
-  // const cards = [
-  //   { title: "Events", count: 0, initials: "WB", route: "/dashboard" },
-  //   {
-  //     title: "Organisations",
-  //     count: 0,
-  //     initials: "WB",
-  //     route: "/organizations",
-  //   },
-  // ];
-
   const cards = [
-    { title: "Events", count: counts.events, initials: "", route: "/master-event" },
-    { title: "Organizations", count: counts.totalOrganizations, initials: "", route: "/organizations" },
+    {
+      title: "Master Events",
+      count: counts.events,
+      route: "/master-event",
+    },
+    {
+      title: "Organizations",
+      count: counts.totalOrganizations,
+      route: "/organizations",
+    },
   ];
 
   const handleCardClick = (route) => {
-    console.log(route)
-    // if (typeof mixpanel !== "undefined") {
-    //   console.log('inside:::')
-    //  window.mixpanel.track("Button Clicked", { button: "My Button" });
-    // }
-    if (route == '/master-event') {
-    //   categoryClicked({
-    //     category_count: counts.events || 0, 
-    //     category_name: "master-events",
-    //     user_channel: "web" 
-    // });
-      
-    } else {
-    //   categoryClicked({
-    //     category_count: counts.totalOrganizations || 0,
-    //     category_name: "organization", 
-    //     user_channel: "web" 
-    // });
-    }
     router.push(route);
   };
 
@@ -74,56 +46,65 @@ const Welcome = () => {
         alignItems: "center",
         justifyContent: "flex-start",
         height: "100vh",
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "#f5f5f5",
       }}
     >
       <Navbar />
 
-      <Typography variant="h4" fontWeight="bold" marginTop="2rem">
-        Hodor Home
+      <Typography
+        variant="h2"
+        fontWeight="bold"
+        sx={{ marginTop: "2rem", color: "#333" }}
+      >
+        HODOR
       </Typography>
 
-      <Box sx={{ display: "flex", gap: "2rem", marginTop: "2rem" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: "2rem",
+          marginTop: "3rem",
+          padding: "0 20px",
+          width: "100%",
+          justifyContent: "center",
+        }}
+      >
         {cards.map((card, index) => (
           <Card
             key={index}
             onClick={() => handleCardClick(card.route)}
             sx={{
-              minWidth: 275,
+              width: "300px",
               textAlign: "center",
               boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              borderRadius: "12px",
               cursor: "pointer",
-              "&:hover": { boxShadow: "0 6px 12px rgba(0,0,0,0.2)" },
+              backgroundColor: "#ffffff",
+              "&:hover": {
+                boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+                transform: "translateY(-8px)",
+                transition: "all 0.3s ease",
+              },
             }}
           >
             <CardContent>
-              <Typography variant="h6" fontWeight="bold">
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                sx={{ padding : "20px" }}
+              >
                 {card.title}
               </Typography>
-              <Box
+              <Typography
+                variant="body1"
                 sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
                   marginTop: "1rem",
+                  color: "#666",
+                  fontSize: "1.2rem",
                 }}
               >
-                <Typography color="text.secondary">
-                  Count - {card.count}
-                </Typography>
-                {/* <Avatar
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    backgroundColor: "#d4edda",
-                    color: "#155724",
-                    marginLeft: "0.5rem",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {card.initials}
-                </Avatar> */}
-              </Box>
+                Count: {card.count}
+              </Typography>
             </CardContent>
           </Card>
         ))}

@@ -1,30 +1,37 @@
 import React from "react";
-import { Box, Typography, Button } from "@mui/material";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 const Navbar = () => {
   const router = useRouter();
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        padding: "1em 7rem",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-      }}
-    >
-      <Typography variant="h5" fontWeight="bold" sx={{ cursor: "pointer" }} onClick={() => router.push("/welcome")}>
-        Optiblack
-      </Typography>
-      {/* <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        <Typography>Welcome Back!</Typography>
-        <Button variant="outlined" size="small">
-          Log out
-        </Button>
-      </Box> */}
-    </Box>
+    <div className="flex justify-between items-center w-full px-28 py-6 shadow-md bg-white">
+      {/* Logo */}
+      <Image
+        src="https://optiblack.com/hubfs/Group%201234-1.png"
+        alt="Optiblack Logo"
+        width={150} // Increased width
+        height={30} // Increased height
+        className="cursor-pointer"
+        onClick={() => router.push("/welcome")}
+      />
+
+      {/* Right-end Navigation Links */}
+      <div className="flex gap-8 text-2xl font-semibold">
+        <button
+          className=" hover:opacity-65 transition-opacity cursor-pointer"
+          onClick={() => router.push("/organizations")}
+        >
+          Organizations
+        </button>
+        <button
+          className=" hover:opacity-65 transition-opacity cursor-pointer"
+          onClick={() => router.push("/master-event")}
+        >
+          Master Events
+        </button>
+      </div>
+    </div>
   );
 };
 

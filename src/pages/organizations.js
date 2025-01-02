@@ -4,8 +4,6 @@ import {
   Box,
   Typography,
   Card,
-  CardContent,
-  Avatar,
   IconButton,
   TextField,
   Button,
@@ -13,12 +11,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
-import { Add, Delete } from "@mui/icons-material"; // Import Add and Delete Icons
+import { Add, Close } from "@mui/icons-material";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
-import { sceenLoaded } from '../utils/mixpanel';
 
 const Organizations = () => {
   const router = useRouter();
@@ -32,10 +31,6 @@ const Organizations = () => {
 
   useEffect(() => {
     fetchOrganizations();
-  //   sceenLoaded({
-  //     screen_name: "organization", 
-  //     user_channel: "web" 
-  // });
   }, []);
 
   const fetchOrganizations = async () => {
@@ -75,11 +70,21 @@ const Organizations = () => {
       const response = await axios.post("/api/organizations", { name: newOrganizationName });
       const newOrganization = response.data.organization;
 
-      setOrganizations((prev) => [...prev, newOrganization]);
-      handleAddDialogClose();
+      if (response.data.success === false) {
+        alert(response.data.message || "Failed to add organization. Please try again.");
+       
+      } else {
+        const newOrganization = response.data.organization;
+        setOrganizations((prev) => [...prev, newOrganization]);
+        handleAddDialogClose();
+      }
     } catch (err) {
-      console.error("Failed to add organization", err);
-      alert("Failed to add organization. Please try again.");
+
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message); 
+      } else {
+        alert("Failed to add organization. Please try again.");
+      }
     }
   };
 
@@ -114,100 +119,133 @@ const Organizations = () => {
         alignItems: "center",
         justifyContent: "flex-start",
         height: "100vh",
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "#f5f5f5",
       }}
     >
       <Navbar />
 
-      <Typography variant="h4" fontWeight="bold" marginTop="2rem">
-        {"Hodor Home > Organizations"}
+      {/* Main Heading */}
+      <Typography
+        variant="h3"
+        fontWeight="bold"
+        sx={{ marginTop: "2rem", color: "#333", textAlign: "center" }}
+      >
+        Organizations
       </Typography>
 
-      <Box sx={{ display: "flex", gap: "2rem", marginTop: "2rem", flexWrap: "wrap" }}>
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        separator="›"
+        aria-label="breadcrumb"
+        sx={{ marginTop: "1rem", fontSize: "1rem", color: "#666" }}
+      >
+        <Link
+          underline="hover"
+          color="inherit"
+          onClick={() => router.push("/welcome")}
+          sx={{ cursor: "pointer" }}
+        >
+          Dashboard
+        </Link>
+        <Typography color="textPrimary">Organizations</Typography>
+      </Breadcrumbs>
+
+      {/* Organization Cards */}
+      <Box
+        sx={{
+          display: "flex",
+          gap: "2rem",
+          marginTop: "3rem",
+          padding: "0 20px",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
         {/* Add Organization Card */}
         <Card
           onClick={handleAddOrganization}
           sx={{
-            minWidth: 275,
+            width: "300px",
+            minHeight: "150px", // Ensure uniform height
             textAlign: "center",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+            borderRadius: "12px",
             cursor: "pointer",
-            "&:hover": { boxShadow: "0 6px 12px rgba(0,0,0,0.2)" },
+            backgroundColor: "#ffffff",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
-            padding: "1.5rem",
+            padding: "2rem",
+            "&:hover": {
+              boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+              transform: "translateY(-5px)",
+              transition: "all 0.3s ease",
+            },
           }}
         >
-          <IconButton sx={{ color: "#1976d2", fontSize: "3rem" }}>
-            <Add />
-          </IconButton>
-          <Typography variant="h6" fontWeight="bold" marginTop="0.5rem">
+          <Typography variant="h5" fontWeight="bold">
             Add Organization
           </Typography>
+          <IconButton sx={{ fontSize: "3rem", marginTop: "1rem" }}>
+            <Add />
+          </IconButton>
         </Card>
 
-        {/* Existing Organization Cards */}
+        {/* Existing Organizations */}
         {organizations.map((org) => (
           <Card
             key={org._id}
             sx={{
-              minWidth: 275,
+              width: "300px",
+              minHeight: "150px", // Ensure uniform height
               textAlign: "center",
               boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              borderRadius: "12px",
               cursor: "pointer",
-              "&:hover": { boxShadow: "0 6px 12px rgba(0,0,0,0.2)" },
+              backgroundColor: "#ffffff",
+              position: "relative", // For absolute positioning of the cross icon
+              "&:hover": {
+                boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+                transform: "translateY(-5px)",
+                transition: "all 0.3s ease",
+              },
             }}
           >
-            <CardContent onClick={() => handleCardClick(org)}>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                //onClick={() => handleCardClick(org)} // Route to a new page when clicked
-                style={{ cursor: "pointer" }}
-              >
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent navigation
+                handleDeleteOrganization(org);
+              }}
+              sx={{
+                position: "absolute",
+                top: "0px",
+                right: "0px",
+                color: "#d32f2f",
+                zIndex: 10,
+              }}
+            >
+              <Close />
+            </IconButton>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+              onClick={() => handleCardClick(org)}
+            >
+              <Typography variant="h5" fontWeight="bold" sx={{ cursor: "pointer" }}>
                 {org.name}
               </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: "1rem",
-                }}
-              >
-                <Typography color="text.secondary">
-                  Applications Count - {org.applications.length}
-                </Typography>
-                {/* <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: "#d4edda",
-                    color: "#155724",
-                    marginLeft: "0.5rem",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {org.name.slice(0, 2).toUpperCase()}
-                </Avatar> */}
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent navigation
-                    handleDeleteOrganization(org);
-                  }}
-                  sx={{ color: "#d32f2f", marginLeft: "0.5rem" }}
-                >
-                  <Delete />
-                </IconButton>
-              </Box>
-            </CardContent>
+            </Box>
           </Card>
         ))}
       </Box>
 
-      {/* Dialog for Adding Organization */}
+      {/* Add Organization Dialog */}
       <Dialog open={openAddDialog} onClose={handleAddDialogClose} fullWidth maxWidth="sm">
         <DialogTitle>Add New Organization</DialogTitle>
         <DialogContent>
@@ -230,7 +268,7 @@ const Organizations = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog for Deleting Organization */}
+      {/* Delete Organization Dialog */}
       <Dialog open={openDeleteDialog} onClose={handleDeleteDialogClose}>
         <DialogTitle>Delete Organization</DialogTitle>
         <DialogContent>

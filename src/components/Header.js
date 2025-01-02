@@ -404,7 +404,7 @@ ${eventCode}
           // top: 0,
           // left: 0,
           width: "100%",
-          backgroundColor: "white",
+          // backgroundColor: "white",
           zIndex: 1000,
         }}
       >

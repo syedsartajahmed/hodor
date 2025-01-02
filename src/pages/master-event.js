@@ -107,10 +107,7 @@ const MasterEvents = () => {
 
     return (
       <>
-        {/* <div className="my-1">
-
-        <Navbar />
-        </div> */}
+         <Navbar />
           <Header isShowFilter={true}/>
           {showList ? <List /> : <Table isShowOrganization={true} page="master-events"/>}
           <EventDrawer />
