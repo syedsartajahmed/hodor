@@ -6,6 +6,7 @@ import Table from "@/components/Table";
 import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
+import Navbar from "@/components/Navbar";
 
 const MasterEvents = () => {
     const {
@@ -82,7 +83,8 @@ const MasterEvents = () => {
     };
 
     return (
-        <div>
+      <>
+                <Navbar />
           <Header isShowFilter={true} />
           {showList ? <List /> : <Table isShowOrganization={true} page="master-events" isShowCopy={true} />}
           <EventDrawer />
@@ -95,7 +97,7 @@ const MasterEvents = () => {
               Please select an organization to view events.
           </div>
           )} */}
-        </div>
+        </>
     );
 };
 
