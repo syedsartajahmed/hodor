@@ -151,7 +151,7 @@ const mixpanel = Mixpanel.init("${mixpanelToken}", {);
         .join("");
     });
   
-    const importComment = `// Import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
+    const importComment = `// import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
   
     // Final code with import, initialization, and function implementations
   //   const finalCode = `  // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
@@ -318,7 +318,7 @@ ${eventCode}
   
       return {
         implementation: `// ${event?.event_definition || 'Track user interaction'}
-  export function ${functionName}(${event?.identify && event?.items[0]?.user_property.length > 0 ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
+  export function ${functionName}(${event?.identify ? 'userId, ' : ''}data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
     ${methodCalls}
   }`,
       };

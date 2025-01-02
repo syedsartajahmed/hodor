@@ -42,45 +42,24 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
 
   const enhancedColumns = [
     ...columns,
-    {
-      field: "delete",
-      headerName: "DELETE",
-      renderCell: (params) => <DeleteCellRenderer params={params} page={page} />,
-      width: 100,
-    },
-    ...(isShowCopy
+    ...(isShowOrganization
       ? [
-          {
-            field: "copy",
-            headerName: "Copy to Organization",
-            renderCell: (params) => (
-              <ContentCopyIcon
-                onClick={() => handleCopy(params.row)}
-                style={{ cursor: "pointer" }}
-              />
-            ),
-            width: 150,
-          },
+          // {
+          //   field: "organization",
+          //   headerName: "Organization",
+          //   renderCell: (params) => (
+          //     <Box>
+          //       {params.row.organization || "N/A"}
+          //     </Box>
+          //   ),
+          //   width: 150,
+        // },
+        {
+          field: "organization",
+          headerName: "INDUSTRY",
+          flex: 1,
+        },
         ]
-      : []),
-      ...(isShowOrganization
-        ? [
-            // {
-            //   field: "organization",
-            //   headerName: "Organization",
-            //   renderCell: (params) => (
-            //     <Box>
-            //       {params.row.organization || "N/A"}
-            //     </Box>
-            //   ),
-            //   width: 150,
-          // },
-          {
-            field: "organization",
-            headerName: "INDUSTRY",
-            flex: 1,
-          },
-          ]
       : []),
       ...(!isShowOrganization
         ? [
@@ -102,6 +81,27 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
           },
           ]
         : []),
+    {
+      field: "delete",
+      headerName: "DELETE",
+      renderCell: (params) => <DeleteCellRenderer params={params} page={page} />,
+      width: 100,
+    },
+    ...(isShowCopy
+      ? [
+          {
+            field: "copy",
+            headerName: "Copy to Organization",
+            renderCell: (params) => (
+              <ContentCopyIcon
+                onClick={() => handleCopy(params.row)}
+                style={{ cursor: "pointer" }}
+              />
+            ),
+            width: 150,
+          },
+        ]
+      : []),
   ];
   // console.log(tableData)
 
