@@ -410,7 +410,7 @@ ${eventCode}
       >
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h6" fontWeight="bold">
-            Events ({eventSize})
+          {currentOrganization?.name || "Organization"}  ({eventSize})
           </Typography>
           <Button variant="contained" color="secondary" onClick={handleOpen}>
             + New Event
