@@ -14,7 +14,7 @@ import {
   FormControl,
   InputLabel,
   Checkbox,
-  ListItemText,
+  ListItemText,DialogActions,DialogContentText,DialogContent,DialogTitle,Dialog
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import AddIcon from "@mui/icons-material/Add";
@@ -225,6 +225,20 @@ const SmallNote = styled(Typography)`
     });
   };
   
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  const handleConfirmDelete = () => {
+    handleCloseDialog();
+    handleDelete();
+  };
+
 
   // const handleSuperPropertyChange = (index, field, value) => {
   //   const updatedProperties = [...superProperties];
@@ -1065,6 +1079,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
       {showUserProperties && (
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div className="flex items-center justify-between w-full ">
             <div style={{ display: "flex", alignItems: "center" }}>
               <Typography fontWeight="bold">Update User Properties</Typography>
               <Tooltip title="Info about Update User Properties">
@@ -1072,6 +1087,33 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
                   <InfoIcon />
                 </IconButton>
               </Tooltip>
+            </div>
+            <IconButton 
+             onClick={() => {
+              setShowUserProperties(false); 
+              setUserProperties([]); 
+          
+              setSelectedEvent((prevEvent) => {
+                const updatedItems = [...(prevEvent.items || [])];
+                
+                if (updatedItems[0]) {
+                 
+                  updatedItems[0] = {
+                    ...updatedItems[0],
+                    user_property: [], 
+                  };
+                }
+                return {
+                  ...prevEvent,
+                  items: updatedItems,
+                };
+              });
+            }}
+              sx={{ color: 'error.main', marginRight: '25px' }}
+              size="small"
+            >
+            <DeleteIcon />
+          </IconButton>
             </div>
           </AccordionSummary>
           <AccordionDetails>
@@ -1126,10 +1168,27 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
           </AccordionDetails>
         </Accordion>
       )}
+       <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this record? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            No
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error">
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {showLogEvent && (
         <Accordion>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div className="flex items-center justify-between w-full">
             <div style={{ display: "flex", alignItems: "center" }}>
               <Typography fontWeight="bold">Log Event</Typography>
               <Tooltip title="Info about Log Event">
@@ -1138,6 +1197,34 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ''}{
                 </IconButton>
               </Tooltip>
             </div>
+              <IconButton 
+             onClick={() => {
+              setShowLogEvent(false); 
+              setEventProperties([]); 
+          
+              setSelectedEvent((prevEvent) => {
+                const updatedItems = [...(prevEvent.items || [])];
+                
+                if (updatedItems[0]) {
+                 
+                  updatedItems[0] = {
+                    ...updatedItems[0],
+                    event_property: [], 
+                  };
+                }
+                return {
+                  ...prevEvent,
+                  items: updatedItems,
+                };
+              });
+            }}
+              sx={{ color: 'error.main', marginRight: '25px' }}
+              size="small"
+            >
+            <DeleteIcon />
+          </IconButton>
+            </div>
+            
           </AccordionSummary>
 
 
