@@ -128,7 +128,7 @@ mixpanel.init("${mixpanelToken}", {
 
 
 const Mixpanel = require("mixpanel");
-const mixpanel = Mixpanel.init("${mixpanelToken}", {);
+const mixpanel = Mixpanel.init("${mixpanelToken}", {});
         `;
       }
     
