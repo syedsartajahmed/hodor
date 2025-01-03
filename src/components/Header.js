@@ -295,7 +295,7 @@ ${eventCode}
       const userPropsCode = event.items[0]?.user_property.length > 0
         ? `\n    mixpanel.people.set({
       ${event?.items[0]?.user_property
-        .map(prop => `"${prop?.name}": data["${prop?.value}"],`)
+        .map(prop => `"${prop?.name}": data["${prop?.name}"],`)
         .join('\n      ')}
     });`
         : '';
