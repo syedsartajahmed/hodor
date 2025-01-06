@@ -33,8 +33,10 @@ const Navbar = () => {
         <button
           className={`hover:opacity-65 transition-opacity cursor-pointer ${
             isActive("/master-event") ? "opacity-70" : ""
-          }`}
-          onClick={() => router.push("/master-event")}
+            }`}
+          
+          
+                onClick={() => router.push("/master-event")}
         >
           Master Events
         </button>
