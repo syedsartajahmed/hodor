@@ -6,7 +6,7 @@ import React from "react";
 import DeleteCellRenderer from "@/components/DeleteCellRenderer";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import axios from "axios";
-import { useRouter } from 'next/router';
+import { useRouter } from "next/router";
 
 const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
   const { tableData, toggleDrawer, setSelectedEvent } = useAppContext();
@@ -14,7 +14,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
   const { pathname } = router;
 
   const handleCopy = async (rowData) => {
-    const { query } = router; 
+    const { query } = router;
     const organizationId = query.id;
     const masterEventId = rowData.id;
     const payload = {
@@ -25,66 +25,47 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
     try {
       const response = await axios.post("/api/copyMasterEvents", payload);
       if (response.status === 201) {
-        alert('Copied successfully to your organization!');
+        alert("Copied successfully to your organization!");
       }
     } catch (err) {
       console.error("Error saving event:", err.message);
     } finally {
-      
     }
   };
 
   const handleRowClick = (rowData) => {
-    console.log(rowData.row); 
+    console.log(rowData.row);
     setSelectedEvent(rowData.row);
-    toggleDrawer(true, rowData.row); 
+    toggleDrawer(true, rowData.row);
   };
 
   const enhancedColumns = [
     ...columns,
     ...(isShowOrganization
       ? [
-          // {
-          //   field: "organization",
-          //   headerName: "Organization",
-          //   renderCell: (params) => (
-          //     <Box>
-          //       {params.row.organization || "N/A"}
-          //     </Box>
-          //   ),
-          //   width: 150,
-        // },
-        {
-          field: "organization",
-          headerName: "INDUSTRY",
-          flex: 1,
-        },
+          {
+            field: "organization",
+            headerName: "INDUSTRY",
+            flex: 1,
+          },
         ]
       : []),
-      ...(!isShowOrganization
-        ? [
-            // {
-            //   field: "organization",
-            //   headerName: "Organization",
-            //   renderCell: (params) => (
-            //     <Box>
-            //       {params.row.organization || "N/A"}
-            //     </Box>
-            //   ),
-            //   width: 150,
-          // },
+    ...(!isShowOrganization
+      ? [
           {
             field: "status",
             headerName: "STATUS",
             // flex: 1,
             width: 150,
           },
-          ]
-        : []),
+        ]
+      : []),
     {
       field: "delete",
       headerName: "DELETE",
-      renderCell: (params) => <DeleteCellRenderer params={params} page={page} />,
+      renderCell: (params) => (
+        <DeleteCellRenderer params={params} page={page} />
+      ),
       width: 100,
     },
     ...(isShowCopy
@@ -110,9 +91,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}
-          getRowClassName={(params) =>
-            "bg-lightgray-50" 
-          }
+          getRowClassName={(params) => "bg-lightgray-50"}
           columns={enhancedColumns}
           //onRowClick={handleRowClick}
           disableColumnFilter
@@ -122,7 +101,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
           disableRowSelectionOnClick
           sx={{
             "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "rgb(243 244 246)", 
+              backgroundColor: "rgb(243 244 246)",
               borderBottom: "1px solid rgba(224, 224, 224, 1)",
             },
             "& .MuiDataGrid-columnHeader, & .MuiDataGrid-cell": {

@@ -1,59 +1,75 @@
 import connectDB from "@/utils/mongoose";
 import Organization from "@/models/organization";
 import Application from "@/models/application";
-import Event from "@/models/event"; // Ensure Event model is imported
-import Item from "@/models/item";   // Ensure Item model is imported
+import Event from "@/models/event"; 
+import Item from "@/models/item"; 
 
 async function handler(req, res) {
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
 
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache'); 
-  res.setHeader('Expires', '0');
-  
   const { method } = req;
 
   switch (method) {
-    case 'GET':
+    case "GET":
       try {
         const { organization_id } = req.query;
 
         if (organization_id) {
           // Fetch detailed data for a specific organization
-          const organization = await Organization.findById(organization_id)
-            .populate({
-              path: 'applications',
-              model: 'Application',
+          const organization = await Organization.findById(
+            organization_id
+          ).populate({
+            path: "applications",
+            model: "Application",
+            populate: {
+              path: "events",
+              model: "Event",
               populate: {
-                path: 'events',
-                model: 'Event',
-                populate: {
-                  path: 'items',
-                  model: 'Item',
-                },
+                path: "items",
+                model: "Item",
               },
-            });
+            },
+          });
 
           if (!organization) {
-            return res.status(404).json({ success: false, message: 'Organization not found' });
+            return res
+              .status(404)
+              .json({ success: false, message: "Organization not found" });
           }
 
           return res.status(200).json(organization);
         } else {
-        const organizations = await Organization.find({}, 'name _id applications');
-        res.status(200).json(organizations);
-        }       
+          const organizations = await Organization.find(
+            {},
+            "name _id applications"
+          );
+          res.status(200).json(organizations);
+        }
       } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+        res
+          .status(500)
+          .json({
+            success: false,
+            message: "Server Error",
+            error: error.message,
+          });
       }
       break;
 
-    case 'POST':
+    case "POST":
       try {
         const { name } = req.body;
 
         // Check if name is provided
         if (!name) {
-          return res.status(400).json({ success: false, message: 'Name is required' });
+          return res
+            .status(400)
+            .json({ success: false, message: "Name is required" });
         }
 
         // Create a new organization
@@ -61,7 +77,7 @@ async function handler(req, res) {
 
         // Create a default application for this organization
         const newApplication = await Application.create({
-          type: 'web',
+          type: "web",
           events: [], // Initialize with an empty array of events
         });
 
@@ -77,27 +93,44 @@ async function handler(req, res) {
       } catch (error) {
         if (error.code === 11000) {
           // Handle duplicate key error (unique name constraint)
-          res.status(400).json({ success: false, message: 'Organization name must be unique' });
+          res
+            .status(400)
+            .json({
+              success: false,
+              message: "Organization name must be unique",
+            });
         } else {
-          res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+          res
+            .status(500)
+            .json({
+              success: false,
+              message: "Server Error",
+              error: error.message,
+            });
         }
       }
       break;
 
-    case 'DELETE':
+    case "DELETE":
       try {
         const { organization_id } = req.query;
 
         // Validate organization_id
         if (!organization_id) {
-          return res.status(400).json({ success: false, message: 'Organization ID is required' });
+          return res
+            .status(400)
+            .json({ success: false, message: "Organization ID is required" });
         }
 
         // Find and delete the organization
-        const organization = await Organization.findByIdAndDelete(organization_id);
+        const organization = await Organization.findByIdAndDelete(
+          organization_id
+        );
 
         if (!organization) {
-          return res.status(404).json({ success: false, message: 'Organization not found' });
+          return res
+            .status(404)
+            .json({ success: false, message: "Organization not found" });
         }
 
         // Delete associated applications and their events and items
@@ -113,15 +146,26 @@ async function handler(req, res) {
           }
         }
 
-        return res.status(200).json({ success: true, message: 'Organization and related data deleted successfully' });
+        return res
+          .status(200)
+          .json({
+            success: true,
+            message: "Organization and related data deleted successfully",
+          });
       } catch (error) {
         console.error("Error deleting organization:", error);
-        return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Server Error",
+            error: error.message,
+          });
       }
       break;
 
     default:
-      res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+      res.setHeader("Allow", ["GET", "POST", "DELETE"]);
       return res.status(405).end(`Method ${method} Not Allowed`);
   }
 }

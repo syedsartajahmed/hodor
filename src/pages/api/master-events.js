@@ -3,10 +3,12 @@ import MasterEvent from "@/models/masterEvents";
 import Item from "@/models/item";
 
 async function handler(req, res) {
-
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache'); 
-  res.setHeader('Expires', '0');
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   if (req.method === "POST") {
     const {
       eventName,
@@ -32,23 +34,25 @@ async function handler(req, res) {
       "category",
       "source",
       "action",
-      
     ];
 
     const missingFields = requiredFields.filter((field) => !req.body[field]);
     if (missingFields.length > 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Missing required fields", missingFields });
+        .json({
+          success: false,
+          message: "Missing required fields",
+          missingFields,
+        });
     }
 
     try {
       if (!id) {
-        
         const duplicateEvent = await MasterEvent.findOne({
           eventName,
         });
-  
+
         if (duplicateEvent) {
           return res.status(409).json({
             success: false,
@@ -56,13 +60,14 @@ async function handler(req, res) {
           });
         }
       }
-  
+
       let existingEvent;
       if (id) {
         // Fetch the existing event if updating
-        existingEvent = await MasterEvent.findOne({ _id: id }).populate("items");
+        existingEvent = await MasterEvent.findOne({ _id: id }).populate(
+          "items"
+        );
       }
-  
 
       const itemRefs = [];
       if (items && items.length > 0) {
@@ -121,32 +126,42 @@ async function handler(req, res) {
       });
     } catch (error) {
       console.error("Error processing Master Event:", error);
-      return res.status(500).json({ success: false, error: "Internal server error" });
+      return res
+        .status(500)
+        .json({ success: false, error: "Internal server error" });
     }
   } else if (req.method === "GET") {
-      try {
-        const { organization } = req.query;
-        const query = organization
-          ? { organization: { $in: organization.split(",").map((org) => org.trim()) } }
-          : {};
-        const totalEvents = await MasterEvent.find(query).populate("items");
-        res.status(200).json({ totalEvents });
-      } catch (error) {
-        console.error("Error fetching Master Events:", error);
-        res.status(500).json({ success: false, error: "Internal server error" });
+    try {
+      const { organization } = req.query;
+      const query = organization
+        ? {
+            organization: {
+              $in: organization.split(",").map((org) => org.trim()),
+            },
+          }
+        : {};
+      const totalEvents = await MasterEvent.find(query).populate("items");
+      res.status(200).json({ totalEvents });
+    } catch (error) {
+      console.error("Error fetching Master Events:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   } else if (req.method === "DELETE") {
     const { id } = req.query;
 
     if (!id) {
-      return res.status(400).json({ success: false, message: "Missing event ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing event ID" });
     }
 
     try {
       const eventToDelete = await MasterEvent.findById(id).populate("items");
 
       if (!eventToDelete) {
-        return res.status(404).json({ success: false, message: "Event not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Event not found" });
       }
 
       for (const item of eventToDelete.items) {
@@ -163,7 +178,9 @@ async function handler(req, res) {
       });
     } catch (error) {
       console.error("Error deleting Master Event:", error);
-      return res.status(500).json({ success: false, error: "Internal server error" });
+      return res
+        .status(500)
+        .json({ success: false, error: "Internal server error" });
     }
   } else {
     res.status(405).json({ success: false, error: "Method not allowed" });

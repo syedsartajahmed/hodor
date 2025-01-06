@@ -4,10 +4,12 @@ import Item from "@/models/item";
 import Application from "@/models/application";
 
 async function handler(req, res) {
-
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache'); 
-  res.setHeader('Expires', '0');
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
 
   const { method } = req;
 
@@ -47,12 +49,12 @@ async function handler(req, res) {
             .json({ success: false, message: "Missing required fields" });
         }
 
-        if (!event_id) { 
+        if (!event_id) {
           const duplicateEvent = await Event.findOne({
             eventName,
-            organization_id, 
+            organization_id,
           });
-    
+
           if (duplicateEvent) {
             return res.status(409).json({
               success: false,
@@ -72,42 +74,13 @@ async function handler(req, res) {
         const aggregatedEventProperties = [];
         const aggregatedSuperProperties = [];
 
-        // if (items && items.length > 0) {
-        //   for (const item of items) {
-        //     // Handle user properties
-        //     if (item.user_property && Array.isArray(item.user_property)) {
-        //       aggregatedUserProperties.push(...item.user_property);
-        //     }
-
-        //     // Validate and handle event properties
-        //     if (
-        //       item.event_property &&
-        //       item.event_property.property_name &&
-        //       item.event_property.data_type &&
-        //       item.event_property.property_type
-        //     ) {
-        //       console.log("Valid event_property:", );
-        //       aggregatedEventProperties.push(item.event_property);
-        //     } else if (item.event_property) {
-        //       console.warn(
-        //         "Skipping invalid event_property:",
-        //         JSON.stringify(item.event_property)
-        //       );
-        //     }
-
-        //     // Handle super properties
-        //     if (item.super_property && Array.isArray(item.super_property)) {
-        //       aggregatedSuperProperties.push(...item.super_property);
-        //     }
-        //   }
-        // }
         if (items && items.length > 0) {
           for (const item of items) {
             // Handle user properties
             if (item.user_property && Array.isArray(item.user_property)) {
               aggregatedUserProperties.push(...item.user_property);
             }
-        
+
             // Validate and handle event properties
             if (item.event_property) {
               if (Array.isArray(item.event_property)) {
@@ -116,7 +89,7 @@ async function handler(req, res) {
                 aggregatedEventProperties.push(item.event_property); // Handle single object
               }
             }
-        
+
             // Handle super properties
             if (item.super_property && Array.isArray(item.super_property)) {
               aggregatedSuperProperties.push(...item.super_property);
@@ -214,47 +187,47 @@ async function handler(req, res) {
             .json({ success: false, message: "Event not found" });
         }
 
-       // Aggregate properties
-       const aggregatedUserProperties = [];
-       const aggregatedEventProperties = [];
-       const aggregatedSuperProperties = [];
+        // Aggregate properties
+        const aggregatedUserProperties = [];
+        const aggregatedEventProperties = [];
+        const aggregatedSuperProperties = [];
 
-       if (items && items.length > 0) {
-         for (const item of items) {
-           // Handle user properties
-           if (item.user_property && Array.isArray(item.user_property)) {
-             aggregatedUserProperties.push(...item.user_property);
-           }
+        if (items && items.length > 0) {
+          for (const item of items) {
+            // Handle user properties
+            if (item.user_property && Array.isArray(item.user_property)) {
+              aggregatedUserProperties.push(...item.user_property);
+            }
 
-           // Validate and handle event properties
-           if (
-             item.event_property &&
-             item.event_property.property_name &&
-             item.event_property.data_type &&
-             item.event_property.property_type
-           ) {
-             aggregatedEventProperties.push(item.event_property);
-           } else if (item.event_property) {
-             console.warn(
-               "Skipping invalid event_property:",
-               JSON.stringify(item.event_property)
-             );
-           }
+            // Validate and handle event properties
+            if (
+              item.event_property &&
+              item.event_property.property_name &&
+              item.event_property.data_type &&
+              item.event_property.property_type
+            ) {
+              aggregatedEventProperties.push(item.event_property);
+            } else if (item.event_property) {
+              console.warn(
+                "Skipping invalid event_property:",
+                JSON.stringify(item.event_property)
+              );
+            }
 
-           // Handle super properties
-           if (item.super_property && Array.isArray(item.super_property)) {
-             aggregatedSuperProperties.push(...item.super_property);
-           }
-         }
+            // Handle super properties
+            if (item.super_property && Array.isArray(item.super_property)) {
+              aggregatedSuperProperties.push(...item.super_property);
+            }
+          }
         }
         console.log("Aggregated event Properties:", aggregatedEventProperties);
 
-       // Create aggregated item
-       const aggregatedItem = await Item.create({
-         user_property: aggregatedUserProperties,
-         event_property: aggregatedEventProperties,
-         super_property: aggregatedSuperProperties,
-       });
+        // Create aggregated item
+        const aggregatedItem = await Item.create({
+          user_property: aggregatedUserProperties,
+          event_property: aggregatedEventProperties,
+          super_property: aggregatedSuperProperties,
+        });
 
         // Update event
         event.items = [aggregatedItem._id];
@@ -271,7 +244,11 @@ async function handler(req, res) {
 
         return res
           .status(200)
-          .json({ success: true, message: "Event updated successfully", event });
+          .json({
+            success: true,
+            message: "Event updated successfully",
+            event,
+          });
       } catch (error) {
         console.error("Error updating event:", error);
         return res.status(500).json({

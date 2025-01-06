@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
 
 const DeleteCellRenderer = ({ params, page }) => {
   const { tableData, setTableData, currentOrganization } = useAppContext();
-  
+
   // State to control the open/close of the confirmation dialog
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -70,7 +77,8 @@ const DeleteCellRenderer = ({ params, page }) => {
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this record? This action cannot be undone.
+            Are you sure you want to delete this record? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

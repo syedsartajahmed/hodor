@@ -91,7 +91,7 @@ const Welcome = () => {
               <Typography
                 variant="h5"
                 fontWeight="bold"
-                sx={{ padding : "20px" }}
+                sx={{ padding: "20px" }}
               >
                 {card.title}
               </Typography>

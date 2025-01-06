@@ -6,25 +6,39 @@ import Item from "@/models/item";
 import Application from "@/models/application";
 
 async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache'); 
-  res.setHeader('Expires', '0');
-  
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ success: false, error: `Method ${req.method} Not Allowed` });
+    return res
+      .status(405)
+      .json({ success: false, error: `Method ${req.method} Not Allowed` });
   }
 
   const { organizationId, masterEventId } = req.body;
 
   if (!organizationId || !masterEventId) {
-    return res.status(400).json({ success: false, error: "Organization ID and Master Event ID are required." });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        error: "Organization ID and Master Event ID are required.",
+      });
   }
 
   try {
-    const masterEvent = await MasterEvent.findById(masterEventId).populate("items");
+    const masterEvent = await MasterEvent.findById(masterEventId).populate(
+      "items"
+    );
     if (!masterEvent) {
-      return res.status(404).json({ success: false, error: "Master Event not found." });
+      return res
+        .status(404)
+        .json({ success: false, error: "Master Event not found." });
     }
 
     // Copy items based on their existing structure
@@ -44,7 +58,8 @@ async function handler(req, res) {
     const newEvent = new Event({
       eventName: masterEvent.eventName || "default_event_name",
       items: copiedItems,
-      event_definition: masterEvent.event_definition || "No description provided",
+      event_definition:
+        masterEvent.event_definition || "No description provided",
       stakeholders: masterEvent.stakeholders || [],
       category: masterEvent.category || "Uncategorized",
       source: masterEvent.source || ["Default Source"],
@@ -56,12 +71,18 @@ async function handler(req, res) {
     await newEvent.save();
 
     // Find or create the web application for the organization
-    const organization = await Organization.findById(organizationId).populate("applications");
+    const organization = await Organization.findById(organizationId).populate(
+      "applications"
+    );
     if (!organization) {
-      return res.status(404).json({ success: false, error: "Organization not found." });
+      return res
+        .status(404)
+        .json({ success: false, error: "Organization not found." });
     }
 
-    let webApplication = organization.applications.find((app) => app.type === "web");
+    let webApplication = organization.applications.find(
+      (app) => app.type === "web"
+    );
 
     if (!webApplication) {
       webApplication = await Application.create({ type: "web", events: [] });
@@ -76,7 +97,9 @@ async function handler(req, res) {
     return res.status(201).json({ success: true, data: newEvent });
   } catch (error) {
     console.error("Error in processing request:", error.message);
-    return res.status(500).json({ success: false, error: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal Server Error" });
   }
 }
 

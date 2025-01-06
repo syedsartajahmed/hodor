@@ -141,7 +141,8 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             Mixpanel Token
           </Typography>
           <SmallNote>
-            Enter your Mixpanel project token. This will be used in the initialization code.
+            Enter your Mixpanel project token. This will be used in the
+            initialization code.
           </SmallNote>
           <TextField
             fullWidth
@@ -192,8 +193,10 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
           2. Create a Separate File
         </Typography>
         <SmallNote>
-          For better organization, create a file such as <strong>utils/mixpanel.js</strong> (or 
-          <strong> lib/mixpanel.js</strong>) and place the initialization code there.
+          For better organization, create a file such as{" "}
+          <strong>utils/mixpanel.js</strong> (or
+          <strong> lib/mixpanel.js</strong>) and place the initialization code
+          there.
         </SmallNote>
       </Box>
 
@@ -211,7 +214,8 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             3. Mixpanel Initialization
           </Typography>
           <SmallNote>
-            Add this initialization code inside your newly created file (e.g., <strong>mixpanel.js</strong>) before using Mixpanel.
+            Add this initialization code inside your newly created file (e.g.,{" "}
+            <strong>mixpanel.js</strong>) before using Mixpanel.
           </SmallNote>
           <CodeBox>
             {initCode}
@@ -239,7 +243,8 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             4. Generated Code
           </Typography>
           <SmallNote>
-            Place this code in the same file where you set up Mixpanel, or in another file if you prefer to keep it separate.
+            Place this code in the same file where you set up Mixpanel, or in
+            another file if you prefer to keep it separate.
           </SmallNote>
           <CodeBox>
             {generatedCode}
@@ -264,7 +269,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            5. Function Import 
+            5. Function Import
           </Typography>
           <SmallNote>
             Use this import statement to invoke the generated function.

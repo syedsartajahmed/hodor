@@ -15,6 +15,7 @@
     "@mui/material": "^5.15.0",
     "@mui/system": "^5.15.0",
     "@mui/x-data-grid": "^6.4.0",
+    "@next/font": "^14.2.15",
     "axios": "^1.7.9",
     "mixpanel": "^0.18.0",
     "mixpanel-browser": "^2.58.0",

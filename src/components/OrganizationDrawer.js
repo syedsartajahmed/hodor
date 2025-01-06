@@ -10,7 +10,7 @@ const OrganizationDrawer = () => {
     selectOrganization,
     setAllEvents,
   } = useAppContext();
-  
+
   const [organizations, setOrganizations] = useState([]);
   const [newOrgName, setNewOrgName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,8 +20,7 @@ const OrganizationDrawer = () => {
 
   // Fetch organizations when the drawer is opened
   useEffect(() => {
-
-      fetchOrganizations();
+    fetchOrganizations();
   }, []);
 
   const fetchOrganizations = async () => {
@@ -43,10 +42,10 @@ const OrganizationDrawer = () => {
     try {
       setLoading(true);
       setError(null);
-  
+
       const newOrganization = { name: newOrgName };
       await axios.post("/api/organizations", newOrganization); // Call POST API to add a new organization
-      
+
       setSuccessMessage("Organization added successfully!");
       setNewOrgName(""); // Clear the input
       fetchOrganizations(); // Refetch the latest list of organizations
@@ -62,13 +61,15 @@ const OrganizationDrawer = () => {
     try {
       setLoading(true);
       setError(null);
-  
-      const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
 
-      const organizationDetails = response.data;  
+      const response = await axios.get(
+        `/api/organizations?organization_id=${organizationId}`
+      );
+
+      const organizationDetails = response.data;
       const events = organizationDetails.applications?.[0]?.events || [];
       setAllEvents(events);
-  
+
       // Handle the fetched data (e.g., update the state)
       console.log("Fetched organization details:", organizationDetails);
       //setSelectedOrganization(organizationDetails);
@@ -79,8 +80,6 @@ const OrganizationDrawer = () => {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <div
@@ -102,7 +101,9 @@ const OrganizationDrawer = () => {
 
         {/* Organization List */}
         <div className="flex-1 overflow-y-auto p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Organizations</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-2">
+            Organizations
+          </h3>
           {loading && <p className="text-gray-500">Loading...</p>}
           {error && <p className="text-red-500">{error}</p>}
           {successMessage && <p className="text-green-500">{successMessage}</p>}
@@ -114,7 +115,7 @@ const OrganizationDrawer = () => {
                 onClick={() => {
                   setSelectedOrganization(org);
                   fetchOrganizationDetails(org._id);
-                  selectOrganization(org); 
+                  selectOrganization(org);
                   toggleOrgDrawer(false);
                 }}
               >
@@ -127,7 +128,9 @@ const OrganizationDrawer = () => {
           <div className="my-4 border-t border-gray-700"></div>
 
           {/* Add New Organization */}
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Add New Organization</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-2">
+            Add New Organization
+          </h3>
           <div className="flex items-center space-x-2">
             <input
               type="text"

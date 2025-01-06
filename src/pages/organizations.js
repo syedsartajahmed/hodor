@@ -22,7 +22,6 @@ import { useAppContext } from "@/context/AppContext";
 const Organizations = () => {
   const router = useRouter();
   const { setCurrentOrganization } = useAppContext();
-
   const [organizations, setOrganizations] = useState([]);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newOrganizationName, setNewOrganizationName] = useState("");
@@ -67,21 +66,24 @@ const Organizations = () => {
     }
 
     try {
-      const response = await axios.post("/api/organizations", { name: newOrganizationName });
+      const response = await axios.post("/api/organizations", {
+        name: newOrganizationName,
+      });
       const newOrganization = response.data.organization;
 
       if (response.data.success === false) {
-        alert(response.data.message || "Failed to add organization. Please try again.");
-       
+        alert(
+          response.data.message ||
+            "Failed to add organization. Please try again."
+        );
       } else {
         const newOrganization = response.data.organization;
         setOrganizations((prev) => [...prev, newOrganization]);
         handleAddDialogClose();
       }
     } catch (err) {
-
       if (err.response && err.response.data && err.response.data.message) {
-        alert(err.response.data.message); 
+        alert(err.response.data.message);
       } else {
         alert("Failed to add organization. Please try again.");
       }
@@ -100,7 +102,9 @@ const Organizations = () => {
 
   const handleDeleteOrganizationSubmit = async () => {
     try {
-      await axios.delete(`/api/organizations?organization_id=${selectedOrganization._id}`);
+      await axios.delete(
+        `/api/organizations?organization_id=${selectedOrganization._id}`
+      );
       setOrganizations((prev) =>
         prev.filter((org) => org._id !== selectedOrganization._id)
       );
@@ -166,7 +170,7 @@ const Organizations = () => {
           onClick={handleAddOrganization}
           sx={{
             width: "300px",
-            minHeight: "150px", // Ensure uniform height
+            minHeight: "150px", 
             textAlign: "center",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
             borderRadius: "12px",
@@ -198,13 +202,13 @@ const Organizations = () => {
             key={org._id}
             sx={{
               width: "300px",
-              minHeight: "150px", // Ensure uniform height
+              minHeight: "150px", 
               textAlign: "center",
               boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
               borderRadius: "12px",
               cursor: "pointer",
               backgroundColor: "#ffffff",
-              position: "relative", // For absolute positioning of the cross icon
+              position: "relative",
               "&:hover": {
                 boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
                 transform: "translateY(-5px)",
@@ -214,7 +218,7 @@ const Organizations = () => {
           >
             <IconButton
               onClick={(e) => {
-                e.stopPropagation(); // Prevent navigation
+                e.stopPropagation(); 
                 handleDeleteOrganization(org);
               }}
               sx={{
@@ -237,7 +241,11 @@ const Organizations = () => {
               }}
               onClick={() => handleCardClick(org)}
             >
-              <Typography variant="h5" fontWeight="bold" sx={{ cursor: "pointer" }}>
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                sx={{ cursor: "pointer" }}
+              >
                 {org.name}
               </Typography>
             </Box>
@@ -246,7 +254,12 @@ const Organizations = () => {
       </Box>
 
       {/* Add Organization Dialog */}
-      <Dialog open={openAddDialog} onClose={handleAddDialogClose} fullWidth maxWidth="sm">
+      <Dialog
+        open={openAddDialog}
+        onClose={handleAddDialogClose}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Add New Organization</DialogTitle>
         <DialogContent>
           <TextField
@@ -262,7 +275,11 @@ const Organizations = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleAddDialogClose}>Cancel</Button>
-          <Button onClick={handleAddOrganizationSubmit} variant="contained" color="primary">
+          <Button
+            onClick={handleAddOrganizationSubmit}
+            variant="contained"
+            color="primary"
+          >
             Add
           </Button>
         </DialogActions>
@@ -272,7 +289,8 @@ const Organizations = () => {
       <Dialog open={openDeleteDialog} onClose={handleDeleteDialogClose}>
         <DialogTitle>Delete Organization</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete the organization &quot;{selectedOrganization?.name}&quot;? This action cannot be undone.
+          Are you sure you want to delete the organization &quot;
+          {selectedOrganization?.name}&quot;? This action cannot be undone.
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteDialogClose}>Cancel</Button>
