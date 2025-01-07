@@ -1140,14 +1140,31 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
                   value={selectedSource}
                   onChange={(e) => setSelectedSource(e.target.value)}
                 >
-                  {uniqueSources.map((source) => (
+                  {/* {uniqueSources.map((source) => (
                     <FormControlLabel
                       key={source}
                       value={source}
                       control={<Radio />}
                       label={source}
                     />
-                  ))}
+                  ))} */}
+                    {uniqueSources.map((source) => (
+          <FormControlLabel
+            key={source}
+            value={source}
+            control={<Radio />}
+            label={
+              // Dynamically add brackets with platform information
+              source === "Backend"
+                ? `${source} (NodeJS)`
+                : source === "Android"
+                ? `${source} (Kotlin)`
+                : source === "iOS"
+                ? `${source} (Swift)`
+                : source // Default to just the source name
+            }
+          />
+        ))}
                 </RadioGroup>
               </FormControl>
             </DialogContent>
