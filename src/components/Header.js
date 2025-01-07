@@ -95,8 +95,25 @@ const Header = ({
 
   // *** Extract unique sources from allEvents (assuming allEvents is an array) ***
   const uniqueSources = [
-    ...new Set(allEvents?.flatMap((event) => event.source || [])),
+    ...new Set(
+      allEvents?.flatMap((event) => {
+        if (!event.source) return [];
+        return event.source.map((src) => {
+          if (src == "Android") return "Android(kotlin)";
+          if (src == "Backend") {
+            console.log(event);
+            return "Backend(node.js)";
+          } 
+          if (src == "iOS") return "iOS(swift)";
+          console.log(src);
+          return src; // Keep as is for other sources
+        });
+      })
+    ),
   ].filter(Boolean);
+  
+  console.log(uniqueSources);
+  
 
   // *** Updated handleDownloadButtonClick to open dialog instead of downloading directly ***
   const handleDownloadButtonClick = () => {
