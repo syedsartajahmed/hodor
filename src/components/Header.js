@@ -95,25 +95,8 @@ const Header = ({
 
   // *** Extract unique sources from allEvents (assuming allEvents is an array) ***
   const uniqueSources = [
-    ...new Set(
-      allEvents?.flatMap((event) => {
-        if (!event.source) return [];
-        return event.source.map((src) => {
-          if (src == "Android") return "Android(kotlin)";
-          if (src == "Backend") {
-            console.log(event);
-            return "Backend(node.js)";
-          } 
-          if (src == "iOS") return "iOS(swift)";
-          console.log(src);
-          return src; // Keep as is for other sources
-        });
-      })
-    ),
+    ...new Set(allEvents?.flatMap((event) => event.source || [])),
   ].filter(Boolean);
-  
-  console.log(uniqueSources);
-  
 
   // *** Updated handleDownloadButtonClick to open dialog instead of downloading directly ***
   const handleDownloadButtonClick = () => {
@@ -402,23 +385,21 @@ const handleDownload = () => {
   switch (selectedSource) {
       case "Website":
           code = generateWebsiteCode(filteredEvents, mixpanelToken);
-      filename = "mixpanel-web.js";
-      
+          filename = "mixpanel-web.js";
           break;
-      case "Backend(node.js)":
+      case "Backend":
           code = generateBackendCode(filteredEvents, mixpanelToken);
           filename = "mixpanel-backend.js";
           break;
-      case "Android(kotlin)":
+      case "Android":
           code = generateAndroidCode(filteredEvents);
           filename = "MixpanelTracking.kt";
           break;
-      case "iOS(swift)":
+      case "iOS":
           code = generateIOSCode(filteredEvents);
           filename = "MixpanelTracking.swift";
           break;
-    default:
-      console.log(selectedSource);
+      default:
           alert("Unsupported platform");
           return;
   }
@@ -643,64 +624,143 @@ const generateEventCode = (events, importSection, platform) => {
       }
   };
 
+//   const generateExampleInvocation = (event, platform) => {
+//     const { camelCase: functionName } = formatEventName(event?.eventName);
+//     const properties = event.items[0]?.event_property || [];
+    
+//     const exampleData = properties.reduce((acc, prop) => {
+//       let exampleValue = "";
+//       switch(prop.property_type?.toLowerCase()) {
+//         case "string":
+//           exampleValue = `"example_${prop.property_name}"`;
+//           break;
+//         case "number":
+//           exampleValue = "123";
+//           break;
+//         case "boolean":
+//           exampleValue = "true";
+//           break;
+//         default:
+//           exampleValue = `"example_value"`;
+//       }
+//       acc[prop.property_name] = exampleValue;
+//       return acc;
+//     }, {});
+
+//     switch (platform) {
+//       case "web":
+//       case "backend":
+//         return `// Example invocation:
+// // ${event?.event_definition || "Track user interaction"}
+// ${functionName}(${event?.identify ? '"user123", ' : ''}{
+//   ${Object.entries(exampleData)
+//     .map(([key, value]) => `${key}: ${value}`)
+//     .join(",\n  ")}
+// });`;
+      
+//       case "android":
+//         return `// Example invocation:
+// // ${event?.event_definition || "Track user interaction"}
+// val data = mapOf(
+//   ${Object.entries(exampleData)
+//     .map(([key, value]) => `"${key}" to ${value}`)
+//     .join(",\n  ")}
+// )
+// ${functionName}(context${event?.identify ? ', "user123"' : ''}, data)`;
+      
+//       case "ios":
+//         return `// Example invocation:
+// // ${event?.event_definition || "Track user interaction"}
+// let data: [String: Any] = [
+//   ${Object.entries(exampleData)
+//     .map(([key, value]) => `"${key}": ${value}`)
+//     .join(",\n  ")}
+// ]
+// ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
+      
+//       default:
+//         return "";
+//     }
+  //   };
+  
+
   const generateExampleInvocation = (event, platform) => {
     const { camelCase: functionName } = formatEventName(event?.eventName);
-    const properties = event.items[0]?.event_property || [];
-    
-    const exampleData = properties.reduce((acc, prop) => {
-      let exampleValue = "";
-      switch(prop.property_type?.toLowerCase()) {
-        case "string":
-          exampleValue = `"example_${prop.property_name}"`;
-          break;
-        case "number":
-          exampleValue = "123";
-          break;
-        case "boolean":
-          exampleValue = "true";
-          break;
-        default:
-          exampleValue = `"example_value"`;
-      }
-      acc[prop.property_name] = exampleValue;
-      return acc;
+
+    // Combine all properties from event, user, and super properties
+    const allProperties = [
+        ...(event.items[0]?.event_property || []),
+        ...(event.items[0]?.user_property || []),
+        ...(event.items[0]?.super_property || []),
+    ];
+
+    // Generate example data based on property types and value sources
+    const exampleData = allProperties.reduce((acc, prop) => {
+        let propertyName = prop.property_name || prop.name; // Use `property_name` or fallback to `name`
+        let exampleValue;
+
+        if (prop.sample_value) {
+            // Use sample_value if provided
+            exampleValue = JSON.stringify(prop.sample_value);
+        } else {
+            // Infer example value based on `data_type` or fallback
+            switch (prop.data_type?.toLowerCase() || "") {
+                case "string":
+                    exampleValue = `"example_${propertyName}"`;
+                    break;
+                case "number":
+                    exampleValue = 123; // Example numeric value
+                    break;
+                case "boolean":
+                    exampleValue = true; // Example boolean value
+                    break;
+                default:
+                    exampleValue = `"example_value"`; // Default fallback
+            }
+        }
+
+        if (propertyName) {
+            acc[propertyName] = exampleValue;
+        }
+
+        return acc;
     }, {});
 
+    const formattedData = Object.entries(exampleData)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(",\n  ");
+
+    // Platform-specific example invocation
     switch (platform) {
-      case "web":
-      case "backend":
-        return `// Example invocation:
+        case "web":
+        case "backend":
+            return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
 ${functionName}(${event?.identify ? '"user123", ' : ''}{
-  ${Object.entries(exampleData)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(",\n  ")}
+  ${formattedData}
 });`;
-      
-      case "android":
-        return `// Example invocation:
+
+        case "android":
+            return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
 val data = mapOf(
-  ${Object.entries(exampleData)
-    .map(([key, value]) => `"${key}" to ${value}`)
-    .join(",\n  ")}
+  ${formattedData.split(",\n  ").join(",\n  ").replace(/:/g, " to")}
 )
 ${functionName}(context${event?.identify ? ', "user123"' : ''}, data)`;
-      
-      case "ios":
-        return `// Example invocation:
+
+        case "ios":
+            return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
 let data: [String: Any] = [
-  ${Object.entries(exampleData)
-    .map(([key, value]) => `"${key}": ${value}`)
-    .join(",\n  ")}
+  ${formattedData}
 ]
 ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
-      
-      default:
-        return "";
+
+        default:
+            return "";
     }
-  };
+};
+
 
   const eventsCode = events.map((event) => {
     const { snakeCase: eventName, camelCase: functionName } = formatEventName(
@@ -998,7 +1058,7 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
         <Typography
   variant="h6"
   fontWeight="bold"
-  //onClick={handleOrganizationClick}
+  // onClick={handleOrganizationClick}
   sx={{
     cursor: currentOrganization?.name ? "pointer" : "default",
     color: currentOrganization?.name ? "#333" : "#888",
