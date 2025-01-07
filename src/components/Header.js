@@ -402,21 +402,23 @@ const handleDownload = () => {
   switch (selectedSource) {
       case "Website":
           code = generateWebsiteCode(filteredEvents, mixpanelToken);
-          filename = "mixpanel-web.js";
+      filename = "mixpanel-web.js";
+      
           break;
-      case "Backend":
+      case "Backend(node.js)":
           code = generateBackendCode(filteredEvents, mixpanelToken);
           filename = "mixpanel-backend.js";
           break;
-      case "Android":
+      case "Android(kotlin)":
           code = generateAndroidCode(filteredEvents);
           filename = "MixpanelTracking.kt";
           break;
-      case "iOS":
+      case "iOS(swift)":
           code = generateIOSCode(filteredEvents);
           filename = "MixpanelTracking.swift";
           break;
-      default:
+    default:
+      console.log(selectedSource);
           alert("Unsupported platform");
           return;
   }
