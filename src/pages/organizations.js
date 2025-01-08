@@ -18,6 +18,8 @@ import { Add, Close } from "@mui/icons-material";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
+import ApplicationSetupDialog from "@/components/ApplicationSetupDialog";
+import Footer from "@/components/Footer";
 
 const Organizations = () => {
   const router = useRouter();
@@ -27,6 +29,9 @@ const Organizations = () => {
   const [newOrganizationName, setNewOrganizationName] = useState("");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
+
+  const [openAppSetup, setOpenAppSetup] = useState(false);
+  const [newOrgId, setNewOrgId] = useState(null);
 
   useEffect(() => {
     fetchOrganizations();
@@ -59,7 +64,7 @@ const Organizations = () => {
     setNewOrganizationName("");
   };
 
-  const handleAddOrganizationSubmit = async () => {
+  const handleAddOrganizationSubmit1 = async () => {
     if (!newOrganizationName.trim()) {
       alert("Organization name is required.");
       return;
@@ -87,6 +92,52 @@ const Organizations = () => {
       } else {
         alert("Failed to add organization. Please try again.");
       }
+    }
+  };
+
+  const handleAddOrganizationSubmit = async () => {
+    if (!newOrganizationName.trim()) {
+      alert("Organization name is required.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/organizations", {
+        name: newOrganizationName,
+      });
+
+      if (response.data.success === false) {
+        alert(
+          response.data.message ||
+            "Failed to add organization. Please try again."
+        );
+      } else {
+        const newOrganization = response.data.organization;
+        setOrganizations((prev) => [...prev, newOrganization]);
+        handleAddDialogClose();
+        // Open application setup dialog
+        setNewOrgId(newOrganization._id);
+        setOpenAppSetup(true);
+      }
+    } catch (err) {
+      alert("Failed to add organization. Please try again.");
+    }
+  };
+
+  // Add new handler for application setup
+  const handleAppSetup = async (appData) => {
+    try {
+      const response = await axios.post("/api/applications", {
+        ...appData,
+        organizationId: newOrgId,
+      });
+
+      if (response.data.success) {
+        setOpenAppSetup(false);
+        router.push(`/dashboard/${newOrgId}`);
+      }
+    } catch (error) {
+      alert("Failed to setup application. Please try again.");
     }
   };
 
@@ -146,7 +197,7 @@ const Organizations = () => {
         <Link
           underline="hover"
           color="inherit"
-          onClick={() => router.push("/welcome")}
+          onClick={() => router.push("/")}
           sx={{ cursor: "pointer" }}
         >
           Dashboard
@@ -170,7 +221,7 @@ const Organizations = () => {
           onClick={handleAddOrganization}
           sx={{
             width: "300px",
-            minHeight: "150px", 
+            minHeight: "150px",
             textAlign: "center",
             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
             borderRadius: "12px",
@@ -202,7 +253,7 @@ const Organizations = () => {
             key={org._id}
             sx={{
               width: "300px",
-              minHeight: "150px", 
+              minHeight: "150px",
               textAlign: "center",
               boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
               borderRadius: "12px",
@@ -218,7 +269,7 @@ const Organizations = () => {
           >
             <IconButton
               onClick={(e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 handleDeleteOrganization(org);
               }}
               sx={{
@@ -303,6 +354,13 @@ const Organizations = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <ApplicationSetupDialog
+        open={openAppSetup}
+        onClose={() => setOpenAppSetup(false)}
+        onSubmit={handleAppSetup}
+        initialData={{}}
+      />
+      {/* <Footer /> */}
     </Box>
   );
 };

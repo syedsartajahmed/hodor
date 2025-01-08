@@ -17,7 +17,8 @@ export const AppProvider = ({ children }) => {
     id: null,
     name: null,
     applicationId: null,
-  }); 
+    applicationDetails: {},
+  });
   const [allEvents, setAllEvents] = useState([]);
 
   const toggleOrgDrawer = (open) => {
@@ -35,9 +36,9 @@ export const AppProvider = ({ children }) => {
     setIsEventDrawerOpen(open);
     //setSelectedEvent(event);
     if (event) {
-      setSelectedEvent(event); 
+      setSelectedEvent(event);
     } else {
-      setSelectedEvent(null); 
+      setSelectedEvent(null);
     }
     console.log("Selected Event:", event);
     //if (!open) setSelectedEvent([]);
@@ -45,12 +46,11 @@ export const AppProvider = ({ children }) => {
 
   const selectOrganization = (organization) => {
     setCurrentOrganization({
-      id: organization._id, 
+      id: organization._id,
       name: organization.name,
       applicationId: organization.applications?.[0] || null,
     });
   };
-  
 
   const addEvent = (event) => {
     console.log("Adding event:", event);
@@ -89,7 +89,7 @@ export const AppProvider = ({ children }) => {
     setShowList,
     setSelectedEvent,
     setAllEvents,
-    allEvents
+    allEvents,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

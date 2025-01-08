@@ -5,6 +5,8 @@ const ItemSchema = new Schema({
     {
       name: { type: String },
       value: { type: Schema.Types.Mixed },
+      data_type: { type: String, default: "" },
+      property_definition: { type: String, default: "" },
     },
   ],
 
@@ -23,6 +25,8 @@ const ItemSchema = new Schema({
     {
       name: { type: String },
       value: { type: Schema.Types.Mixed },
+      data_type: { type: String, default: "" },
+      property_definition: { type: String, default: "" },
     },
   ],
 });

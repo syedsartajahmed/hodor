@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import styled from "@emotion/styled";
+import { useAppContext } from "@/context/AppContext";
 
 const CodeBox = styled(Box)`
   background-color: #2d2d2d;
@@ -43,10 +44,21 @@ const DrawerPropertiesWithEnvironment = ({
   const [initCode, setInitCode] = useState("");
   const [token, setToken] = useState("");
 
+  const {
+    isEventDrawerOpen,
+    toggleEventDrawer,
+    selectedEvent,
+    setAllEvents,
+    currentOrganization,
+    setTableData,
+    setSelectedOrganization,
+  } = useAppContext();
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedToken = localStorage.getItem("mixpanelToken");
+      const storedToken = currentOrganization?.applicationDetails?.token;
       if (storedToken) {
+        console.log("Stored token:", storedToken);
         setToken(storedToken);
         updateInitCode(storedToken);
       }
@@ -56,9 +68,9 @@ const DrawerPropertiesWithEnvironment = ({
   const handleTokenChange = (event) => {
     const newToken = event.target.value;
     setToken(newToken);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("mixpanelToken", newToken);
-    }
+    // if (typeof window !== "undefined") {
+    //   localStorage.setItem("mixpanelToken", newToken);
+    // }
     updateInitCode(newToken);
   };
 
@@ -147,7 +159,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
           <TextField
             fullWidth
             label="Mixpanel Token"
-            value={token}
+            value={currentOrganization?.applicationDetails?.token}
             onChange={handleTokenChange}
             variant="outlined"
           />

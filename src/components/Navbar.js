@@ -2,7 +2,7 @@ import React from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 
-const Navbar = () => {
+const Navbar = ({ hideHeader = false }) => {
   const router = useRouter();
 
   // Helper function to determine active state
@@ -17,30 +17,32 @@ const Navbar = () => {
         width={150} // Increased width
         height={30} // Increased height
         className="cursor-pointer"
-        onClick={() => router.push("/welcome")}
+        onClick={() => router.push("/")}
       />
 
-      {/* Right-end Navigation Links */}
-      <div className="flex gap-8 text-2xl font-semibold">
-        <button
-          className={`hover:opacity-65 transition-opacity cursor-pointer ${
-            isActive("/organizations") ? "opacity-70" : ""
-          }`}
-          onClick={() => router.push("/organizations")}
-        >
-          Organizations
-        </button>
-        <button
-          className={`hover:opacity-65 transition-opacity cursor-pointer ${
-            isActive("/master-event") ? "opacity-70" : ""
-            }`}
-          
-          
-                onClick={() => router.push("/master-event")}
-        >
-          Master Events
-        </button>
-      </div>
+      {!hideHeader && (
+        <div>
+          {/* Right-end Navigation Links */}
+          <div className="flex gap-8 text-2xl font-semibold">
+            <button
+              className={`hover:opacity-65 transition-opacity cursor-pointer ${
+                isActive("/organizations") ? "opacity-70" : ""
+              }`}
+              onClick={() => router.push("/organizations")}
+            >
+              Organizations
+            </button>
+            <button
+              className={`hover:opacity-65 transition-opacity cursor-pointer ${
+                isActive("/master-event") ? "opacity-70" : ""
+              }`}
+              onClick={() => router.push("/master-event")}
+            >
+              Master Events
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

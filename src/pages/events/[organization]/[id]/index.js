@@ -6,6 +6,8 @@ import List from "@/components/List";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from "next/router";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const {
@@ -34,10 +36,18 @@ const Index = () => {
       const events = organizationDetails.applications?.[0]?.events || [];
       setAllEvents(events);
 
+      const firstApplication = organizationDetails.applications?.[0] || {};
+
       setCurrentOrganization({
         id: organizationDetails._id,
         name: organizationDetails.name,
-        applicationId: organizationDetails.applications?.[0]["_id"] || null,
+        applicationId: firstApplication._id || null,
+        applicationDetails: {
+          apiSecret: firstApplication.apiSecret || "",
+          projectId: firstApplication.projectId || "",
+          serviceAccountPassword: firstApplication.serviceAccountPassword || "",
+          token: firstApplication.token || "",
+        },
       });
 
       const updatedRows = events.map((event) => ({
@@ -94,9 +104,11 @@ const Index = () => {
 
   return (
     <>
+      <Navbar hideHeader={true} />
       <Header isShowCopy={false} />
-      {showList ? <List /> : <Table page={"dashboard"} />}
-      <EventDrawer />
+      {showList ? <List /> : <Table isEventPage={true} page={"dashboard"} />}
+      <EventDrawer isShowSave={false} />
+      <Footer />
     </>
   );
 };

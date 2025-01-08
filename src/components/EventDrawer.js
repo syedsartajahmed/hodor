@@ -4,7 +4,7 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import DrawerProperties from "./DrawerProperties";
 
-const EventDrawer = () => {
+const EventDrawer = ({ isShowSave = true }) => {
   const {
     isEventDrawerOpen,
     toggleEventDrawer,
@@ -218,6 +218,8 @@ const EventDrawer = () => {
               {
                 name: userProperty?.name || null,
                 value: userProperty?.value || null,
+                property_definition: userProperty?.property_definition || null,
+                data_type: userProperty?.data_type || null,
               },
             ],
           })
@@ -266,6 +268,8 @@ const EventDrawer = () => {
               {
                 name: superProperty?.name || null,
                 value: superProperty?.value || null,
+                property_definition: superProperty?.property_definition || null,
+                data_type: superProperty?.data_type || null,
               },
             ],
           })
@@ -370,7 +374,7 @@ const EventDrawer = () => {
   const generateFunctionName = (eventName) => {
     return eventName.trim().toLowerCase().replace(/\s+/g, "_") + "_event";
   };
- 
+
   return (
     <div
       className={`fixed top-0 right-0 h-full  w-120 bg-gray-100 shadow-lg transform transition-transform duration-300 z-50 ${
@@ -404,49 +408,53 @@ const EventDrawer = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex flex-row items-center mx-5">
-          <div className="flex-1"></div>
-          <div className="p-4 border-t flex items-center gap-7 justify-center">
-            <button
-              onClick={handleSave}
-              className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
-              disabled={loading} // Disable button when loading
-            >
-              {loading ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
+        {isShowSave && (
+          <div>
+            <div className="flex flex-row items-center mx-5">
+              <div className="flex-1"></div>
+              <div className="p-4 border-t flex items-center gap-7 justify-center">
+                <button
+                  onClick={handleSave}
+                  className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
+                  disabled={loading} // Disable button when loading
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
-                  ></path>
-                </svg>
-              ) : (
-                "Save"
-              )}
-            </button>
+                  {loading ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Save"
+                  )}
+                </button>
 
-            <button
-              onClick={() => toggleEventDrawer(false)}
-              className="text-gray-500 hover:text-gray-800"
-            >
-              Cancel
-            </button>
+                <button
+                  onClick={() => toggleEventDrawer(false)}
+                  className="text-gray-500 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+        {/* Footer */}
       </div>
     </div>
   );

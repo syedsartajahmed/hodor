@@ -31,6 +31,7 @@ import { useRef } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DrawerPropertiesWithEnvironment from "./DrawerPropertiesWithEnvironment";
 import styled from "@emotion/styled";
+import { Add, Close } from "@mui/icons-material";
 
 const DrawerProperties = () => {
   const CodeBox = styled(Box)`
@@ -730,6 +731,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
           item.super_property.map((prop) => ({
             name: prop.name,
             value: prop.value || "",
+            data_type: prop.data_type || "",
+            property_definition: prop.property_definition || "",
           }))
         );
         setSuperProperties(superProps);
@@ -744,6 +747,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
           item.user_property.map((prop) => ({
             name: prop.name,
             value: prop.value || "",
+            data_type: prop.data_type || "",
+            property_definition: prop.property_definition || "",
           }))
         );
         setUserProperties(userProps);
@@ -900,7 +905,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
             //need to chagne here
             value={stakeholders}
             onChange={handleStakeholdersChange}
-            renderValue={(selected) => selected.join(", ")}
+            renderValue={(selected) => selected?.join(", ")}
           >
             {stakeholderOptions.map((option) => (
               <MenuItem key={option} value={option}>
@@ -943,7 +948,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
             multiple
             value={platforms}
             onChange={handlePlatformsChange}
-            renderValue={(selected) => selected.join(", ")}
+            renderValue={(selected) => selected?.join(", ")}
           >
             {platformOptions.map((option) => (
               <MenuItem key={option} value={option}>
@@ -960,7 +965,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
             multiple
             value={source}
             onChange={handleSourceChange}
-            renderValue={(selected) => selected.join(", ")}
+            renderValue={(selected) => selected?.join(", ")}
           >
             {sourceOptions.map((option) => (
               <MenuItem key={option} value={option}>
@@ -1146,53 +1151,118 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
             </div>
           </AccordionSummary>
           <AccordionDetails>
-            {userProperties.map((property, index) => (
-              <Box key={index} sx={{ mb: 2 }}>
-                <TextField
-                  label="User Property Name"
-                  value={property.name}
-                  onChange={
-                    (e) =>
-                      handleUserPropertyChange(index, "name", e.target.value)
-                    // handleTempEventPropertyChange("name", e.target.value)
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <TextField
-                  label="User Property Value"
-                  value={property.value}
-                  onChange={(e) =>
-                    handleUserPropertyChange(index, "value", e.target.value)
-                  }
-                  fullWidth
-                  margin="dense"
-                />
-                <IconButton
-                  //onClick={deleteEventPropertyGroup}
-                  onClick={() => {
-                    const updatedProperties = [...userProperties];
-                    updatedProperties.splice(index, 1);
-                    setUserProperties(updatedProperties);
-
-                    setSelectedEvent((prevEvent) => {
-                      const updatedItems = [...(prevEvent.items || [])];
-                      if (updatedItems[0]) {
-                        updatedItems[0].user_property = updatedProperties;
-                      }
-                      return { ...prevEvent, items: updatedItems };
-                    });
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                USER PROPERTIES
+              </Typography>
+              {userProperties.map((property, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
                   }}
-                  sx={{ color: "error.main" }}
-                  size="small"
                 >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            ))}
-            <Button variant="text" color="primary" onClick={addUserProperty}>
-              + Add User Property
-            </Button>
+                  {/* Cross Icon at Top Right */}
+                  <IconButton
+                    onClick={() => {
+                      const updatedProperties = [...userProperties];
+                      updatedProperties.splice(index, 1);
+                      setUserProperties(updatedProperties);
+
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].user_property = updatedProperties;
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff", // Keep text/icon color white for contrast
+                      backgroundColor: "#8a8a8a", // Grey color from the scrollbar
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa", // Slightly darker grey for hover effect
+                      },
+                      borderRadius: "50%", // Circular button
+                      width: "30px", // Consistent size
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
+
+                  {/* First Row: Name, Value, and Property Definition */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="User Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleUserPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <TextField
+                      label="User Property Value"
+                      value={property.value}
+                      onChange={(e) =>
+                        handleUserPropertyChange(index, "value", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Definition and Data Type */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <TextField
+                      label="Property Definition"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleUserPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.data_type || ""}
+                        onChange={(e) =>
+                          handleUserPropertyChange(
+                            index,
+                            "data_type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+              ))}
+              <Button variant="text" color="primary" onClick={addUserProperty}>
+                + Add User Property
+              </Button>
+            </Box>
           </AccordionDetails>
         </Accordion>
       )}
@@ -1255,83 +1325,24 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
           </AccordionSummary>
 
           <AccordionDetails>
-            <Box>
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 EVENT PROPERTIES
               </Typography>
               {eventProperties.map((property, index) => (
-                <Box key={index} sx={{ mb: 2 }}>
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel>Method Call</InputLabel>
-                    <Select
-                      value={property.method_call}
-                      onChange={(e) =>
-                        handleEventPropertyChange(
-                          index,
-                          "methodCall",
-                          e.target.value
-                        )
-                      }
-                    >
-                      {methodCallOptions.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    label="Property Name"
-                    value={property.name}
-                    onChange={(e) =>
-                      handleEventPropertyChange(index, "name", e.target.value)
-                    }
-                    fullWidth
-                    margin="dense"
-                  />
-                  <TextField
-                    label="Property Description"
-                    value={property.property_definition || ""}
-                    onChange={(e) =>
-                      handleEventPropertyChange(
-                        index,
-                        "property_definition",
-                        e.target.value
-                      )
-                    }
-                    fullWidth
-                    margin="dense"
-                  />
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel>Data Type</InputLabel>
-                    <Select
-                      value={property.type}
-                      onChange={(e) =>
-                        handleEventPropertyChange(index, "type", e.target.value)
-                      }
-                    >
-                      {dataTypeOptions.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    label="Sample Value"
-                    value={property.sample_value || ""}
-                    onChange={(e) =>
-                      handleEventPropertyChange(
-                        index,
-                        "sample_value",
-                        e.target.value
-                      )
-                    }
-                    fullWidth
-                    margin="dense"
-                  />
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
+                  }}
+                >
+                  {/* Cross Icon at Top Right */}
                   <IconButton
-                    //onClick={deleteEventPropertyGroup}
                     onClick={() => {
                       const updatedProperties = [...eventProperties];
                       updatedProperties.splice(index, 1);
@@ -1345,11 +1356,104 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
                         return { ...prevEvent, items: updatedItems };
                       });
                     }}
-                    sx={{ color: "error.main" }}
-                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff", // White icon color for contrast
+                      backgroundColor: "#8a8a8a", // Dark red background
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa", // Even darker red on hover
+                      },
+                      borderRadius: "50%", // Circular button
+                      width: "30px", // Consistent size
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                    }}
                   >
-                    <DeleteIcon />
+                    <Close />
                   </IconButton>
+
+                  {/* First Row: Method Call and Property Description */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Method Call</InputLabel>
+                      <Select
+                        value={property.method_call}
+                        onChange={(e) =>
+                          handleEventPropertyChange(
+                            index,
+                            "methodCall",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {methodCallOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Property Description"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleEventPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Name, Data Type, and Sample Value */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleEventPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.type}
+                        onChange={(e) =>
+                          handleEventPropertyChange(
+                            index,
+                            "type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Sample Value"
+                      value={property.sample_value || ""}
+                      onChange={(e) =>
+                        handleEventPropertyChange(
+                          index,
+                          "sample_value",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
                 </Box>
               ))}
               <Button variant="text" color="primary" onClick={addEventProperty}>
@@ -1357,32 +1461,24 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
               </Button>
             </Box>
 
-            <Box mt={3}>
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 SYSTEM PROPERTIES (SUPER PROPERTIES)
               </Typography>
               {superProperties.map((property, index) => (
-                <Box key={index} sx={{ mb: 2 }}>
-                  <TextField
-                    label="Super Property Name"
-                    value={property.name}
-                    onChange={(e) =>
-                      handleSuperPropertyChange(index, "name", e.target.value)
-                    }
-                    fullWidth
-                    margin="dense"
-                  />
-                  <TextField
-                    label="Super Property Value"
-                    value={property.value}
-                    onChange={(e) =>
-                      handleSuperPropertyChange(index, "value", e.target.value)
-                    }
-                    fullWidth
-                    margin="dense"
-                  />
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
+                  }}
+                >
+                  {/* Cross Icon at Top Right */}
                   <IconButton
-                    //onClick={deleteEventPropertyGroup}
                     onClick={() => {
                       const updatedProperties = [...superProperties];
                       updatedProperties.splice(index, 1);
@@ -1396,11 +1492,85 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
                         return { ...prevEvent, items: updatedItems };
                       });
                     }}
-                    sx={{ color: "error.main" }}
-                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff",
+                      backgroundColor: "#8a8a8a",
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa",
+                      },
+                      borderRadius: "50%",
+                      width: "30px",
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
                   >
-                    <DeleteIcon />
+                    <Close />
                   </IconButton>
+
+                  {/* First Row: Name, Value, and Property Definition */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Super Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <TextField
+                      label="Super Property Value"
+                      value={property.value}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(
+                          index,
+                          "value",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Definition and Data Type */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <TextField
+                      label="Property Definition"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.data_type || ""}
+                        onChange={(e) =>
+                          handleSuperPropertyChange(
+                            index,
+                            "data_type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
                 </Box>
               ))}
               <Button variant="text" color="primary" onClick={addSuperProperty}>

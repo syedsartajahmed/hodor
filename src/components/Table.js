@@ -8,7 +8,12 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
+const Table = ({
+  page,
+  isShowCopy,
+  isShowOrganization = false,
+  isEventPage = false,
+}) => {
   const { tableData, toggleDrawer, setSelectedEvent } = useAppContext();
   const router = useRouter();
   const { pathname } = router;
@@ -60,14 +65,19 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
           },
         ]
       : []),
-    {
-      field: "delete",
-      headerName: "DELETE",
-      renderCell: (params) => (
-        <DeleteCellRenderer params={params} page={page} />
-      ),
-      width: 100,
-    },
+    ...(!isEventPage
+      ? [
+          {
+            field: "delete",
+            headerName: "DELETE",
+            renderCell: (params) => (
+              <DeleteCellRenderer params={params} page={page} />
+            ),
+            width: 100,
+          },
+        ]
+      : []),
+
     ...(isShowCopy
       ? [
           {
@@ -87,7 +97,7 @@ const Table = ({ page, isShowCopy, isShowOrganization = false }) => {
   // console.log(tableData)
 
   return (
-    <div className="mx-10 mt-5">
+    <div className="mx-10 mt-5 mb-[261px]">
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
           rows={tableData}

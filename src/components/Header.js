@@ -28,11 +28,9 @@ import NewCategoryModal from "./NewCategory";
 import { useRouter } from "next/router";
 import DownloadIcon from "@mui/icons-material/Download";
 import axios from "axios";
-// import ApplicationSetupDialog from '@/components/ApplicationSetupDialog';
-// import UploadIcon from "@mui/icons-material/Upload";
-// import Papa from "papaparse";
-
-
+import ApplicationSetupDialog from "@/components/ApplicationSetupDialog";
+import UploadIcon from "@mui/icons-material/Upload";
+import Papa from "papaparse";
 
 const Header = ({
   isShowCopy = false,
@@ -51,6 +49,8 @@ const Header = ({
     setTableData,
   } = useAppContext();
   const router = useRouter();
+  const isMasterEventsPath = router.pathname.includes("/master-event");
+
   const eventSize = tableData.length;
   const [selectedOrganizations, setSelectedOrganizations] = useState([]);
 
@@ -103,323 +103,319 @@ const Header = ({
     setOpenSourceDialog(true);
   };
 
-//   const handleDownload = () => {
-//     const mixpanelToken =
-//       localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
+  //   const handleDownload = () => {
+  //     const mixpanelToken =
+  //       localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
 
-//     if (!selectedSource) {
-//       alert("Please select a source first.");
-//       return;
-//     }
+  //     if (!selectedSource) {
+  //       alert("Please select a source first.");
+  //       return;
+  //     }
 
-//     // 1) Filter events to only those containing the chosen source
-//     const filteredEvents = allEvents.filter((event) =>
-//       event.source.includes(selectedSource)
-//     );
+  //     // 1) Filter events to only those containing the chosen source
+  //     const filteredEvents = allEvents.filter((event) =>
+  //       event.source.includes(selectedSource)
+  //     );
 
-//     // 2) Choose different import/init code based on Website vs. Backend
-//     let importSection = "";
-//     if (selectedSource === "Website") {
-//       importSection = `
+  //     // 2) Choose different import/init code based on Website vs. Backend
+  //     let importSection = "";
+  //     if (selectedSource === "Website") {
+  //       importSection = `
 
-// //  # Installation Instructions
-// //  # via npm
-// //  npm install --save mixpanel-browser
+  // //  # Installation Instructions
+  // //  # via npm
+  // //  npm install --save mixpanel-browser
 
-// //  # via yarn
-// //  yarn add mixpanel-browser
+  // //  # via yarn
+  // //  yarn add mixpanel-browser
 
+  // import mixpanel from "mixpanel-browser";
+  // mixpanel.init("${mixpanelToken}", {
+  //   debug: true,
+  //   track_pageview: true,
+  // });
+  //         `;
+  //     } else if (selectedSource === "Backend") {
+  //       importSection = `
 
-// import mixpanel from "mixpanel-browser";
-// mixpanel.init("${mixpanelToken}", {
-//   debug: true,
-//   track_pageview: true,
-// });
-//         `;
-//     } else if (selectedSource === "Backend") {
-//       importSection = `
+  // //  # Installation Instructions for Backend
+  // //  npm install --save mixpanel
+  // //  yarn add mixpanel
 
-// //  # Installation Instructions for Backend
-// //  npm install --save mixpanel
-// //  yarn add mixpanel
+  // const Mixpanel = require("mixpanel");
+  // const mixpanel = Mixpanel.init("${mixpanelToken}", {});
+  //         `;
+  //     }
 
+  //     // 3) Generate event code only for the filtered events
+  //     const eventCode = generateAllEventsCode(filteredEvents);
 
-// const Mixpanel = require("mixpanel");
-// const mixpanel = Mixpanel.init("${mixpanelToken}", {});
-//         `;
-//     }
+  //     // Extract function names for the comment
+  //     const functionNames = allEvents.map((event) => {
+  //       const name = event?.eventName
+  //         ?.trim()
+  //         .replace(/([a-z])([A-Z])/g, "$1_$2")
+  //         .replace(/[_\s]+/g, "_")
+  //         .toLowerCase();
+  //       return name
+  //         ?.split("_")
+  //         .map((word, index) =>
+  //           index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+  //         )
+  //         .join("");
+  //     });
 
-//     // 3) Generate event code only for the filtered events
-//     const eventCode = generateAllEventsCode(filteredEvents);
+  //     const importComment = `// import { ${functionNames.join(
+  //       ", "
+  //     )} } from './utils/mixpanel.js';`;
 
-//     // Extract function names for the comment
-//     const functionNames = allEvents.map((event) => {
-//       const name = event?.eventName
-//         ?.trim()
-//         .replace(/([a-z])([A-Z])/g, "$1_$2")
-//         .replace(/[_\s]+/g, "_")
-//         .toLowerCase();
-//       return name
-//         ?.split("_")
-//         .map((word, index) =>
-//           index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-//         )
-//         .join("");
-//     });
+  //     const finalCode = `
+  // // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+  // ${importComment}
+  // ${importSection}
 
-//     const importComment = `// import { ${functionNames.join(
-//       ", "
-//     )} } from './utils/mixpanel.js';`;
+  // ${eventCode}
+  //       `;
 
-//     const finalCode = `
-// // Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
-// ${importComment}
-// ${importSection}
+  //     const blob = new Blob([finalCode], { type: "text/javascript" });
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = "mixpanel.js";
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+  //     setOpenSourceDialog(false);
 
-// ${eventCode}
-//       `;
+  //   };
 
-//     const blob = new Blob([finalCode], { type: "text/javascript" });
-//     const url = window.URL.createObjectURL(blob);
-//     const a = document.createElement("a");
-//     a.href = url;
-//     a.download = "mixpanel.js";
-//     document.body.appendChild(a);
-//     a.click();
-//     a.remove();
-//     window.URL.revokeObjectURL(url);
-//     setOpenSourceDialog(false);
+  //   const generateAllEventsCode = (events) => {
+  //     const formatEventName = (name) => {
+  //       const eventName = name?.trim()
+  //         ? name
+  //             .trim()
+  //             .replace(/([a-z])([A-Z])/g, "$1_$2")
+  //             .replace(/[_\s]+/g, "_")
+  //             .toLowerCase()
+  //         : "unnamed_event";
 
-//   };
+  //       return {
+  //         snakeCase: eventName,
+  //         camelCase: eventName
+  //           .split("_")
+  //           .map((word, index) =>
+  //             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+  //           )
+  //           .join(""),
+  //       };
+  //     };
 
-//   const generateAllEventsCode = (events) => {
-//     const formatEventName = (name) => {
-//       const eventName = name?.trim()
-//         ? name
-//             .trim()
-//             .replace(/([a-z])([A-Z])/g, "$1_$2")
-//             .replace(/[_\s]+/g, "_")
-//             .toLowerCase()
-//         : "unnamed_event";
+  //     const generateMethodCode = (properties, methodType, eventName) => {
+  //       switch (methodType) {
+  //         case "Track":
+  //           return `mixpanel.track("${eventName}", {
+  //       ${properties
+  //         ?.map(
+  //           (prop) =>
+  //             `"${prop?.property_name}": data["${
+  //               prop?.property_type === "String"
+  //                 ? `${prop?.property_name}`
+  //                 : prop?.property_name
+  //             }"], // ${prop?.property_type}`
+  //         )
+  //         .join("\n      ")}
+  //     });`;
 
-//       return {
-//         snakeCase: eventName,
-//         camelCase: eventName
-//           .split("_")
-//           .map((word, index) =>
-//             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-//           )
-//           .join(""),
-//       };
-//     };
+  //         case "Register":
+  //         case "Register Once":
+  //           const registerMethod =
+  //             methodType === "Register" ? "register" : "register_once";
+  //           return `mixpanel.${registerMethod}({
+  //       ${properties
+  //         ?.map(
+  //           (prop) =>
+  //             `"${prop?.property_name}": data["${
+  //               prop?.property_type === "String"
+  //                 ? `${prop?.sample_value}`
+  //                 : prop?.sample_value
+  //             }"],`
+  //         )
+  //         .join("\n      ")}
+  //     });`;
 
-//     const generateMethodCode = (properties, methodType, eventName) => {
-//       switch (methodType) {
-//         case "Track":
-//           return `mixpanel.track("${eventName}", {
-//       ${properties
-//         ?.map(
-//           (prop) =>
-//             `"${prop?.property_name}": data["${
-//               prop?.property_type === "String"
-//                 ? `${prop?.property_name}`
-//                 : prop?.property_name
-//             }"], // ${prop?.property_type}`
-//         )
-//         .join("\n      ")}
-//     });`;
+  //         case "People Set":
+  //         case "People Set Once":
+  //           const setMethod = methodType === "People Set" ? "set" : "set_once";
+  //           return `mixpanel.people.${setMethod}({
+  //       ${properties
+  //         ?.map(
+  //           (prop) =>
+  //             `"${prop?.property_name}": data["${
+  //               prop?.property_type === "String"
+  //                 ? `${prop?.sample_value}`
+  //                 : prop?.sample_value
+  //             }"],`
+  //         )
+  //         .join("\n      ")}
+  //     });`;
 
-//         case "Register":
-//         case "Register Once":
-//           const registerMethod =
-//             methodType === "Register" ? "register" : "register_once";
-//           return `mixpanel.${registerMethod}({
-//       ${properties
-//         ?.map(
-//           (prop) =>
-//             `"${prop?.property_name}": data["${
-//               prop?.property_type === "String"
-//                 ? `${prop?.sample_value}`
-//                 : prop?.sample_value
-//             }"],`
-//         )
-//         .join("\n      ")}
-//     });`;
+  //         case "People Unset":
+  //           return `mixpanel.people.unset([
+  //       ${properties
+  //         ?.map((prop) => `"${prop?.property_name}",`)
+  //         .join("\n      ")}}
+  //     ]);`;
 
-//         case "People Set":
-//         case "People Set Once":
-//           const setMethod = methodType === "People Set" ? "set" : "set_once";
-//           return `mixpanel.people.${setMethod}({
-//       ${properties
-//         ?.map(
-//           (prop) =>
-//             `"${prop?.property_name}": data["${
-//               prop?.property_type === "String"
-//                 ? `${prop?.sample_value}`
-//                 : prop?.sample_value
-//             }"],`
-//         )
-//         .join("\n      ")}
-//     });`;
+  //         case "Opt Out Tracking":
+  //           return "mixpanel.opt_out_tracking();";
 
-//         case "People Unset":
-//           return `mixpanel.people.unset([
-//       ${properties
-//         ?.map((prop) => `"${prop?.property_name}",`)
-//         .join("\n      ")}}
-//     ]);`;
+  //         default:
+  //           return "";
+  //       }
+  //     };
 
-//         case "Opt Out Tracking":
-//           return "mixpanel.opt_out_tracking();";
+  //     // Generate code for all events
+  //     const allEventsCode = events.map((event) => {
+  //       const { snakeCase: eventName, camelCase: functionName } = formatEventName(
+  //         event?.eventName
+  //       );
 
-//         default:
-//           return "";
-//       }
-//     };
+  //       // Group properties by method call
+  //       const methodGroups = {};
+  //       event.items[0]?.event_property?.forEach((prop) => {
+  //         if (!methodGroups[prop?.method_call]) {
+  //           methodGroups[prop?.method_call] = [];
+  //         }
+  //         methodGroups[prop?.method_call].push(prop);
+  //       });
 
-//     // Generate code for all events
-//     const allEventsCode = events.map((event) => {
-//       const { snakeCase: eventName, camelCase: functionName } = formatEventName(
-//         event?.eventName
-//       );
+  //       // Generate code for each method group
+  //       const methodCalls = Object.entries(methodGroups)
+  //         .map(([method, props]) => generateMethodCode(props, method, eventName))
+  //         .filter((code) => code)
+  //         .join("\n\n  ");
 
-//       // Group properties by method call
-//       const methodGroups = {};
-//       event.items[0]?.event_property?.forEach((prop) => {
-//         if (!methodGroups[prop?.method_call]) {
-//           methodGroups[prop?.method_call] = [];
-//         }
-//         methodGroups[prop?.method_call].push(prop);
-//       });
+  //       // Generate super properties code
+  //       const superPropsCode =
+  //         event.items[0]?.super_property?.length > 0
+  //           ? `\n    mixpanel.register({
+  //       ${event?.items[0]?.super_property
+  //         .map((prop) => `"${prop?.name}": data["${prop?.name}"],`)
+  //         .join("\n      ")}
+  //     });`
+  //           : "";
 
-//       // Generate code for each method group
-//       const methodCalls = Object.entries(methodGroups)
-//         .map(([method, props]) => generateMethodCode(props, method, eventName))
-//         .filter((code) => code)
-//         .join("\n\n  ");
+  //       // Generate user properties code
+  //       const userPropsCode =
+  //         event.items[0]?.user_property.length > 0
+  //           ? `\n    mixpanel.people.set({
+  //       ${event?.items[0]?.user_property
+  //         .map((prop) => `"${prop?.name}": data["${prop?.name}"],`)
+  //         .join("\n      ")}
+  //     });`
+  //           : "";
 
-//       // Generate super properties code
-//       const superPropsCode =
-//         event.items[0]?.super_property?.length > 0
-//           ? `\n    mixpanel.register({
-//       ${event?.items[0]?.super_property
-//         .map((prop) => `"${prop?.name}": data["${prop?.name}"],`)
-//         .join("\n      ")}
-//     });`
-//           : "";
+  //       // Generate identify/unidentify code
+  //       const identifyCode = event?.identify
+  //         ? "\n    mixpanel.identify(userId);"
+  //         : "";
+  //       const unidentifyCode = event?.unidentify ? "\n    mixpanel.reset();" : "";
 
-//       // Generate user properties code
-//       const userPropsCode =
-//         event.items[0]?.user_property.length > 0
-//           ? `\n    mixpanel.people.set({
-//       ${event?.items[0]?.user_property
-//         .map((prop) => `"${prop?.name}": data["${prop?.name}"],`)
-//         .join("\n      ")}
-//     });`
-//           : "";
+  //       // Generate example data for function call
+  //       const exampleData = {
+  //         ...event.items[0]?.event_property.reduce(
+  //           (acc, prop) => ({
+  //             ...acc,
+  //             [prop?.property_name]: prop?.sample_value,
+  //           }),
+  //           {}
+  //         ),
+  //         ...event.items[0]?.super_property.reduce(
+  //           (acc, prop) => ({
+  //             ...acc,
+  //             [prop?.name]: prop?.value,
+  //           }),
+  //           {}
+  //         ),
+  //       };
 
-//       // Generate identify/unidentify code
-//       const identifyCode = event?.identify
-//         ? "\n    mixpanel.identify(userId);"
-//         : "";
-//       const unidentifyCode = event?.unidentify ? "\n    mixpanel.reset();" : "";
+  //       return {
+  //         implementation: `// ${
+  //           event?.event_definition || "Track user interaction"
+  //         }
+  //   export function ${functionName}(${
+  //           event?.identify ? "userId, " : ""
+  //         }data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
+  //     ${methodCalls}
+  //   }`,
+  //       };
+  //     });
 
-//       // Generate example data for function call
-//       const exampleData = {
-//         ...event.items[0]?.event_property.reduce(
-//           (acc, prop) => ({
-//             ...acc,
-//             [prop?.property_name]: prop?.sample_value,
-//           }),
-//           {}
-//         ),
-//         ...event.items[0]?.super_property.reduce(
-//           (acc, prop) => ({
-//             ...acc,
-//             [prop?.name]: prop?.value,
-//           }),
-//           {}
-//         ),
-//       };
+  //     // Combine all implementations and examples
+  //     const finalCode = `${allEventsCode
+  //       .map((code) => code?.implementation)
+  //       .join("\n\n")}`;
 
-//       return {
-//         implementation: `// ${
-//           event?.event_definition || "Track user interaction"
-//         }
-//   export function ${functionName}(${
-//           event?.identify ? "userId, " : ""
-//         }data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
-//     ${methodCalls}
-//   }`,
-//       };
-//     });
+  //     return finalCode;
+  //   };
 
-//     // Combine all implementations and examples
-//     const finalCode = `${allEventsCode
-//       .map((code) => code?.implementation)
-//       .join("\n\n")}`;
+  const handleDownload = () => {
+    const mixpanelToken =
+      currentOrganization?.applicationDetails?.token || "YOUR_PROJECT_TOKEN";
 
-//     return finalCode;
-//   };
-
-  
-
-const handleDownload = () => {
-  const mixpanelToken =
-      localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
-
-  if (!selectedSource) {
+    if (!selectedSource) {
       alert("Please select a source first.");
       return;
-  }
+    }
 
-  // Filter events to only those containing the chosen source
-  const filteredEvents = allEvents.filter((event) =>
+    // Filter events to only those containing the chosen source
+    const filteredEvents = allEvents.filter((event) =>
       event.source.includes(selectedSource)
-  );
+    );
 
-  let code = "";
-  let filename = "";
+    let code = "";
+    let filename = "";
 
-  // Generate code based on selected platform
-  switch (selectedSource) {
+    // Generate code based on selected platform
+    switch (selectedSource) {
       case "Website":
-          code = generateWebsiteCode(filteredEvents, mixpanelToken);
-          filename = "mixpanel-web.js";
-          break;
+        code = generateWebsiteCode(filteredEvents, mixpanelToken);
+        filename = "mixpanel-web.js";
+        break;
       case "Backend":
-          code = generateBackendCode(filteredEvents, mixpanelToken);
-          filename = "mixpanel-backend.js";
-          break;
+        code = generateBackendCode(filteredEvents, mixpanelToken);
+        filename = "mixpanel-backend.js";
+        break;
       case "Android":
-          code = generateAndroidCode(filteredEvents);
-          filename = "MixpanelTracking.kt";
-          break;
+        code = generateAndroidCode(filteredEvents);
+        filename = "MixpanelTracking.kt";
+        break;
       case "iOS":
-          code = generateIOSCode(filteredEvents);
-          filename = "MixpanelTracking.swift";
-          break;
+        code = generateIOSCode(filteredEvents);
+        filename = "MixpanelTracking.swift";
+        break;
       default:
-          alert("Unsupported platform");
-          return;
-  }
+        alert("Unsupported platform");
+        return;
+    }
 
-  // Create and download the file
-  const blob = new Blob([code], { type: "text/plain" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
-  setOpenSourceDialog(false);
-};
-  
+    // Create and download the file
+    const blob = new Blob([code], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    setOpenSourceDialog(false);
+  };
+
   // Helper function to generate code for Website platform
-const generateWebsiteCode = (events, mixpanelToken) => {
-  const importSection = `
+  const generateWebsiteCode = (events, mixpanelToken) => {
+    const importSection = `
 //  # Installation Instructions
 //  # via npm
 //  npm install --save mixpanel-browser
@@ -434,12 +430,12 @@ mixpanel.init("${mixpanelToken}", {
 });
   `;
 
-  return generateEventCode(events, importSection, "web");
-};
+    return generateEventCode(events, importSection, "web");
+  };
 
-// Helper function to generate code for Backend platform
-const generateBackendCode = (events, mixpanelToken) => {
-  const importSection = `
+  // Helper function to generate code for Backend platform
+  const generateBackendCode = (events, mixpanelToken) => {
+    const importSection = `
 //  # Installation Instructions for Backend
 //  npm install --save mixpanel
 //  yarn add mixpanel
@@ -448,12 +444,12 @@ const Mixpanel = require("mixpanel");
 const mixpanel = Mixpanel.init("${mixpanelToken}", {});
   `;
 
-  return generateEventCode(events, importSection, "backend");
-};
+    return generateEventCode(events, importSection, "backend");
+  };
 
-// Helper function to generate code for Android platform
-const generateAndroidCode = (events) => {
-  const importSection = `
+  // Helper function to generate code for Android platform
+  const generateAndroidCode = (events) => {
+    const importSection = `
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import org.json.JSONObject
 import android.content.Context
@@ -464,308 +460,305 @@ const val MIXPANEL_TOKEN = "YOUR_PROJECT_TOKEN"
 // MixpanelAPI.getInstance(this, MIXPANEL_TOKEN)
   `;
 
-  return generateEventCode(events, importSection, "android");
-};
+    return generateEventCode(events, importSection, "android");
+  };
 
-// Helper function to generate code for iOS platform
-const generateIOSCode = (events) => {
-  const importSection = `
+  // Helper function to generate code for iOS platform
+  const generateIOSCode = (events) => {
+    const importSection = `
 import Mixpanel
 
 // Initialize Mixpanel in your AppDelegate:
 // Mixpanel.initialize(token: "YOUR_PROJECT_TOKEN", trackAutomaticEvents: false)
   `;
 
-  return generateEventCode(events, importSection, "ios");
-};
+    return generateEventCode(events, importSection, "ios");
+  };
 
-// Main event code generator function
-const generateEventCode = (events, importSection, platform) => {
-  const formatEventName = (name) => {
+  // Main event code generator function
+  const generateEventCode = (events, importSection, platform) => {
+    const formatEventName = (name) => {
       const eventName = name?.trim()
-          ? name
-              .trim()
-              .replace(/([a-z])([A-Z])/g, "$1_$2")
-              .replace(/[_\s]+/g, "_")
-              .toLowerCase()
-          : "unnamed_event";
+        ? name
+            .trim()
+            .replace(/([a-z])([A-Z])/g, "$1_$2")
+            .replace(/[_\s]+/g, "_")
+            .toLowerCase()
+        : "unnamed_event";
 
       const camelCase = eventName
-          .split("_")
-          .map((word, index) =>
-              index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-          )
-          .join("");
+        .split("_")
+        .map((word, index) =>
+          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join("");
 
       return { snakeCase: eventName, camelCase };
-  };
+    };
 
-  const generateMethodCode = (properties, methodType, eventName, platform) => {
+    const generateMethodCode = (
+      properties,
+      methodType,
+      eventName,
+      platform
+    ) => {
       switch (platform) {
-          case "web":
-          case "backend":
-              return generateJSMethodCode(properties, methodType, eventName);
-          case "android":
-              return generateKotlinMethodCode(properties, methodType, eventName);
-          case "ios":
-              return generateSwiftMethodCode(properties, methodType, eventName);
-          default:
-              return "";
+        case "web":
+        case "backend":
+          return generateJSMethodCode(properties, methodType, eventName);
+        case "android":
+          return generateKotlinMethodCode(properties, methodType, eventName);
+        case "ios":
+          return generateSwiftMethodCode(properties, methodType, eventName);
+        default:
+          return "";
       }
-  };
+    };
 
-  const generateJSMethodCode = (properties, methodType, eventName) => {
+    const generateJSMethodCode = (properties, methodType, eventName) => {
       switch (methodType) {
-          case "Track":
-              return `mixpanel.track("${eventName}", {
+        case "Track":
+          return `mixpanel.track("${eventName}", {
   ${properties
-      ?.map(
-          (prop) =>
-              `"${prop?.property_name}": data["${prop?.property_name}"], // ${prop?.property_type}`
-      )
-      .join(",\n    ")}
+    ?.map(
+      (prop) =>
+        `"${prop?.property_name}": data["${prop?.property_name}"], // ${prop?.property_type}`
+    )
+    .join(",\n    ")}
 });`;
 
-          case "Register":
-          case "Register Once":
-              const registerMethod =
-                  methodType === "Register" ? "register" : "register_once";
-              return `mixpanel.${registerMethod}({
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register" ? "register" : "register_once";
+          return `mixpanel.${registerMethod}({
   ${properties
-      ?.map(
-          (prop) =>
-              `"${prop?.property_name}": data["${prop?.property_name}"],`
-      )
-      .join(",\n    ")}
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
 });`;
 
-          case "People Set":
-          case "People Set Once":
-              const setMethod = methodType === "People Set" ? "set" : "set_once";
-              return `mixpanel.people.${setMethod}({
+        case "People Set":
+        case "People Set Once":
+          const setMethod = methodType === "People Set" ? "set" : "set_once";
+          return `mixpanel.people.${setMethod}({
   ${properties
-      ?.map(
-          (prop) =>
-              `"${prop?.property_name}": data["${prop?.property_name}"],`
-      )
-      .join(",\n    ")}
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
 });`;
 
-          default:
-              return "";
+        default:
+          return "";
       }
-  };
+    };
 
-  const generateKotlinMethodCode = (properties, methodType, eventName) => {
+    const generateKotlinMethodCode = (properties, methodType, eventName) => {
       switch (methodType) {
-          case "Track":
-              return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).track("${eventName}", 
+        case "Track":
+          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).track("${eventName}", 
   JSONObject().apply {
       ${properties
-          ?.map(
-              (prop) =>
-                  `put("${prop?.property_name}", data["${prop?.property_name}"]) // ${prop?.property_type}`
-          )
-          .join("\n        ")}
+        ?.map(
+          (prop) =>
+            `put("${prop?.property_name}", data["${prop?.property_name}"]) // ${prop?.property_type}`
+        )
+        .join("\n        ")}
   })`;
 
-          case "Register":
-          case "Register Once":
-              const registerMethod =
-                  methodType === "Register"
-                      ? "registerSuperProperties"
-                      : "registerSuperPropertiesOnce";
-              return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).${registerMethod}(
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register"
+              ? "registerSuperProperties"
+              : "registerSuperPropertiesOnce";
+          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).${registerMethod}(
   JSONObject().apply {
       ${properties
-          ?.map(
-              (prop) =>
-                  `put("${prop?.property_name}", data["${prop?.property_name}"])`
-          )
-          .join("\n        ")}
+        ?.map(
+          (prop) =>
+            `put("${prop?.property_name}", data["${prop?.property_name}"])`
+        )
+        .join("\n        ")}
   })`;
 
-          default:
-              return "";
+        default:
+          return "";
       }
-  };
+    };
 
-  const generateSwiftMethodCode = (properties, methodType, eventName) => {
+    const generateSwiftMethodCode = (properties, methodType, eventName) => {
       switch (methodType) {
-          case "Track":
-              return `Mixpanel.mainInstance().track(
+        case "Track":
+          return `Mixpanel.mainInstance().track(
   event: "${eventName}",
   properties: [
       ${properties
-          ?.map(
-              (prop) =>
-                  `"${prop?.property_name}": data["${prop?.property_name}"] as Any // ${prop?.property_type}`
-          )
-          .join(",\n        ")}
+        ?.map(
+          (prop) =>
+            `"${prop?.property_name}": data["${prop?.property_name}"] as Any // ${prop?.property_type}`
+        )
+        .join(",\n        ")}
   ])`;
 
-          case "Register":
-          case "Register Once":
-              const registerMethod =
-                  methodType === "Register"
-                      ? "registerSuperProperties"
-                      : "registerSuperPropertiesOnce";
-              return `Mixpanel.mainInstance().${registerMethod}([
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register"
+              ? "registerSuperProperties"
+              : "registerSuperPropertiesOnce";
+          return `Mixpanel.mainInstance().${registerMethod}([
   ${properties
-      ?.map(
-          (prop) =>
-              `"${prop?.property_name}": data["${prop?.property_name}"] as Any`
-      )
-      .join(",\n    ")}
+    ?.map(
+      (prop) =>
+        `"${prop?.property_name}": data["${prop?.property_name}"] as Any`
+    )
+    .join(",\n    ")}
 ])`;
 
-          default:
-              return "";
+        default:
+          return "";
       }
-  };
+    };
 
-//   const generateExampleInvocation = (event, platform) => {
-//     const { camelCase: functionName } = formatEventName(event?.eventName);
-//     const properties = event.items[0]?.event_property || [];
-    
-//     const exampleData = properties.reduce((acc, prop) => {
-//       let exampleValue = "";
-//       switch(prop.property_type?.toLowerCase()) {
-//         case "string":
-//           exampleValue = `"example_${prop.property_name}"`;
-//           break;
-//         case "number":
-//           exampleValue = "123";
-//           break;
-//         case "boolean":
-//           exampleValue = "true";
-//           break;
-//         default:
-//           exampleValue = `"example_value"`;
-//       }
-//       acc[prop.property_name] = exampleValue;
-//       return acc;
-//     }, {});
+    //   const generateExampleInvocation = (event, platform) => {
+    //     const { camelCase: functionName } = formatEventName(event?.eventName);
+    //     const properties = event.items[0]?.event_property || [];
 
-//     switch (platform) {
-//       case "web":
-//       case "backend":
-//         return `// Example invocation:
-// // ${event?.event_definition || "Track user interaction"}
-// ${functionName}(${event?.identify ? '"user123", ' : ''}{
-//   ${Object.entries(exampleData)
-//     .map(([key, value]) => `${key}: ${value}`)
-//     .join(",\n  ")}
-// });`;
-      
-//       case "android":
-//         return `// Example invocation:
-// // ${event?.event_definition || "Track user interaction"}
-// val data = mapOf(
-//   ${Object.entries(exampleData)
-//     .map(([key, value]) => `"${key}" to ${value}`)
-//     .join(",\n  ")}
-// )
-// ${functionName}(context${event?.identify ? ', "user123"' : ''}, data)`;
-      
-//       case "ios":
-//         return `// Example invocation:
-// // ${event?.event_definition || "Track user interaction"}
-// let data: [String: Any] = [
-//   ${Object.entries(exampleData)
-//     .map(([key, value]) => `"${key}": ${value}`)
-//     .join(",\n  ")}
-// ]
-// ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
-      
-//       default:
-//         return "";
-//     }
-  //   };
-  
+    //     const exampleData = properties.reduce((acc, prop) => {
+    //       let exampleValue = "";
+    //       switch(prop.property_type?.toLowerCase()) {
+    //         case "string":
+    //           exampleValue = `"example_${prop.property_name}"`;
+    //           break;
+    //         case "number":
+    //           exampleValue = "123";
+    //           break;
+    //         case "boolean":
+    //           exampleValue = "true";
+    //           break;
+    //         default:
+    //           exampleValue = `"example_value"`;
+    //       }
+    //       acc[prop.property_name] = exampleValue;
+    //       return acc;
+    //     }, {});
 
-  const generateExampleInvocation = (event, platform) => {
-    const { camelCase: functionName } = formatEventName(event?.eventName);
+    //     switch (platform) {
+    //       case "web":
+    //       case "backend":
+    //         return `// Example invocation:
+    // // ${event?.event_definition || "Track user interaction"}
+    // ${functionName}(${event?.identify ? '"user123", ' : ''}{
+    //   ${Object.entries(exampleData)
+    //     .map(([key, value]) => `${key}: ${value}`)
+    //     .join(",\n  ")}
+    // });`;
 
-    // Combine all properties from event, user, and super properties
-    const allProperties = [
+    //       case "android":
+    //         return `// Example invocation:
+    // // ${event?.event_definition || "Track user interaction"}
+    // val data = mapOf(
+    //   ${Object.entries(exampleData)
+    //     .map(([key, value]) => `"${key}" to ${value}`)
+    //     .join(",\n  ")}
+    // )
+    // ${functionName}(context${event?.identify ? ', "user123"' : ''}, data)`;
+
+    //       case "ios":
+    //         return `// Example invocation:
+    // // ${event?.event_definition || "Track user interaction"}
+    // let data: [String: Any] = [
+    //   ${Object.entries(exampleData)
+    //     .map(([key, value]) => `"${key}": ${value}`)
+    //     .join(",\n  ")}
+    // ]
+    // ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
+
+    //       default:
+    //         return "";
+    //     }
+    //   };
+
+    const generateExampleInvocation = (event, platform) => {
+      const { camelCase: functionName } = formatEventName(event?.eventName);
+
+      // Combine all properties from event, user, and super properties
+      const allProperties = [
         ...(event.items[0]?.event_property || []),
         ...(event.items[0]?.user_property || []),
         ...(event.items[0]?.super_property || []),
-    ];
+      ];
 
-    // Generate example data based on property types and value sources
-    const exampleData = allProperties.reduce((acc, prop) => {
+      // Generate example data based on property types and value sources
+      const exampleData = allProperties.reduce((acc, prop) => {
         let propertyName = prop.property_name || prop.name; // Use `property_name` or fallback to `name`
         let exampleValue;
 
         if (prop.sample_value) {
-            // Use sample_value if provided
-            exampleValue = JSON.stringify(prop.sample_value);
+          // Use sample_value if provided
+          exampleValue = JSON.stringify(prop.sample_value);
         } else {
-            // Infer example value based on `data_type` or fallback
-            switch (prop.data_type?.toLowerCase() || "") {
-                case "string":
-                    exampleValue = `"example_${propertyName}"`;
-                    break;
-                case "number":
-                    exampleValue = 123; // Example numeric value
-                    break;
-                case "boolean":
-                    exampleValue = true; // Example boolean value
-                    break;
-                default:
-                    exampleValue = `"example_value"`; // Default fallback
-            }
+          // Infer example value based on `data_type` or fallback
+          switch (prop.data_type?.toLowerCase() || "") {
+            case "string":
+              exampleValue = `"example_${propertyName}"`;
+              break;
+            case "number":
+              exampleValue = 123; // Example numeric value
+              break;
+            case "boolean":
+              exampleValue = true; // Example boolean value
+              break;
+            default:
+              exampleValue = `"example_value"`; // Default fallback
+          }
         }
 
         if (propertyName) {
-            acc[propertyName] = exampleValue;
+          acc[propertyName] = exampleValue;
         }
 
         return acc;
-    }, {});
+      }, {});
 
-    const formattedData = Object.entries(exampleData)
+      const formattedData = Object.entries(exampleData)
         .map(([key, value]) => `${key}: ${value}`)
         .join(",\n  ");
 
-    // Platform-specific example invocation
-    switch (platform) {
+      // Platform-specific example invocation
+      switch (platform) {
         case "web":
         case "backend":
-            return `// Example invocation:
+          return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
-${functionName}(${event?.identify ? '"user123", ' : ''}{
+${functionName}(${event?.identify ? '"user123", ' : ""}{
   ${formattedData}
 });`;
 
         case "android":
-            return `// Example invocation:
+          return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
 val data = mapOf(
   ${formattedData.split(",\n  ").join(",\n  ").replace(/:/g, " to")}
 )
-${functionName}(context${event?.identify ? ', "user123"' : ''}, data)`;
+${functionName}(context${event?.identify ? ', "user123"' : ""}, data)`;
 
         case "ios":
-            return `// Example invocation:
+          return `// Example invocation:
 // ${event?.event_definition || "Track user interaction"}
 let data: [String: Any] = [
   ${formattedData}
 ]
-${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
+${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
 
         default:
-            return "";
-    }
-};
+          return "";
+      }
+    };
 
-
-  const eventsCode = events.map((event) => {
-    const { snakeCase: eventName, camelCase: functionName } = formatEventName(
-      event?.eventName
-    );
+    const eventsCode = events.map((event) => {
+      const { snakeCase: eventName, camelCase: functionName } = formatEventName(
+        event?.eventName
+      );
 
       // Group properties by method call
       const methodGroups = {};
@@ -775,35 +768,38 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
         }
         methodGroups[prop?.method_call].push(prop);
       });
-  
+
       const methodCalls = Object.entries(methodGroups)
         .map(([method, props]) =>
           generateMethodCode(props, method, eventName, platform)
         )
         .filter((code) => code)
         .join("\n\n    ");
-  
+
       const superPropsCode = generateSuperPropertiesCode(
         event.items[0]?.super_property,
         platform
       );
-  
+
       const userPropsCode = generateUserPropertiesCode(
         event.items[0]?.user_property,
         platform
       );
-  
+
       const identifyCode = generateIdentifyCode(event?.identify, platform);
-      const unidentifyCode = generateUnidentifyCode(event?.unidentify, platform);
-  
+      const unidentifyCode = generateUnidentifyCode(
+        event?.unidentify,
+        platform
+      );
+
       const functionSignature = getFunctionSignature(
         platform,
         functionName,
         event?.identify
       );
-  
+
       const exampleInvocation = generateExampleInvocation(event, platform);
-  
+
       return `
   // ${event?.event_definition || "Track user interaction"}
   ${functionSignature} {${identifyCode}${unidentifyCode}
@@ -814,128 +810,128 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ''}data: data)`;
   
   ${exampleInvocation}`;
     });
-  
+
     return `${importSection}
   
   ${eventsCode.join("\n\n")}`;
   };
-// Helper function to generate super properties code
-const generateSuperPropertiesCode = (superProperties, platform) => {
-  if (!superProperties?.length) return "";
+  // Helper function to generate super properties code
+  const generateSuperPropertiesCode = (superProperties, platform) => {
+    if (!superProperties?.length) return "";
 
-  const propsString = superProperties
+    const propsString = superProperties
       .map((prop) => `"${prop?.name}": data["${prop?.name}"]`)
       .join(",\n        ");
 
-  switch (platform) {
+    switch (platform) {
       case "web":
       case "backend":
-          return `mixpanel.register({
+        return `mixpanel.register({
       ${propsString}
   });`;
       case "android":
-          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).registerSuperProperties(
+        return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).registerSuperProperties(
       JSONObject().apply {
           ${superProperties
-              .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
-              .join("\n            ")}
+            .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
+            .join("\n            ")}
       }
   )`;
       case "ios":
-          return `Mixpanel.mainInstance().registerSuperProperties([
+        return `Mixpanel.mainInstance().registerSuperProperties([
       ${propsString}
   ])`;
       default:
-          return "";
-  }
-};
+        return "";
+    }
+  };
 
-// Helper function to generate user properties code
-const generateUserPropertiesCode = (userProperties, platform) => {
-  if (!userProperties?.length) return "";
+  // Helper function to generate user properties code
+  const generateUserPropertiesCode = (userProperties, platform) => {
+    if (!userProperties?.length) return "";
 
-  const propsString = userProperties
+    const propsString = userProperties
       .map((prop) => `"${prop?.name}": data["${prop?.name}"]`)
       .join(",\n        ");
 
-  switch (platform) {
+    switch (platform) {
       case "web":
       case "backend":
-          return `mixpanel.people.set({
+        return `mixpanel.people.set({
       ${propsString}
   });`;
       case "android":
-          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).people.set(
+        return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).people.set(
       JSONObject().apply {
           ${userProperties
-              .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
-              .join("\n            ")}
+            .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
+            .join("\n            ")}
       }
   )`;
       case "ios":
-          return `Mixpanel.mainInstance().people.set(properties: [
+        return `Mixpanel.mainInstance().people.set(properties: [
       ${propsString}
   ])`;
       default:
-          return "";
-  }
-};
+        return "";
+    }
+  };
 
-// Helper function to generate identify code
-const generateIdentifyCode = (shouldIdentify, platform) => {
-  if (!shouldIdentify) return "";
+  // Helper function to generate identify code
+  const generateIdentifyCode = (shouldIdentify, platform) => {
+    if (!shouldIdentify) return "";
 
-  switch (platform) {
+    switch (platform) {
       case "web":
       case "backend":
-          return "\n    mixpanel.identify(userId);";
+        return "\n    mixpanel.identify(userId);";
       case "android":
-          return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).identify(userId);";
+        return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).identify(userId);";
       case "ios":
-          return "\n    Mixpanel.mainInstance().identify(distinctId: userId)";
+        return "\n    Mixpanel.mainInstance().identify(distinctId: userId)";
       default:
-          return "";
-  }
-};
+        return "";
+    }
+  };
 
-// Helper function to generate unidentify code
-const generateUnidentifyCode = (shouldUnidentify, platform) => {
-  if (!shouldUnidentify) return "";
+  // Helper function to generate unidentify code
+  const generateUnidentifyCode = (shouldUnidentify, platform) => {
+    if (!shouldUnidentify) return "";
 
-  switch (platform) {
+    switch (platform) {
       case "web":
       case "backend":
-          return "\n    mixpanel.reset();";
+        return "\n    mixpanel.reset();";
       case "android":
-          return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).reset();";
+        return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).reset();";
       case "ios":
-          return "\n    Mixpanel.mainInstance().reset()";
+        return "\n    Mixpanel.mainInstance().reset()";
       default:
-          return "";
-  }
-};
+        return "";
+    }
+  };
 
-// Helper function to generate function signatures
-const getFunctionSignature = (platform, functionName, hasUserId) => {
-  switch (platform) {
+  // Helper function to generate function signatures
+  const getFunctionSignature = (platform, functionName, hasUserId) => {
+    switch (platform) {
       case "web":
       case "backend":
-          return `export function ${functionName}(${
-              hasUserId ? "userId, " : ""
-          }data)`;
+        return `export function ${functionName}(${
+          hasUserId ? "userId, " : ""
+        }data)`;
       case "android":
-          return `fun ${functionName}(context: Context, ${
-              hasUserId ? "userId: String, " : ""
-          }data: Map<String, Any>)`;
+        return `fun ${functionName}(context: Context, ${
+          hasUserId ? "userId: String, " : ""
+        }data: Map<String, Any>)`;
       case "ios":
-          return `func ${functionName}(${
-              hasUserId ? "userId: String, " : ""
-          }data: [String: Any])`;
+        return `func ${functionName}(${
+          hasUserId ? "userId: String, " : ""
+        }data: [String: Any])`;
       default:
-          return "";
-  }
-};
-  
+        return "";
+    }
+  };
+
   const handleMasterEvents = async () => {
     router.push(`${window.location.pathname}/master-events`);
   };
@@ -997,7 +993,7 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
     }
   };
 
-   const [openAppSetup, setOpenAppSetup] = useState(false);
+  const [openAppSetup, setOpenAppSetup] = useState(false);
   const [newOrgId, setNewOrgId] = useState(null);
 
   const handleOrganizationClick = () => {
@@ -1009,30 +1005,33 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
   const [uploading, setUploading] = useState(false);
 
   const handleAppSetup = async (formData) => {
-    console.log(formData, currentOrganization)
+    console.log(formData, currentOrganization);
 
     const dataToSubmit = {
       ...formData,
-      applicationId: currentOrganization?.applicationId, 
+      applicationId: currentOrganization?.applicationId,
     };
-    
-    const endpoint = '/api/applications';
+
+    const endpoint = "/api/applications";
 
     try {
       const response = await axios({
-        method: 'put',
+        method: "put",
         url: endpoint,
         data: dataToSubmit,
       });
 
       if (response.data.success) {
-        console.log('Application setup success:', response.data.application);
+        console.log("Application setup success:", response.data.application);
         setOpenAppSetup(false);
       } else {
-        console.error('Error:', response.data.message);
+        console.error("Error:", response.data.message);
       }
     } catch (error) {
-      console.error('Network error:', error.response?.data?.message || error.message);
+      console.error(
+        "Network error:",
+        error.response?.data?.message || error.message
+      );
     }
   };
 
@@ -1055,24 +1054,28 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
         }}
       >
         <Box display="flex" alignItems="center" gap={2}>
-        <Typography
-  variant="h6"
-  fontWeight="bold"
-  // onClick={handleOrganizationClick}
-  sx={{
-    cursor: currentOrganization?.name ? "pointer" : "default",
-    color: currentOrganization?.name ? "#333" : "#888",
-    backgroundColor: "#f0f0f0", // Light gray background color
-    padding: "4px 8px", // Add some padding for better spacing
-    borderRadius: "4px", // Rounded corners
-    "&:hover": currentOrganization?.name && { 
-      textDecoration: "underline",
-      backgroundColor: "#e0e0e0", // Slightly darker gray on hover
-    },
-  }}
->
-  {currentOrganization?.name || "Organization"} ({eventSize})
-</Typography>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            onClick={handleOrganizationClick}
+            sx={{
+              cursor: currentOrganization?.name ? "pointer" : "default",
+              color: currentOrganization?.name ? "#333" : "#888",
+              backgroundColor: "#f0f0f0", // Light gray background color
+              padding: "4px 8px", // Add some padding for better spacing
+              borderRadius: "4px", // Rounded corners
+              "&:hover": currentOrganization?.name && {
+                textDecoration: "underline",
+                backgroundColor: "#e0e0e0", // Slightly darker gray on hover
+              },
+            }}
+          >
+            {isMasterEventsPath
+              ? "Master Events"
+              : currentOrganization?.name || "Organization"}{" "}
+            ({eventSize})
+            {/* {currentOrganization?.name || "Organization"} ({eventSize}) */}
+          </Typography>
 
           <Button variant="contained" color="secondary" onClick={handleOpen}>
             + New Event
@@ -1125,7 +1128,6 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
             >
               Download
             </Button>
-            
           )}
           <Dialog
             open={openSourceDialog}
@@ -1148,23 +1150,23 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
                       label={source}
                     />
                   ))} */}
-                    {uniqueSources.map((source) => (
-          <FormControlLabel
-            key={source}
-            value={source}
-            control={<Radio />}
-            label={
-              // Dynamically add brackets with platform information
-              source === "Backend"
-                ? `${source} (NodeJS)`
-                : source === "Android"
-                ? `${source} (Kotlin)`
-                : source === "iOS"
-                ? `${source} (Swift)`
-                : source // Default to just the source name
-            }
-          />
-        ))}
+                  {uniqueSources.map((source) => (
+                    <FormControlLabel
+                      key={source}
+                      value={source}
+                      control={<Radio />}
+                      label={
+                        // Dynamically add brackets with platform information
+                        source === "Backend"
+                          ? `${source} (NodeJS)`
+                          : source === "Android"
+                          ? `${source} (Kotlin)`
+                          : source === "iOS"
+                          ? `${source} (Swift)`
+                          : source // Default to just the source name
+                      }
+                    />
+                  ))}
                 </RadioGroup>
               </FormControl>
             </DialogContent>
@@ -1216,94 +1218,197 @@ const getFunctionSignature = (platform, functionName, hasUserId) => {
             </FormControl>
           )}
         </Box>
-        {/* <Box display="flex" alignItems="center" gap={2}>
-  <Button
-    variant="outlined"
-    startIcon={<UploadIcon />}
-    component="label"
-    disabled={uploading}
-  >
-    Upload CSV
-    <input
-      type="file"
-      accept=".csv"
-      hidden
-      onChange={(event) => {
-        const file = event.target.files[0];
-        if (file) {
-          setUploading(true);
-          Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (result) => {
-              const formattedData = result.data.map((row, index) => ({
-                id: `${Date.now()}-${index}`, // Add unique ID
-                name: row.eventName || "Unnamed Event",
-                eventProperties: row.items
-                  ? JSON.parse(row.items)
-                      .map((item) => {
-                        const eventProps = item.event_property
-                          ?.map(
-                            (prop) =>
-                              `${prop.property_name || "N/A"}: ${
-                                prop.sample_value || "N/A"
-                              }, method call: ${prop.method_call || "N/A"}`
-                          )
-                          .join("; ") || "";
-      
-                        const superProps = item.super_property
-                          ?.map(
-                            (prop) =>
-                              `${prop.name || "N/A"}: ${prop.value || "N/A"}`
-                          )
-                          .join("; ") || "";
-      
-                        const userProps = item.user_property
-                          ?.map(
-                            (prop) =>
-                              `${prop.name || "N/A"}: ${prop.value || "N/A"}`
-                          )
-                          .join("; ") || "";
-      
-                        return [
-                          eventProps ? `Event Properties: { ${eventProps} }` : "",
-                          superProps ? `Super Properties: { ${superProps} }` : "",
-                          userProps ? `User Properties: { ${userProps} }` : "",
-                        ]
-                          .filter(Boolean)
-                          .join(", ");
-                      })
-                      .join("; ")
-                  : "",
-                items: row.items ? JSON.parse(row.items) : [],
-                stakeholders: row.stakeholders ? row.stakeholders.split(",") : [],
-                category: row.category || "Uncategorized",
-                source: row.source ? row.source.split(",") : ["Unknown"],
-                platform: row.platform ? row.platform.split(",") : ["Unknown"],
-                action: row.action || "No action",
-                identify: row.identify === "true",
-                unidentify: row.unidentify === "true",
-                organization: row.organization || "N/A",
-              }));
-      
-              setTableData((prev) => [...prev, ...formattedData]);
-              setUploading(false);
-            },
-            error: () => setUploading(false),
-          });
-        }
-      }}
-    />
-  </Button>
-</Box> */}
+        {isMasterEventsPath && (
+          <Box display="flex" alignItems="center" gap={2}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              component="label"
+              disabled={uploading}
+            >
+              Upload CSV
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={async (event) => {
+                  const file = event.target.files[0];
+                  if (file) {
+                    setUploading(true);
 
-        {/* <ApplicationSetupDialog
-  open={openAppSetup}
-  onClose={() => setOpenAppSetup(false)}
-  onSubmit={handleAppSetup}
-  isEdit={!!currentOrganization?.applicationId} 
-  initialData={currentOrganization?.applicationDetails || {}}
-/> */}
+                    Papa.parse(file, {
+                      header: true,
+                      skipEmptyLines: true,
+                      complete: async (result) => {
+                        const rows = result.data;
+                        const newFormattedData = []; // Temporary array for new rows
+
+                        for (const [index, row] of rows.entries()) {
+                          try {
+                            // Format the row data for API payload
+                            const payload = {
+                              eventName: row.eventName || "Unnamed Event",
+                              event_definition:
+                                row.event_definition ||
+                                "No description provided",
+                              platform: row.platform
+                                ? row.platform.split(",")
+                                : ["Unknown"],
+                              stakeholders: row.stakeholders
+                                ? row.stakeholders.split(",")
+                                : [],
+                              category: row.category || "Uncategorized",
+                              source: row.source
+                                ? row.source.split(",")
+                                : ["Unknown"],
+                              action: row.action || "No action",
+                              items: row.items
+                                ? JSON.parse(row.items).map((item) => ({
+                                    user_property: item.user_property || [],
+                                    event_property:
+                                      item.event_property?.map((prop) => ({
+                                        property_name:
+                                          prop.property_name || prop.name,
+                                        sample_value:
+                                          prop.sample_value || prop.value,
+                                        data_type: prop.data_type || prop.type,
+                                        property_type: prop.property_type,
+                                        property_definition:
+                                          prop.property_definition ||
+                                          "Event property definition",
+                                        method_call:
+                                          prop.method_call || "Track",
+                                      })) || [],
+                                    super_property: item.super_property || [],
+                                  }))
+                                : [],
+                              identify: row.identify === "true",
+                              unidentify: row.unidentify === "true",
+                              organization: row.organization || "N/A",
+                            };
+
+                            // Make API call to save the row to the master events
+                            const response = await axios.post(
+                              "/api/master-events",
+                              payload
+                            );
+                            const savedEvent = response.data.totalEvents?.find(
+                              (event) => event.eventName === payload.eventName
+                            );
+
+                            if (savedEvent) {
+                              // Add the saved event to the temporary array
+                              newFormattedData.push({
+                                id: savedEvent._id,
+                                name: savedEvent.eventName,
+                                eventProperties: savedEvent.items
+                                  .map((item) => {
+                                    const eventProps =
+                                      item.event_property
+                                        ?.map(
+                                          (prop) =>
+                                            `Property Name: ${
+                                              prop.property_name || "N/A"
+                                            }, Value: ${
+                                              prop.sample_value || "N/A"
+                                            }, Data Type: ${
+                                              prop.data_type || "N/A"
+                                            }, Method Call: ${
+                                              prop.method_call || "N/A"
+                                            }`
+                                        )
+                                        .join("; ") || "";
+
+                                    const superProps =
+                                      item.super_property
+                                        ?.map(
+                                          (prop) =>
+                                            `Name: ${
+                                              prop.name || "N/A"
+                                            }, Value: ${prop.value || "N/A"}`
+                                        )
+                                        .join("; ") || "";
+
+                                    const userProps =
+                                      item.user_property
+                                        ?.map(
+                                          (prop) =>
+                                            `Name: ${
+                                              prop.name || "N/A"
+                                            }, Value: ${prop.value || "N/A"}`
+                                        )
+                                        .join("; ") || "";
+
+                                    return [
+                                      eventProps
+                                        ? `Event Properties: { ${eventProps} }`
+                                        : "",
+                                      superProps
+                                        ? `Super Properties: { ${superProps} }`
+                                        : "",
+                                      userProps
+                                        ? `User Properties: { ${userProps} }`
+                                        : "",
+                                    ]
+                                      .filter(Boolean)
+                                      .join(", ");
+                                  })
+                                  .join("; "),
+                                stakeholders: savedEvent.stakeholders,
+                                category: savedEvent.category,
+                                source: savedEvent.source,
+                                action: savedEvent.action,
+                                platform: savedEvent.platform,
+                              });
+                              alert("CSV data uploaded successfully!");
+                            }
+                          } catch (error) {
+                            if (
+                              error.response &&
+                              error.response.data &&
+                              error.response.data.message
+                            ) {
+                              alert(error.response.data.message);
+                            } else {
+                              alert("Failed to save event. Please try again.");
+                            }
+                          }
+                        }
+
+                        // Deduplicate and update the table data
+                        setTableData((prev) => {
+                          const allData = [...prev, ...newFormattedData];
+                          const deduplicatedData = allData.filter(
+                            (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+                          ); // Remove duplicates based on the `id`
+                          return deduplicatedData;
+                        });
+
+                        setUploading(false);
+                      },
+                      error: () => {
+                        setUploading(false);
+                        alert(
+                          "Failed to parse the CSV file. Please try again."
+                        );
+                      },
+                    });
+
+                    event.target.value = null; // Reset the file input
+                  }
+                }}
+              />
+            </Button>
+          </Box>
+        )}
+
+        <ApplicationSetupDialog
+          open={openAppSetup}
+          onClose={() => setOpenAppSetup(false)}
+          onSubmit={handleAppSetup}
+          isEdit={!!currentOrganization?.applicationId}
+          initialData={currentOrganization?.applicationDetails || {}}
+        />
       </Box>
       <Box sx={{ marginTop: "10px" }}></Box>
       {open && <AddEventModal open={open} setOpen={setOpen} />}

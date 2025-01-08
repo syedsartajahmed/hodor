@@ -41,10 +41,18 @@ const Index = () => {
       setAllEvents(events);
       console.log("Fetched organization details:", events);
       console.log(organizationDetails.applications?.[0]["_id"] || null);
+      const firstApplication = organizationDetails.applications?.[0] || {};
+
       setCurrentOrganization({
         id: organizationDetails._id,
         name: organizationDetails.name,
-        applicationId: organizationDetails.applications?.[0]["_id"] || null,
+        applicationId: firstApplication._id || null,
+        applicationDetails: {
+          apiSecret: firstApplication.apiSecret || "",
+          projectId: firstApplication.projectId || "",
+          serviceAccountPassword: firstApplication.serviceAccountPassword || "",
+          token: firstApplication.token || "",
+        },
       });
 
       const updatedRows = events.map((event) => ({
