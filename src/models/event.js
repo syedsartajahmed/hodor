@@ -14,7 +14,7 @@ const EventSchema = new Schema({
   unidentify: { type: Boolean, default: false },
   status: {
     type: String,
-    enum: ["completed", "not started", "in progress"],
+    enum: ["ready to implement", "not started", "in progress"],
     default: "not started",
   },
 });

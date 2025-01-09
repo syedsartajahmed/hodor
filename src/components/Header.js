@@ -1284,7 +1284,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                                 : [],
                               identify: row.identify === "true",
                               unidentify: row.unidentify === "true",
-                              organization: row.organization || "N/A",
+                              organization: row?.organization || "",
                             };
 
                             // Make API call to save the row to the master events
@@ -1359,6 +1359,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                                 source: savedEvent.source,
                                 action: savedEvent.action,
                                 platform: savedEvent.platform,
+                                organization : savedEvent?.organization
                               });
                               alert("CSV data uploaded successfully!");
                             }

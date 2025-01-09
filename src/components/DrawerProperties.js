@@ -772,7 +772,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
     }));
   };
 
-  const statusOptions = ["not started", "in progress", "completed"];
+  const statusOptions = ["not started", "in progress", "ready to implement"];
 
   const handleStatusChange = (event) => {
     const newStatus = event.target.value;
