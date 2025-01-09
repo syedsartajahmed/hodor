@@ -31,6 +31,7 @@ import axios from "axios";
 import ApplicationSetupDialog from "@/components/ApplicationSetupDialog";
 import UploadIcon from "@mui/icons-material/Upload";
 import Papa from "papaparse";
+import showToast from "@/utils/toast";
 
 const Header = ({
   isShowCopy = false,
@@ -70,7 +71,7 @@ const Header = ({
       .writeText(url)
       .then(() => {
         console.log("URL copied to clipboard:", url);
-        alert(`Link copied to clipboard:\n${url}`);
+        showToast(`Link copied to clipboard:\n${url}`);
       })
       .catch((err) => {
         console.error("Failed to copy URL to clipboard:", err);
@@ -108,7 +109,7 @@ const Header = ({
   //       localStorage.getItem("mixpanelToken") || "YOUR_PROJECT_TOKEN";
 
   //     if (!selectedSource) {
-  //       alert("Please select a source first.");
+  //       showToast("Please select a source first.");
   //       return;
   //     }
 
@@ -365,7 +366,7 @@ const Header = ({
       currentOrganization?.applicationDetails?.token || "YOUR_PROJECT_TOKEN";
 
     if (!selectedSource) {
-      alert("Please select a source first.");
+      showToast("Please select a source first.");
       return;
     }
 
@@ -396,7 +397,7 @@ const Header = ({
         filename = "MixpanelTracking.swift";
         break;
       default:
-        alert("Unsupported platform");
+        showToast("Unsupported platform");
         return;
     }
 
@@ -1361,7 +1362,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                                 platform: savedEvent.platform,
                                 organization : savedEvent?.organization
                               });
-                              alert("CSV data uploaded successfully!");
+                              showToast("CSV data uploaded successfully!");
                             }
                           } catch (error) {
                             if (
@@ -1369,9 +1370,9 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                               error.response.data &&
                               error.response.data.message
                             ) {
-                              alert(error.response.data.message);
+                              showToast(error.response.data.message);
                             } else {
-                              alert("Failed to save event. Please try again.");
+                              showToast("Failed to save event. Please try again.");
                             }
                           }
                         }
@@ -1389,7 +1390,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                       },
                       error: () => {
                         setUploading(false);
-                        alert(
+                        showToast(
                           "Failed to parse the CSV file. Please try again."
                         );
                       },

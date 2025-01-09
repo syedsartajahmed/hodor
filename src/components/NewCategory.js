@@ -1,6 +1,7 @@
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import showToast from "@/utils/toast";
 
 const NewCategoryModal = ({ open, setOpen }) => {
   const { categories, setCategories } = useAppContext();
@@ -13,7 +14,7 @@ const NewCategoryModal = ({ open, setOpen }) => {
 
   const handleSubmit = () => {
     if (categoryName.trim() === "") {
-      alert("Category name cannot be empty!");
+      showToast("Category name cannot be empty!");
       return;
     }
 

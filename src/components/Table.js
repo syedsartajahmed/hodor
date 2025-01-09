@@ -7,6 +7,7 @@ import DeleteCellRenderer from "@/components/DeleteCellRenderer";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import axios from "axios";
 import { useRouter } from "next/router";
+import showToast from "@/utils/toast";
 
 const Table = ({
   page,
@@ -30,7 +31,7 @@ const Table = ({
     try {
       const response = await axios.post("/api/copyMasterEvents", payload);
       if (response.status === 201) {
-        alert("Copied successfully to your organization!");
+        showToast("Copied successfully to your organization!");
       }
     } catch (err) {
       console.error("Error saving event:", err.message);

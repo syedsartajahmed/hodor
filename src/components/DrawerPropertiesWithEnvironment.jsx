@@ -13,6 +13,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import styled from "@emotion/styled";
 import { useAppContext } from "@/context/AppContext";
+import showToast from "@/utils/toast";
 
 const CodeBox = styled(Box)`
   background-color: #2d2d2d;
@@ -118,7 +119,7 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-      alert("Copied to clipboard!");
+      showToast("Copied to clipboard!");
     });
   };
 

@@ -3,6 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from "next/router";
 import DrawerProperties from "./DrawerProperties";
+import showToast from "@/utils/toast";
 
 const EventDrawer = ({ isShowSave = true }) => {
   const {
@@ -175,21 +176,21 @@ const EventDrawer = ({ isShowSave = true }) => {
 
         setTableData(updatedRows);
         //setSelectedOrganization(organizationDetails);
-        alert("Data saved successfully!");
+        showToast("Data saved successfully!");
       } catch (error) {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", error.message);
         if (error.response && error.response.status === 409) {
-          alert(error.response.data.message); // Display the custom error message from the server
+          showToast(error.response.data.message); // Display the custom error message from the server
         } else {
-          alert("An unexpected error occurred. Please try again."); // Fallback for other errors
+          showToast("An unexpected error occurred. Please try again."); // Fallback for other errors
         }
       } finally {
         setLoading(false);
       }
     } else {
       if (!selectedEvent) {
-        alert("No event data to save.");
+        showToast("No event data to save.");
         return;
       }
       const payload = {
@@ -354,16 +355,16 @@ const EventDrawer = ({ isShowSave = true }) => {
             .join("; "),
           ...event,
         }));
-        alert("Data saved successfully!");
+        showToast("Data saved successfully!");
         setTableData(updatedRows);
         setSelectedOrganization(organizationDetails);
       } catch (error) {
         // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", error.message);
         if (error.response && error.response.status === 409) {
-          alert(error.response.data.message); // Display the custom error message from the server
+          showToast(error.response.data.message); // Display the custom error message from the server
         } else {
-          alert("An unexpected error occurred. Please try again."); // Fallback for other errors
+          showToast("An unexpected error occurred. Please try again."); // Fallback for other errors
         }
       } finally {
         setLoading(false);

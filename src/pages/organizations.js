@@ -20,6 +20,7 @@ import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
 import ApplicationSetupDialog from "@/components/ApplicationSetupDialog";
 import Footer from "@/components/Footer";
+import showToast from "@/utils/toast";
 
 const Organizations = () => {
   const router = useRouter();
@@ -66,7 +67,7 @@ const Organizations = () => {
 
   const handleAddOrganizationSubmit1 = async () => {
     if (!newOrganizationName.trim()) {
-      alert("Organization name is required.");
+      showToast("Organization name is required.");
       return;
     }
 
@@ -77,7 +78,7 @@ const Organizations = () => {
       const newOrganization = response.data.organization;
 
       if (response.data.success === false) {
-        alert(
+        showToast(
           response.data.message ||
             "Failed to add organization. Please try again."
         );
@@ -88,16 +89,16 @@ const Organizations = () => {
       }
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
-        alert(err.response.data.message);
+        showToast(err.response.data.message);
       } else {
-        alert("Failed to add organization. Please try again.");
+        showToast("Failed to add organization. Please try again.");
       }
     }
   };
 
   const handleAddOrganizationSubmit = async () => {
     if (!newOrganizationName.trim()) {
-      alert("Organization name is required.");
+      showToast("Organization name is required.");
       return;
     }
 
@@ -107,7 +108,7 @@ const Organizations = () => {
       });
 
       if (response.data.success === false) {
-        alert(
+        showToast(
           response.data.message ||
             "Failed to add organization. Please try again."
         );
@@ -120,7 +121,7 @@ const Organizations = () => {
         setOpenAppSetup(true);
       }
     } catch (err) {
-      alert("Failed to add organization. Please try again.");
+      showToast("Failed to add organization. Please try again.");
     }
   };
 
@@ -137,7 +138,7 @@ const Organizations = () => {
         router.push(`/dashboard/${newOrgId}`);
       }
     } catch (error) {
-      alert("Failed to setup application. Please try again.");
+      showToast("Failed to setup application. Please try again.");
     }
   };
 
@@ -162,7 +163,7 @@ const Organizations = () => {
       handleDeleteDialogClose();
     } catch (err) {
       console.error("Failed to delete organization", err);
-      alert("Failed to delete organization. Please try again.");
+      showToast("Failed to delete organization. Please try again.");
     }
   };
 

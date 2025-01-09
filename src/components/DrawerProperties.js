@@ -32,6 +32,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DrawerPropertiesWithEnvironment from "./DrawerPropertiesWithEnvironment";
 import styled from "@emotion/styled";
 import { Add, Close } from "@mui/icons-material";
+import showToast from "@/utils/toast";
 
 const DrawerProperties = () => {
   const CodeBox = styled(Box)`
@@ -784,7 +785,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-      alert("Copied to clipboard!");
+      showToast("Copied to clipboard!");
     });
   };
 

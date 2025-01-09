@@ -4,6 +4,8 @@ import "@/styles/globals.css";
 //   return <Component {...pageProps} />;
 // }
 import { useEffect } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import * as React from "react";
 import { CssBaseline } from "@mui/material";
@@ -26,7 +28,8 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <AppProvider>
       <CssBaseline />
-        <Component {...pageProps} />
+      <Component {...pageProps} />
+      <ToastContainer />
     </AppProvider>
   );
 }
