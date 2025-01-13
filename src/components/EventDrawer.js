@@ -14,6 +14,8 @@ const EventDrawer = ({ isShowSave = true }) => {
     currentOrganization,
     setTableData,
     setSelectedOrganization,
+    setIsProductAnalyst,
+    isProductAnalyst,
   } = useAppContext();
   const router = useRouter();
   const { pathname } = router;
@@ -376,6 +378,10 @@ const EventDrawer = ({ isShowSave = true }) => {
     return eventName.trim().toLowerCase().replace(/\s+/g, "_") + "_event";
   };
 
+  const handleToggle = () => {
+    setIsProductAnalyst(!isProductAnalyst);
+  };
+
   return (
     <div
       className={`fixed top-0 right-0 h-full  w-120 bg-gray-100 shadow-lg transform transition-transform duration-300 z-50 ${
@@ -391,6 +397,22 @@ const EventDrawer = ({ isShowSave = true }) => {
           <h2 className="text-lg font-semibold">
             {selectedEvent?.name || "Event Details"}
           </h2>
+          <div className="flex items-center space-x-2">
+            <span className="text-base font-bold">
+              {isProductAnalyst ? "Product Analyst" : "CDP"}
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={isProductAnalyst}
+                onChange={handleToggle}
+              />
+              <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-[#2d2d2d] peer focus:outline-none peer-focus:ring-2 peer-focus:ring-[#2d2d2d] transition"></div>
+              <span className="absolute left-1 top-1 w-4 h-4 bg-white border border-gray-300 rounded-full peer-checked:translate-x-5 peer-checked:border-white transition-transform"></span>
+            </label>
+          </div>
+
           <button
             onClick={() => toggleEventDrawer(false)}
             className="text-gray-500 hover:text-gray-800"

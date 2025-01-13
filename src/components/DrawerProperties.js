@@ -70,6 +70,7 @@ const DrawerProperties = () => {
     currentOrganization,
     setTableData,
     setSelectedOrganization,
+    isProductAnalyst,
   } = useAppContext();
 
   const [eventProperties, setEventProperties] = useState([
@@ -442,126 +443,206 @@ const DrawerProperties = () => {
     // Generate code for each method type
     const generateMethodCode = (properties, methodType) => {
       console.log(properties, methodType);
-      switch (methodType) {
-        case "Track":
-          const validProperties = properties.filter((prop) =>
-            prop.name?.trim()
-          );
-          if (validProperties.length === 0) return "";
-          return `mixpanel.track("${eventName}", {
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            prop.type === "String" ? `${prop.name}` : prop.name
-          }"], // ${prop.type}`
-      )
-      .join(",\n    ")}
-  });`;
+      if (isProductAnalyst) {
+        switch (methodType) {
+          case "Track":
+            const validProperties = properties.filter((prop) =>
+              prop.name?.trim()
+            );
+            if (validProperties.length === 0) return "";
+            return `mixpanel.track("${eventName}", {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"], // ${prop.type}`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "Register":
-          return `mixpanel.register({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            prop.type === "String" ? `${prop.sample_value}` : prop.sample_value
-          }"]`
-      )
-      .join(",\n    ")}
-  });`;
+          case "Register":
+            return `mixpanel.register({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "Register Once":
-          return `mixpanel.register_once({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            prop.type === "String" ? `${prop.sample_value}` : prop.sample_value
-          }"]`
-      )
-      .join(",\n    ")}
-  });`;
+          case "Register Once":
+            return `mixpanel.register_once({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "People Set":
-          return `mixpanel.people.set({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            prop.type === "String" ? `${prop.sample_value}` : prop.sample_value
-          }"]`
-      )
-      .join(",\n    ")}
-  });`;
+          case "People Set":
+            return `mixpanel.people.set({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "People Set Once":
-          return `mixpanel.people.set_once({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            prop.type === "String" ? `${prop.sample_value}` : prop.sample_value
-          }"]`
-      )
-      .join(",\n    ")}
-  });`;
+          case "People Set Once":
+            return `mixpanel.people.set_once({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "People Increment":
-          return `mixpanel.people.increment(${
-            properties.length === 1
-              ? `"${properties[0].name}", data["${properties[0].sample_value}"]`
-              : `{
-    ${properties
-      .map((prop) => `"${prop.name}": data["${prop.sample_value}"]`)
-      .join(",\n    ")}
-  }`
-          });`;
+          case "People Increment":
+            return `mixpanel.people.increment(${
+              properties.length === 1
+                ? `"${properties[0].name}", data["${properties[0].sample_value}"]`
+                : `{
+      ${properties
+        .map((prop) => `"${prop.name}": data["${prop.sample_value}"]`)
+        .join(",\n    ")}
+    }`
+            });`;
 
-        case "People Unset":
-          return `mixpanel.people.unset([
-    ${properties.map((prop) => `"${prop.name}"`).join(",\n    ")}
-  ]);`;
+          case "People Unset":
+            return `mixpanel.people.unset([
+      ${properties.map((prop) => `"${prop.name}"`).join(",\n    ")}
+    ]);`;
 
-        case "People Append":
-          return `mixpanel.people.append({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data["${
-            Array.isArray(prop.sample_value)
-              ? JSON.stringify(prop.sample_value)
-              : `${prop.sample_value}`
-          }"]`
-      )
-      .join(",\n    ")}
-  });`;
+          case "People Append":
+            return `mixpanel.people.append({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              Array.isArray(prop.sample_value)
+                ? JSON.stringify(prop.sample_value)
+                : `${prop.sample_value}`
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "People Union":
-          return `mixpanel.people.union({
-    ${properties
-      .map(
-        (prop) =>
-          `"${prop.name}": data.${
-            Array.isArray(prop.sample_value)
-              ? JSON.stringify(prop.sample_value)
-              : `["${prop.sample_value}"]`
-          }`
-      )
-      .join(",\n    ")}
-  });`;
+          case "People Union":
+            return `mixpanel.people.union({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data.${
+              Array.isArray(prop.sample_value)
+                ? JSON.stringify(prop.sample_value)
+                : `["${prop.sample_value}"]`
+            }`
+        )
+        .join(",\n    ")}
+    });`;
 
-        case "Time Event":
-          return `mixpanel.time_event("${eventName}");`;
+          case "Time Event":
+            return `mixpanel.time_event("${eventName}");`;
 
-        case "Opt In Tracking":
-          return "mixpanel.opt_in_tracking();";
+          case "Opt In Tracking":
+            return "mixpanel.opt_in_tracking();";
 
-        case "Opt Out Tracking":
-          return "mixpanel.opt_out_tracking();";
+          case "Opt Out Tracking":
+            return "mixpanel.opt_out_tracking();";
 
-        default:
-          return "";
+          default:
+            return "";
+        }
+      } else {
+        switch (methodType) {
+          case "Track":
+            const validProperties = properties.filter((prop) =>
+              prop.name?.trim()
+            );
+            if (validProperties.length === 0) return "";
+            return `rudderanalytics.track("${eventName}", {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"], // ${prop.type}`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Register":
+            return `rudderanalytics.identify(
+    rudderanalytics.getAnonymousId(),
+    {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"]`
+        )
+        .join(",\n        ")}
+    }
+  );`;
+
+          case "Identify":
+            return `rudderanalytics.identify(userId, {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Reset":
+            return "rudderanalytics.reset();";
+
+          case "Page":
+            return `rudderanalytics.page();`;
+
+          case "Group":
+            return `rudderanalytics.group(groupId, {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          default:
+            return "";
+        }
       }
     };
 
@@ -572,28 +653,71 @@ const DrawerProperties = () => {
       .join("\n\n  ");
 
     // Generate identify/unidentify code if needed
+    // const identifyCode = selectedEvent?.identify
+    //   ? "\n  mixpanel.identify(userId);"
+    //   : "";
+    // const unidentifyCode = selectedEvent?.unidentify
+    //   ? "\n  mixpanel.reset();"
+    //   : "";
+
     const identifyCode = selectedEvent?.identify
-      ? "\n  mixpanel.identify(userId);"
+      ? !isProductAnalyst
+        ? "\n  rudderanalytics.identify(userId);"
+        : "\n  mixpanel.identify(userId);"
       : "";
+
     const unidentifyCode = selectedEvent?.unidentify
-      ? "\n  mixpanel.reset();"
+      ? !isProductAnalyst
+        ? "\n  rudderanalytics.reset();"
+        : "\n  mixpanel.reset();"
       : "";
 
     // Generate super properties code
+    //   const superPropsCode =
+    //     superProperties.filter((prop) => prop.name?.trim() && prop.value?.trim())
+    //       .length > 0
+    //       ? `\n  mixpanel.register({
+    //   ${superProperties
+    //     .filter((prop) => prop.name?.trim() && prop.value?.trim())
+    //     .map(
+    //       (prop) =>
+    //         `"${prop.name}": data["${
+    //           prop.type === "String" ? `${prop.name}` : prop.name
+    //         }"],`
+    //     )
+    //     .join("\n    ")}
+    // });`
+    //       : "";
+
     const superPropsCode =
       superProperties.filter((prop) => prop.name?.trim() && prop.value?.trim())
         .length > 0
-        ? `\n  mixpanel.register({
+        ? isProductAnalyst
+          ? `\n  mixpanel.register({
     ${superProperties
       .filter((prop) => prop.name?.trim() && prop.value?.trim())
       .map(
         (prop) =>
           `"${prop.name}": data["${
             prop.type === "String" ? `${prop.name}` : prop.name
-          }"],`
+          }"]`
       )
-      .join("\n    ")}
+      .join(",\n    ")}
   });`
+          : `\n  rudderanalytics.identify(
+    rudderanalytics.getAnonymousId(),
+    {
+      ${superProperties
+        .filter((prop) => prop.name?.trim() && prop.value?.trim())
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"]`
+        )
+        .join(",\n      ")}
+    }
+  );`
         : "";
 
     // Generate user properties code
@@ -675,7 +799,13 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
     if (selectedEvent) {
       generateCode();
     }
-  }, [selectedEvent, eventProperties, superProperties, userProperties]);
+  }, [
+    selectedEvent,
+    eventProperties,
+    superProperties,
+    userProperties,
+    isProductAnalyst,
+  ]);
 
   useEffect(() => {
     // if (selectedEvent && isInitialLoad.current) {

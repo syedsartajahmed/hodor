@@ -53,7 +53,10 @@ const DrawerPropertiesWithEnvironment = ({
     currentOrganization,
     setTableData,
     setSelectedOrganization,
+    isProductAnalyst,
   } = useAppContext();
+
+  const analyticsProvider = isProductAnalyst ? "Mixpanel" : "RudderAnalytics";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,9 +72,6 @@ const DrawerPropertiesWithEnvironment = ({
   const handleTokenChange = (event) => {
     const newToken = event.target.value;
     setToken(newToken);
-    // if (typeof window !== "undefined") {
-    //   localStorage.setItem("mixpanelToken", newToken);
-    // }
     updateInitCode(newToken);
   };
 
@@ -80,26 +80,55 @@ const DrawerPropertiesWithEnvironment = ({
     setEnvironment(value);
 
     if (value === "Frontend") {
-      setInstructions(`
+      setInstructions(
+        isProductAnalyst
+          ? `
 # Installation Instructions
 # via npm
 npm install --save mixpanel-browser
 
 # via yarn
 yarn add mixpanel-browser
-`);
+`
+          : `
+# Installation Instructions
+# via npm
+npm install --save @rudderstack/rudder-sdk-js
+
+# via yarn
+yarn add @rudderstack/rudder-sdk-js
+`
+      );
       updateInitCode(token);
     } else if (value === "Backend") {
-      setInstructions(`
+      setInstructions(
+        isProductAnalyst
+          ? `
 # Installation Instructions for Backend
 npm install --save mixpanel
 yarn add mixpanel
-`);
-      setInitCode(`
+`
+          : `
+# Installation Instructions for Backend
+npm install --save @rudderstack/rudder-sdk-node
+yarn add @rudderstack/rudder-sdk-node
+`
+      );
+      setInitCode(
+        isProductAnalyst
+          ? `
 // Backend Initialization
 const Mixpanel = require('mixpanel');
 const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
-`);
+`
+          : `
+// Backend Initialization
+const Analytics = require('@rudderstack/rudder-sdk-node');
+const client = new Analytics('${
+              token || "YOUR_WRITE_KEY"
+            }', 'https://your-data-plane-url');
+`
+      );
     } else {
       setInstructions(`Chrome integration will be added later.`);
       setInitCode("");
@@ -107,7 +136,8 @@ const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
   };
 
   const updateInitCode = (newToken) => {
-    setInitCode(`
+    if (isProductAnalyst) {
+      setInitCode(`
 import mixpanel from 'mixpanel-browser';
 
 mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
@@ -115,6 +145,18 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
   track_pageview: true,
 });
 `);
+    } else {
+      setInitCode(`
+import * as rudderanalytics from '@rudderstack/rudder-sdk-js';
+
+rudderanalytics.load('${
+        newToken || "YOUR_WRITE_KEY"
+      }', 'https://your-data-plane-url', {
+  logLevel: 'DEBUG',
+  configUrl: 'https://api.rudderlabs.com',
+});
+`);
+    }
   };
 
   const copyToClipboard = (text) => {
@@ -124,10 +166,8 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
   };
 
   useEffect(() => {
-    // Initialize instructions and code on component load
     handleEnvironmentChange({ target: { value: environment } });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, isProductAnalyst]);
 
   return (
     <Box>
@@ -151,15 +191,18 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            Mixpanel Token
+            {analyticsProvider} Token
           </Typography>
           <SmallNote>
-            Enter your Mixpanel project token. This will be used in the
-            initialization code.
+            Enter your {analyticsProvider}{" "}
+            {isProductAnalyst ? "project token" : "write key"}. This will be
+            used in the initialization code.
           </SmallNote>
           <TextField
             fullWidth
-            label="Mixpanel Token"
+            label={`${analyticsProvider} ${
+              isProductAnalyst ? "Token" : "Write Key"
+            }`}
             value={currentOrganization?.applicationDetails?.token}
             onChange={handleTokenChange}
             variant="outlined"
@@ -192,7 +235,6 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
         </Box>
       )}
 
-      {/* NEW STEP 2: Creating a separate file */}
       <Box mt={2}>
         <Typography
           sx={{
@@ -207,9 +249,9 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
         </Typography>
         <SmallNote>
           For better organization, create a file such as{" "}
-          <strong>utils/mixpanel.js</strong> (or
-          <strong> lib/mixpanel.js</strong>) and place the initialization code
-          there.
+          <strong>utils/{analyticsProvider.toLowerCase()}.js</strong> (or
+          <strong> lib/{analyticsProvider.toLowerCase()}.js</strong>) and place
+          the initialization code there.
         </SmallNote>
       </Box>
 
@@ -224,11 +266,12 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             variant="h6"
             gutterBottom
           >
-            3. Mixpanel Initialization
+            3. {analyticsProvider} Initialization
           </Typography>
           <SmallNote>
             Add this initialization code inside your newly created file (e.g.,{" "}
-            <strong>mixpanel.js</strong>) before using Mixpanel.
+            <strong>{analyticsProvider.toLowerCase()}.js</strong>) before using{" "}
+            {analyticsProvider}.
           </SmallNote>
           <CodeBox>
             {initCode}
@@ -256,8 +299,9 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             4. Generated Code
           </Typography>
           <SmallNote>
-            Place this code in the same file where you set up Mixpanel, or in
-            another file if you prefer to keep it separate.
+            Place this code in the same file where you set up{" "}
+            {analyticsProvider}, or in another file if you prefer to keep it
+            separate.
           </SmallNote>
           <CodeBox>
             {generatedCode}
@@ -288,10 +332,12 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             Use this import statement to invoke the generated function.
           </SmallNote>
           <CodeBox>
-            {`import { ${functionName} } from '../utils/mixpanel';`}
+            {`import { ${functionName} } from '../utils/${analyticsProvider.toLowerCase()}';`}
             <IconButton
               onClick={() =>
-                copyToClipboard(`import { ${functionName} } from './filePath';`)
+                copyToClipboard(
+                  `import { ${functionName} } from '../utils/${analyticsProvider.toLowerCase()}';`
+                )
               }
               sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
             >
@@ -315,7 +361,8 @@ mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
             6. Trigger Code
           </Typography>
           <SmallNote>
-            Call this function wherever you want to trigger Mixpanel tracking.
+            Call this function wherever you want to trigger {analyticsProvider}{" "}
+            tracking.
           </SmallNote>
           <CodeBox>
             {triggerCode}

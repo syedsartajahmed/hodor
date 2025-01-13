@@ -48,6 +48,7 @@ const Header = ({
     currentOrganization,
     allEvents,
     setTableData,
+    isProductAnalyst,
   } = useAppContext();
   const router = useRouter();
   const isMasterEventsPath = router.pathname.includes("/master-event");
@@ -378,28 +379,52 @@ const Header = ({
     let code = "";
     let filename = "";
 
-    // Generate code based on selected platform
-    switch (selectedSource) {
-      case "Website":
-        code = generateWebsiteCode(filteredEvents, mixpanelToken);
-        filename = "mixpanel-web.js";
-        break;
-      case "Backend":
-        code = generateBackendCode(filteredEvents, mixpanelToken);
-        filename = "mixpanel-backend.js";
-        break;
-      case "Android":
-        code = generateAndroidCode(filteredEvents);
-        filename = "MixpanelTracking.kt";
-        break;
-      case "iOS":
-        code = generateIOSCode(filteredEvents);
-        filename = "MixpanelTracking.swift";
-        break;
-      default:
-        showToast("Unsupported platform");
-        return;
+    if (isProductAnalyst) {
+      switch (selectedSource) {
+        case "Website":
+          code = generateWebsiteCode(filteredEvents, mixpanelToken);
+          filename = "mixpanel-web.js";
+          break;
+        case "Backend":
+          code = generateBackendCode(filteredEvents, mixpanelToken);
+          filename = "mixpanel-backend.js";
+          break;
+        case "Android":
+          code = generateAndroidCode(filteredEvents);
+          filename = "MixpanelTracking.kt";
+          break;
+        case "iOS":
+          code = generateIOSCode(filteredEvents);
+          filename = "MixpanelTracking.swift";
+          break;
+        default:
+          showToast("Unsupported platform");
+          return;
+      }
+    } else {
+      switch (selectedSource) {
+        case "Website":
+          code = generateRudderStackWebsiteCode(filteredEvents, writeKey);
+          filename = "rudderstack-web.js";
+          break;
+        case "Backend":
+          code = generateRudderStackBackendCode(filteredEvents, writeKey);
+          filename = "rudderstack-backend.js";
+          break;
+        case "Android":
+          code = generateRudderStackAndroidCode(filteredEvents);
+          filename = "RudderTracking.kt";
+          break;
+        case "iOS":
+          code = generateRudderStackIOSCode(filteredEvents);
+          filename = "RudderTracking.swift";
+          break;
+        default:
+          showToast("Unsupported platform");
+          return;
+      }
     }
+    // Generate code based on selected platform
 
     // Create and download the file
     const blob = new Blob([code], { type: "text/plain" });
@@ -1036,6 +1061,155 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
     }
   };
 
+  const generateRudderStackWebsiteCode = (events, writeKey) => {
+    const importSection = `
+  // RudderStack JavaScript SDK Installation
+  // via npm or yarn
+  // npm install @rudderstack/rudder-sdk-js
+  // yarn add @rudderstack/rudder-sdk-js
+  
+  import * as rudderanalytics from "@rudderstack/rudder-sdk-js";
+  
+  rudderanalytics.load("${writeKey}", "https://<your-data-plane-url>");
+  rudderanalytics.ready(() => {
+    console.log("RudderStack initialized");
+  });
+    `;
+
+    return generateRudderStackEventCode(events, importSection, "web");
+  };
+  const generateRudderStackBackendCode = (events, writeKey) => {
+    const importSection = `
+  // RudderStack Node.js SDK Installation
+  // via npm or yarn
+  // npm install @rudderstack/rudder-sdk-node
+  // yarn add @rudderstack/rudder-sdk-node
+  
+  const rudderanalytics = require("@rudderstack/rudder-sdk-node");
+  
+  const client = new rudderanalytics("${writeKey}", {
+    dataPlaneUrl: "https://<your-data-plane-url>",
+  });
+    `;
+
+    return generateRudderStackEventCode(events, importSection, "backend");
+  };
+
+  const generateRudderStackAndroidCode = (events) => {
+    const importSection = `
+  // RudderStack Android SDK Installation
+  // Add the following to your "build.gradle"
+  // implementation 'com.rudderstack.android.sdk:core:<version>'
+  
+  import com.rudderstack.android.sdk.core.RudderClient;
+  import com.rudderstack.android.sdk.core.RudderConfig;
+  
+  RudderClient rudderClient = RudderClient.getInstance(
+      context,
+      "YOUR_WRITE_KEY",
+      new RudderConfig.Builder()
+          .withDataPlaneUrl("https://<your-data-plane-url>")
+          .build()
+  );
+    `;
+
+    return generateRudderStackEventCode(events, importSection, "android");
+  };
+
+  const generateRudderStackIOSCode = (events) => {
+    const importSection = `
+  // RudderStack iOS SDK Installation
+  // CocoaPods
+  // pod 'Rudder'
+  
+  import Rudder
+  
+  let rudderConfig = RSConfig(writeKey: "YOUR_WRITE_KEY")
+  rudderConfig.dataPlaneUrl = "https://<your-data-plane-url>"
+  RudderClient.start(config: rudderConfig)
+    `;
+
+    return generateRudderStackEventCode(events, importSection, "ios");
+  };
+
+  const generateRudderStackEventCode = (events, importSection, platform) => {
+    const formatEventName = (name) => {
+      const eventName = name?.trim()
+        ? name
+            .trim()
+            .replace(/([a-z])([A-Z])/g, "$1_$2")
+            .replace(/[_\s]+/g, "_")
+            .toLowerCase()
+        : "unnamed_event";
+
+      const camelCase = eventName
+        .split("_")
+        .map((word, index) =>
+          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join("");
+
+      return { snakeCase: eventName, camelCase };
+    };
+
+    const generateEventMethod = (event, platform) => {
+      const { camelCase: functionName } = formatEventName(event?.eventName);
+
+      const props = event.items[0]?.event_property || [];
+      const properties = props
+        .map(
+          (prop) =>
+            `"${prop?.property_name}": data["${prop?.property_name}"] // ${prop?.property_type}`
+        )
+        .join(",\n        ");
+
+      switch (platform) {
+        case "web":
+          return `rudderanalytics.track("${event.eventName}", {
+      ${properties}
+  });`;
+        case "backend":
+          return `client.track({
+      event: "${event.eventName}",
+      properties: {
+          ${properties}
+      }
+  });`;
+        case "android":
+          return `rudderClient.track("${event.eventName}", new JSONObject() {{
+      ${props
+        .map(
+          (prop) =>
+            `put("${prop.property_name}", data.get("${prop.property_name}"));`
+        )
+        .join("\n        ")}
+  }});`;
+        case "ios":
+          return `RudderClient.sharedInstance()?.track(
+      "${event.eventName}",
+      properties: [
+          ${props
+            .map(
+              (prop) =>
+                `"${prop.property_name}": data["${prop.property_name}"] as Any`
+            )
+            .join(",\n        ")}
+      ]
+  );`;
+        default:
+          return "";
+      }
+    };
+
+    const eventCode = events
+      .map((event) => generateEventMethod(event, platform))
+      .join("\n\n");
+
+    return `${importSection}
+  
+  ${eventCode}`;
+  };
+
   return (
     <>
       <Box
@@ -1360,7 +1534,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                                 source: savedEvent.source,
                                 action: savedEvent.action,
                                 platform: savedEvent.platform,
-                                organization : savedEvent?.organization
+                                organization: savedEvent?.organization,
                               });
                               showToast("CSV data uploaded successfully!");
                             }
@@ -1372,7 +1546,9 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                             ) {
                               showToast(error.response.data.message);
                             } else {
-                              showToast("Failed to save event. Please try again.");
+                              showToast(
+                                "Failed to save event. Please try again."
+                              );
                             }
                           }
                         }
