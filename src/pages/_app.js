@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import * as React from "react";
 import { CssBaseline } from "@mui/material";
 import { AppProvider } from "@/context/AppContext";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function MyApp({ Component, pageProps }) {
 
@@ -30,6 +31,7 @@ export default function MyApp({ Component, pageProps }) {
       <CssBaseline />
       <Component {...pageProps} />
       <ToastContainer />
+      <Analytics />
     </AppProvider>
   );
 }
