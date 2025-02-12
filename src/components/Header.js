@@ -439,6 +439,41 @@ const Header = ({
     setOpenSourceDialog(false);
   };
 
+  const generatePlatformImportComment = (functionNames, platform) => {
+    switch (platform) {
+      case "web":
+        return `// import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
+      
+      case "backend":
+        return `// const { ${functionNames.join(", ")} } = require('./utils/mixpanel.js');`;
+      
+      case "android":
+        return `// Import these functions from MixpanelTracking.kt
+  // import com.yourdomain.analytics.MixpanelTracking.${functionNames.join("\n// import com.yourdomain.analytics.MixpanelTracking.")}`;
+      
+      case "ios":
+        return `// Import these functions from MixpanelTracking.swift
+  // import MixpanelTracking // Make sure this file is in your project
+  // Available functions: ${functionNames.join(", ")}`;
+      
+      default:
+        return "";
+    }
+  };
+      const functionNames = allEvents.map((event) => {
+        const name = event?.eventName
+          ?.trim()
+          .replace(/([a-z])([A-Z])/g, "$1_$2")
+          .replace(/[_\s]+/g, "_")
+          .toLowerCase();
+        return name
+          ?.split("_")
+          .map((word, index) =>
+            index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+          )
+          .join("");
+      });
+
   // Helper function to generate code for Website platform
   const generateWebsiteCode = (events, mixpanelToken) => {
     const importSection = `
@@ -448,6 +483,9 @@ const Header = ({
 
 //  # via yarn
 //  yarn add mixpanel-browser
+
+// Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+${generatePlatformImportComment(functionNames, "web")}
 
 import mixpanel from "mixpanel-browser";
 mixpanel.init("${mixpanelToken}", {
@@ -466,6 +504,9 @@ mixpanel.init("${mixpanelToken}", {
 //  npm install --save mixpanel
 //  yarn add mixpanel
 
+// Use these functions wherever needed by requiring them from './utils/mixpanel.js'
+${generatePlatformImportComment(functionNames, "backend")}
+
 const Mixpanel = require("mixpanel");
 const mixpanel = Mixpanel.init("${mixpanelToken}", {});
   `;
@@ -480,6 +521,8 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI
 import org.json.JSONObject
 import android.content.Context
 
+${generatePlatformImportComment(functionNames, "android")}
+
 const val MIXPANEL_TOKEN = "YOUR_PROJECT_TOKEN"
 
 // Initialize Mixpanel in your Application class:
@@ -493,6 +536,8 @@ const val MIXPANEL_TOKEN = "YOUR_PROJECT_TOKEN"
   const generateIOSCode = (events) => {
     const importSection = `
 import Mixpanel
+
+${generatePlatformImportComment(functionNames, "ios")}
 
 // Initialize Mixpanel in your AppDelegate:
 // Mixpanel.initialize(token: "YOUR_PROJECT_TOKEN", trackAutomaticEvents: false)
