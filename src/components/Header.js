@@ -64,6 +64,8 @@ const Header = ({
 
   const handleOpen = () => setOpen(true);
 
+  
+
   const handleCopy = () => {
     const encodedName = encodeURIComponent(currentOrganization.name);
     const url = `${window.location.origin}/events/${encodedName}/${currentOrganization.id}`;
@@ -1255,6 +1257,231 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
   ${eventCode}`;
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (result) => {
+        try {
+          const processedData = processCSVData(result.data);
+          const newFormattedData = [];
+
+          for (const eventData of processedData) {
+            try {
+              const response = await axios.post("/api/master-events", eventData);
+              const savedEvent = response.data.totalEvents?.find(
+                (event) => event.eventName === eventData.eventName
+              );
+
+              if (savedEvent) {
+                newFormattedData.push(formatForTable(savedEvent));
+              }
+            } catch (error) {
+              showToast(
+                error.response?.data?.message || 
+                "Failed to save event. Please try again."
+              );
+            }
+          }
+
+          setTableData((prev) => {
+            const allData = [...prev, ...newFormattedData];
+            return allData.filter(
+              (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+            );
+          });
+          fetchMasterEvents();
+          showToast("CSV data uploaded successfully!");
+
+          
+        } catch (error) {
+          showToast("Failed to process CSV data. Please check the format.");
+        } finally {
+          setUploading(false);
+        }
+      },
+      error: () => {
+        setUploading(false);
+        showToast("Failed to parse the CSV file. Please try again.");
+      },
+    });
+
+    event.target.value = null;
+  };
+
+  const formatForTable = (savedEvent) => ({
+    id: savedEvent._id,
+    name: savedEvent.eventName,
+    eventProperties: savedEvent.items
+      .map((item) => {
+        const eventProps = item.event_property
+          ?.map(
+            (prop) =>
+              `Property Name: ${prop.property_name || "N/A"}, Value: ${
+                prop.sample_value || "N/A"
+              }, Data Type: ${prop.data_type || "N/A"}, Method Call: ${
+                prop.method_call || "N/A"
+              }`
+          )
+          .join("; ") || "";
+
+        const superProps = item.super_property
+          ?.map(
+            (prop) =>
+              `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
+          )
+          .join("; ") || "";
+
+        const userProps = item.user_property
+          ?.map(
+            (prop) =>
+              `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
+          )
+          .join("; ") || "";
+
+        return [
+          eventProps ? `Event Properties: { ${eventProps} }` : "",
+          superProps ? `Super Properties: { ${superProps} }` : "",
+          userProps ? `User Properties: { ${userProps} }` : "",
+        ]
+          .filter(Boolean)
+          .join(", ");
+      })
+      .join("; "),
+    stakeholders: savedEvent.stakeholders?.split(',') || [],
+    category: savedEvent.category,
+    source: savedEvent.source?.split(',') || [],
+    action: savedEvent.action,
+    platform: savedEvent.platform?.split(',') || [],
+    organization: savedEvent.organization,
+  });
+
+  const processCSVData = (rows) => {
+    // Group rows by eventName to consolidate properties
+    const eventGroups = rows.reduce((acc, row) => {
+      if (!row.eventName) return acc;
+      
+      if (!acc[row.eventName]) {
+        acc[row.eventName] = {
+          eventName: row.eventName,
+          event_definition: row.event_definition || "default",
+          action: row.action || "default",
+          stakeholders: row.stakeholders,
+          category: row.category,
+          source: row.source,
+          platform: row.platform,
+          organization: row.organization,
+          items: [{
+            event_property: [],
+            user_property: [],
+            super_property: []
+          }]
+        };
+      }
+
+      // Process property based on Property Type
+      const property = {
+        property_name: row['Property Name'],
+        property_definition: row['Property Definition'],
+        data_type: row['Data Type'],
+        sample_value: row['Sample Values'],
+        method_call: row['Method Call']
+      };
+
+      // Add property to appropriate array based on Property Type
+      switch (row['Property Type']) {
+        case 'Event Property':
+          acc[row.eventName].items[0].event_property.push(property);
+          break;
+        case 'User Property':
+          acc[row.eventName].items[0].user_property.push({
+            name: property.property_name,
+            value: property.sample_value,
+            type: property.data_type
+          });
+          break;
+        case 'Super Property':
+          acc[row.eventName].items[0].super_property.push({
+            name: property.property_name,
+            value: property.sample_value,
+            type: property.data_type
+          });
+          break;
+      }
+
+      return acc;
+    }, {});
+
+    return Object.values(eventGroups);
+  };
+
+  const fetchMasterEvents = async () => {
+    try {
+      const response = await axios.get("/api/master-events");
+      const masterEventsDetails = response.data;
+      const totalEvents = masterEventsDetails.totalEvents || [];
+      const updatedRows = totalEvents.map((event) => ({
+        id: event._id,
+        name: event.eventName,
+
+        eventProperties: event.items
+          .map((item) => {
+            // Format Event Properties
+            const eventProps =
+              item.event_property
+                ?.map(
+                  (prop) =>
+                    `${prop.property_name || "N/A"}: ${
+                      prop.sample_value || "N/A"
+                    }, method call: ${prop.method_call || "N/A"}`
+                )
+                .join("; ") || "";
+
+            // Format Super Properties
+            const superProps =
+              item.super_property
+                ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
+                .join("; ") || "";
+
+            // Format User Properties
+            const userProps =
+              item.user_property
+                ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
+                .join("; ") || "";
+
+            // Combine all properties into a single formatted string
+            return [
+              eventProps ? `Event Properties: { ${eventProps} }` : "",
+              superProps ? `Super Properties: { ${superProps} }` : "",
+              userProps ? `User Properties: { ${userProps} }` : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+          })
+          .join("; "),
+        stakeholders: event.stakeholders,
+        category: event.category,
+        propertyBundles: event.propertyBundles,
+        groupProperty: event.groupProperty,
+        source: event.source,
+        action: event.action,
+        ...event,
+      }));
+
+      setTableData(updatedRows);
+    } catch (err) {
+      //setError("Failed to fetch organization details");
+      console.error(err);
+    } finally {
+      //setLoading(false);
+    }
+  };
+
   return (
     <>
       <Box
@@ -1451,175 +1678,176 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                 type="file"
                 accept=".csv"
                 hidden
-                onChange={async (event) => {
-                  const file = event.target.files[0];
-                  if (file) {
-                    setUploading(true);
+                onChange={handleFileUpload}
+                // onChange={async (event) => {
+                //   const file = event.target.files[0];
+                //   if (file) {
+                //     setUploading(true);
 
-                    Papa.parse(file, {
-                      header: true,
-                      skipEmptyLines: true,
-                      complete: async (result) => {
-                        const rows = result.data;
-                        const newFormattedData = []; // Temporary array for new rows
+                //     Papa.parse(file, {
+                //       header: true,
+                //       skipEmptyLines: true,
+                //       complete: async (result) => {
+                //         const rows = result.data;
+                //         const newFormattedData = []; // Temporary array for new rows
 
-                        for (const [index, row] of rows.entries()) {
-                          try {
-                            // Format the row data for API payload
-                            const payload = {
-                              eventName: row.eventName || "Unnamed Event",
-                              event_definition:
-                                row.event_definition ||
-                                "No description provided",
-                              platform: row.platform
-                                ? row.platform.split(",")
-                                : ["Unknown"],
-                              stakeholders: row.stakeholders
-                                ? row.stakeholders.split(",")
-                                : [],
-                              category: row.category || "Uncategorized",
-                              source: row.source
-                                ? row.source.split(",")
-                                : ["Unknown"],
-                              action: row.action || "No action",
-                              items: row.items
-                                ? JSON.parse(row.items).map((item) => ({
-                                    user_property: item.user_property || [],
-                                    event_property:
-                                      item.event_property?.map((prop) => ({
-                                        property_name:
-                                          prop.property_name || prop.name,
-                                        sample_value:
-                                          prop.sample_value || prop.value,
-                                        data_type: prop.data_type || prop.type,
-                                        property_type: prop.property_type,
-                                        property_definition:
-                                          prop.property_definition ||
-                                          "Event property definition",
-                                        method_call:
-                                          prop.method_call || "Track",
-                                      })) || [],
-                                    super_property: item.super_property || [],
-                                  }))
-                                : [],
-                              identify: row.identify === "true",
-                              unidentify: row.unidentify === "true",
-                              organization: row?.organization || "",
-                            };
+                //         for (const [index, row] of rows.entries()) {
+                //           try {
+                //             // Format the row data for API payload
+                //             const payload = {
+                //               eventName: row.eventName || "Unnamed Event",
+                //               event_definition:
+                //                 row.event_definition ||
+                //                 "No description provided",
+                //               platform: row.platform
+                //                 ? row.platform.split(",")
+                //                 : ["Unknown"],
+                //               stakeholders: row.stakeholders
+                //                 ? row.stakeholders.split(",")
+                //                 : [],
+                //               category: row.category || "Uncategorized",
+                //               source: row.source
+                //                 ? row.source.split(",")
+                //                 : ["Unknown"],
+                //               action: row.action || "No action",
+                //               items: row.items
+                //                 ? JSON.parse(row.items).map((item) => ({
+                //                     user_property: item.user_property || [],
+                //                     event_property:
+                //                       item.event_property?.map((prop) => ({
+                //                         property_name:
+                //                           prop.property_name || prop.name,
+                //                         sample_value:
+                //                           prop.sample_value || prop.value,
+                //                         data_type: prop.data_type || prop.type,
+                //                         property_type: prop.property_type,
+                //                         property_definition:
+                //                           prop.property_definition ||
+                //                           "Event property definition",
+                //                         method_call:
+                //                           prop.method_call || "Track",
+                //                       })) || [],
+                //                     super_property: item.super_property || [],
+                //                   }))
+                //                 : [],
+                //               identify: row.identify === "true",
+                //               unidentify: row.unidentify === "true",
+                //               organization: row?.organization || "",
+                //             };
 
-                            // Make API call to save the row to the master events
-                            const response = await axios.post(
-                              "/api/master-events",
-                              payload
-                            );
-                            const savedEvent = response.data.totalEvents?.find(
-                              (event) => event.eventName === payload.eventName
-                            );
+                //             // Make API call to save the row to the master events
+                //             const response = await axios.post(
+                //               "/api/master-events",
+                //               payload
+                //             );
+                //             const savedEvent = response.data.totalEvents?.find(
+                //               (event) => event.eventName === payload.eventName
+                //             );
 
-                            if (savedEvent) {
-                              // Add the saved event to the temporary array
-                              newFormattedData.push({
-                                id: savedEvent._id,
-                                name: savedEvent.eventName,
-                                eventProperties: savedEvent.items
-                                  .map((item) => {
-                                    const eventProps =
-                                      item.event_property
-                                        ?.map(
-                                          (prop) =>
-                                            `Property Name: ${
-                                              prop.property_name || "N/A"
-                                            }, Value: ${
-                                              prop.sample_value || "N/A"
-                                            }, Data Type: ${
-                                              prop.data_type || "N/A"
-                                            }, Method Call: ${
-                                              prop.method_call || "N/A"
-                                            }`
-                                        )
-                                        .join("; ") || "";
+                //             if (savedEvent) {
+                //               // Add the saved event to the temporary array
+                //               newFormattedData.push({
+                //                 id: savedEvent._id,
+                //                 name: savedEvent.eventName,
+                //                 eventProperties: savedEvent.items
+                //                   .map((item) => {
+                //                     const eventProps =
+                //                       item.event_property
+                //                         ?.map(
+                //                           (prop) =>
+                //                             `Property Name: ${
+                //                               prop.property_name || "N/A"
+                //                             }, Value: ${
+                //                               prop.sample_value || "N/A"
+                //                             }, Data Type: ${
+                //                               prop.data_type || "N/A"
+                //                             }, Method Call: ${
+                //                               prop.method_call || "N/A"
+                //                             }`
+                //                         )
+                //                         .join("; ") || "";
 
-                                    const superProps =
-                                      item.super_property
-                                        ?.map(
-                                          (prop) =>
-                                            `Name: ${
-                                              prop.name || "N/A"
-                                            }, Value: ${prop.value || "N/A"}`
-                                        )
-                                        .join("; ") || "";
+                //                     const superProps =
+                //                       item.super_property
+                //                         ?.map(
+                //                           (prop) =>
+                //                             `Name: ${
+                //                               prop.name || "N/A"
+                //                             }, Value: ${prop.value || "N/A"}`
+                //                         )
+                //                         .join("; ") || "";
 
-                                    const userProps =
-                                      item.user_property
-                                        ?.map(
-                                          (prop) =>
-                                            `Name: ${
-                                              prop.name || "N/A"
-                                            }, Value: ${prop.value || "N/A"}`
-                                        )
-                                        .join("; ") || "";
+                //                     const userProps =
+                //                       item.user_property
+                //                         ?.map(
+                //                           (prop) =>
+                //                             `Name: ${
+                //                               prop.name || "N/A"
+                //                             }, Value: ${prop.value || "N/A"}`
+                //                         )
+                //                         .join("; ") || "";
 
-                                    return [
-                                      eventProps
-                                        ? `Event Properties: { ${eventProps} }`
-                                        : "",
-                                      superProps
-                                        ? `Super Properties: { ${superProps} }`
-                                        : "",
-                                      userProps
-                                        ? `User Properties: { ${userProps} }`
-                                        : "",
-                                    ]
-                                      .filter(Boolean)
-                                      .join(", ");
-                                  })
-                                  .join("; "),
-                                stakeholders: savedEvent.stakeholders,
-                                category: savedEvent.category,
-                                source: savedEvent.source,
-                                action: savedEvent.action,
-                                platform: savedEvent.platform,
-                                organization: savedEvent?.organization,
-                              });
-                              showToast("CSV data uploaded successfully!");
-                            }
-                          } catch (error) {
-                            if (
-                              error.response &&
-                              error.response.data &&
-                              error.response.data.message
-                            ) {
-                              showToast(error.response.data.message);
-                            } else {
-                              showToast(
-                                "Failed to save event. Please try again."
-                              );
-                            }
-                          }
-                        }
+                //                     return [
+                //                       eventProps
+                //                         ? `Event Properties: { ${eventProps} }`
+                //                         : "",
+                //                       superProps
+                //                         ? `Super Properties: { ${superProps} }`
+                //                         : "",
+                //                       userProps
+                //                         ? `User Properties: { ${userProps} }`
+                //                         : "",
+                //                     ]
+                //                       .filter(Boolean)
+                //                       .join(", ");
+                //                   })
+                //                   .join("; "),
+                //                 stakeholders: savedEvent.stakeholders,
+                //                 category: savedEvent.category,
+                //                 source: savedEvent.source,
+                //                 action: savedEvent.action,
+                //                 platform: savedEvent.platform,
+                //                 organization: savedEvent?.organization,
+                //               });
+                //               showToast("CSV data uploaded successfully!");
+                //             }
+                //           } catch (error) {
+                //             if (
+                //               error.response &&
+                //               error.response.data &&
+                //               error.response.data.message
+                //             ) {
+                //               showToast(error.response.data.message);
+                //             } else {
+                //               showToast(
+                //                 "Failed to save event. Please try again."
+                //               );
+                //             }
+                //           }
+                //         }
 
-                        // Deduplicate and update the table data
-                        setTableData((prev) => {
-                          const allData = [...prev, ...newFormattedData];
-                          const deduplicatedData = allData.filter(
-                            (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-                          ); // Remove duplicates based on the `id`
-                          return deduplicatedData;
-                        });
+                //         // Deduplicate and update the table data
+                //         setTableData((prev) => {
+                //           const allData = [...prev, ...newFormattedData];
+                //           const deduplicatedData = allData.filter(
+                //             (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+                //           ); // Remove duplicates based on the `id`
+                //           return deduplicatedData;
+                //         });
 
-                        setUploading(false);
-                      },
-                      error: () => {
-                        setUploading(false);
-                        showToast(
-                          "Failed to parse the CSV file. Please try again."
-                        );
-                      },
-                    });
+                //         setUploading(false);
+                //       },
+                //       error: () => {
+                //         setUploading(false);
+                //         showToast(
+                //           "Failed to parse the CSV file. Please try again."
+                //         );
+                //       },
+                //     });
 
-                    event.target.value = null; // Reset the file input
-                  }
-                }}
+                //     event.target.value = null; // Reset the file input
+                //   }
+                // }}
               />
             </Button>
           </Box>
