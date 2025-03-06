@@ -26,12 +26,11 @@ import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAppContext } from "@/context/AppContext";
-import axios from "axios";
 import { useRef } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DrawerPropertiesWithEnvironment from "./DrawerPropertiesWithEnvironment";
 import styled from "@emotion/styled";
-import { Add, Close } from "@mui/icons-material";
+import {  Close } from "@mui/icons-material";
 import showToast from "@/utils/toast";
 
 const DrawerProperties = () => {
@@ -46,12 +45,6 @@ const DrawerProperties = () => {
     overflow-x: auto;
   `;
 
-  const SmallNote = styled(Typography)`
-    font-size: 0.75rem;
-    color: #000000;
-    margin-top: 8px;
-    padding-bottom: 10px;
-  `;
 
   const isInitialLoad = useRef(true);
   const [showUserProperties, setShowUserProperties] = useState(false);
@@ -62,14 +55,8 @@ const DrawerProperties = () => {
   const [triggerCode, setTriggerCode] = useState("");
 
   const {
-    isEventDrawerOpen,
-    tabledata,
-    toggleEventDrawer,
     selectedEvent,
     setSelectedEvent,
-    currentOrganization,
-    setTableData,
-    setSelectedOrganization,
     isProductAnalyst,
   } = useAppContext();
 
@@ -264,10 +251,6 @@ const DrawerProperties = () => {
   };
 
   const [openDialog, setOpenDialog] = useState(false);
-
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
-  };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
