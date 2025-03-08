@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
-import { useAppContext } from "@/context/AppContext";
+import { useSetRecoilState } from "recoil";
+import { addEventSelector } from "@/recoil/atom";
 
 const AddEventModal = ({ open, setOpen }) => {
   const [eventData, setEventData] = useState({
     name: "",
     event_definition: "",
   });
-  const { addEvent, tableData } = useAppContext();
+  const setAddEvent = useSetRecoilState(addEventSelector);
 
   const handleClose = () => {
     setOpen(false);
@@ -16,7 +17,7 @@ const AddEventModal = ({ open, setOpen }) => {
 
   const handleSubmit = () => {
     if (eventData.name && eventData.event_definition) {
-      addEvent(eventData);
+      setAddEvent(eventData);
       console.log(eventData);
       handleClose();
     }

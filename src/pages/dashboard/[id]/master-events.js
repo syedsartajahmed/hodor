@@ -3,12 +3,14 @@ import Header from "@/components/Header";
 import EventDrawer from "@/components/EventDrawer";
 import Table from "@/components/Table";
 import List from "@/components/List";
-import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import Navbar from "@/components/Navbar";
+import { useSetRecoilState, useRecoilValue } from "recoil";
+import { tableDataState, showListState } from "@/recoil/atoms";
 
 const MasterEvents = () => {
-  const { setTableData, showList } = useAppContext();
+  const setTableData = useSetRecoilState(tableDataState);
+  const showList = useRecoilValue(showListState);
 
   useEffect(() => {
     fetchMasterEvents();
@@ -18,14 +20,13 @@ const MasterEvents = () => {
     try {
       const response = await axios.get("/api/master-events");
       const masterEventsDetails = response.data;
+      console.log(masterEventsDetails);
       const totalEvents = masterEventsDetails.totalEvents || [];
       const updatedRows = totalEvents.map((event) => ({
         id: event._id,
         name: event.eventName,
-
         eventProperties: event.items
           .map((item) => {
-            // Format Event Properties
             const eventProps =
               item.event_property
                 ?.map(
@@ -36,19 +37,16 @@ const MasterEvents = () => {
                 )
                 .join("; ") || "";
 
-            // Format Super Properties
             const superProps =
               item.super_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Format User Properties
             const userProps =
               item.user_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Combine all properties into a single formatted string
             return [
               eventProps ? `Event Properties: { ${eventProps} }` : "",
               superProps ? `Super Properties: { ${superProps} }` : "",
@@ -69,10 +67,7 @@ const MasterEvents = () => {
 
       setTableData(updatedRows);
     } catch (err) {
-      //setError("Failed to fetch organization details");
-      console.error(err);
-    } finally {
-      //setLoading(false);
+      console.error("Failed to fetch master events:", err);
     }
   };
 
@@ -83,11 +78,7 @@ const MasterEvents = () => {
       {showList ? (
         <List />
       ) : (
-        <Table
-          isShowOrganization={true}
-          page="master-events"
-          isShowCopy={true}
-        />
+        <Table isShowOrganization={true} page="master-events" isShowCopy={true} />
       )}
       <EventDrawer />
     </>

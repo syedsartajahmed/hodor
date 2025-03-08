@@ -3,12 +3,14 @@ import Header from "@/components/Header";
 import EventDrawer from "@/components/EventDrawer";
 import Table from "@/components/Table";
 import List from "@/components/List";
-import { useAppContext } from "@/context/AppContext";
-import axios from "axios";
 import Navbar from "@/components/Navbar";
+import { useRecoilState, useSetRecoilState, useRecoilValue } from "recoil";
+import { tableDataState, showListState } from "@/recoil/atom";
+import axios from "axios";
 
 const MasterEvents = () => {
-  const { setTableData, showList } = useAppContext();
+  const setTableData = useSetRecoilState(tableDataState);
+  const showList = useRecoilValue(showListState);
 
   useEffect(() => {
     fetchMasterEvents();
@@ -34,19 +36,16 @@ const MasterEvents = () => {
                 )
                 .join("; ") || "";
 
-            // Format Super Properties
             const superProps =
               item.super_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Format User Properties
             const userProps =
               item.user_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Combine all properties into a single formatted string
             return [
               eventProps ? `Event Properties: { ${eventProps} }` : "",
               superProps ? `Super Properties: { ${superProps} }` : "",
@@ -65,14 +64,10 @@ const MasterEvents = () => {
         platform: event.platform,
         ...event,
       }));
-      console.log(updatedRows);
 
       setTableData(updatedRows);
     } catch (err) {
-      //setError("Failed to fetch organization details");
       console.error(err);
-    } finally {
-      //setLoading(false);
     }
   };
 

@@ -9,11 +9,15 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import { useAppContext } from "@/context/AppContext";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { tableDataState, drawerState } from "../recoil/atom"; // Import Recoil atoms
 
 const List = () => {
-  const { tableData, toggleDrawer } = useAppContext();
+  // Recoil state
+  const tableData = useRecoilValue(tableDataState); // Read-only tableData
+  const [drawer, setDrawer] = useRecoilState(drawerState); // Drawer state
 
+  // Function to group data by category
   const groupByCategory = (data) => {
     return data.reduce((groups, item) => {
       const { category } = item;
@@ -27,6 +31,12 @@ const List = () => {
 
   const groupedData = groupByCategory(tableData);
 
+  // Function to toggle the drawer
+  const toggleDrawer = (open, event) => {
+    setDrawer({ open, event });
+  };
+
+  // Table columns
   const columns = [
     "NAME",
     "STAKEHOLDERS",
@@ -89,9 +99,7 @@ const List = () => {
                   <TableCell
                     sx={{ cursor: "pointer" }}
                     onClick={() => {
-                      const event = tableData.find(
-                        (item) => item.id === row.id
-                      );
+                      const event = tableData.find((item) => item.id === row.id);
                       toggleDrawer(true, event);
                     }}
                   >

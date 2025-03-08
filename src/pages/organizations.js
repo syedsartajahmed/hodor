@@ -1,4 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import {
+  organizationsState,
+  currentOrganizationState,
+  newOrganizationNameState,
+  openAddDialogState,
+  openDeleteDialogState,
+  selectedOrganizationState,
+  openAppSetupState,
+  newOrgIdState,
+} from "@/recoil/atom";
 import { useRouter } from "next/router";
 import {
   Box,
@@ -17,23 +28,30 @@ import {
 import { Add, Close } from "@mui/icons-material";
 import Navbar from "@/components/Navbar";
 import axios from "axios";
-import { useAppContext } from "@/context/AppContext";
 import ApplicationSetupDialog from "@/components/ApplicationSetupDialog";
-import Footer from "@/components/Footer";
 import showToast from "@/utils/toast";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const Organizations = () => {
   const router = useRouter();
-  const { setCurrentOrganization } = useAppContext();
-  const [organizations, setOrganizations] = useState([]);
-  const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [newOrganizationName, setNewOrganizationName] = useState("");
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState(null);
 
-  const [openAppSetup, setOpenAppSetup] = useState(false);
-  const [newOrgId, setNewOrgId] = useState(null);
+  // Recoil state
+  const [organizations, setOrganizations] = useRecoilState(organizationsState);
+  const setCurrentOrganization = useSetRecoilState(currentOrganizationState);
+  const [newOrganizationName, setNewOrganizationName] = useRecoilState(
+    newOrganizationNameState
+  );
+  const [openAddDialog, setOpenAddDialog] = useRecoilState(openAddDialogState);
+  const [openDeleteDialog, setOpenDeleteDialog] = useRecoilState(
+    openDeleteDialogState
+  );
+  const [selectedOrganization, setSelectedOrganization] = useRecoilState(
+    selectedOrganizationState
+  );
+  const [openAppSetup, setOpenAppSetup] = useRecoilState(openAppSetupState);
+  const [newOrgId, setNewOrgId] = useRecoilState(newOrgIdState);
 
+  // Fetch organizations on component mount
   useEffect(() => {
     fetchOrganizations();
   }, []);
@@ -65,37 +83,6 @@ const Organizations = () => {
     setNewOrganizationName("");
   };
 
-  const handleAddOrganizationSubmit1 = async () => {
-    if (!newOrganizationName.trim()) {
-      showToast("Organization name is required.");
-      return;
-    }
-
-    try {
-      const response = await axios.post("/api/organizations", {
-        name: newOrganizationName,
-      });
-      const newOrganization = response.data.organization;
-
-      if (response.data.success === false) {
-        showToast(
-          response.data.message ||
-            "Failed to add organization. Please try again."
-        );
-      } else {
-        const newOrganization = response.data.organization;
-        setOrganizations((prev) => [...prev, newOrganization]);
-        handleAddDialogClose();
-      }
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        showToast(err.response.data.message);
-      } else {
-        showToast("Failed to add organization. Please try again.");
-      }
-    }
-  };
-
   const handleAddOrganizationSubmit = async () => {
     if (!newOrganizationName.trim()) {
       showToast("Organization name is required.");
@@ -125,7 +112,6 @@ const Organizations = () => {
     }
   };
 
-  // Add new handler for application setup
   const handleAppSetup = async (appData) => {
     try {
       const response = await axios.post("/api/applications", {
@@ -281,8 +267,8 @@ const Organizations = () => {
                 zIndex: 10,
               }}
             >
-              <Close />
-            </IconButton>
+          <DeleteIcon />
+          </IconButton>
             <Box
               sx={{
                 display: "flex",
@@ -361,7 +347,6 @@ const Organizations = () => {
         onSubmit={handleAppSetup}
         initialData={{}}
       />
-      {/* <Footer /> */}
     </Box>
   );
 };

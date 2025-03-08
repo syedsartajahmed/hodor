@@ -1,30 +1,56 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "@/context/AppContext";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  eventDrawerState,
+  allEventsState,
+  currentOrganizationState,
+  tableDataState,
+  selectedOrganizationState,
+  isProductAnalystState,
+} from "../recoil/atom";
 import axios from "axios";
 import { useRouter } from "next/router";
 import DrawerProperties from "./DrawerProperties";
 import showToast from "@/utils/toast";
 
 const EventDrawer = ({ isShowSave = true }) => {
-  const {
-    isEventDrawerOpen,
-    toggleEventDrawer,
-    selectedEvent,
-    setAllEvents,
-    currentOrganization,
-    setTableData,
-    setSelectedOrganization,
-    setIsProductAnalyst,
-    isProductAnalyst,
-  } = useAppContext();
+  // Recoil state
+  const [eventDrawer, setEventDrawer] = useRecoilState(eventDrawerState);
+  const [allEvents, setAllEvents] = useRecoilState(allEventsState);
+  const currentOrganization = useRecoilValue(currentOrganizationState);
+  const [tableData, setTableData] = useRecoilState(tableDataState);
+  const [selectedOrganization, setSelectedOrganization] = useRecoilState(selectedOrganizationState);
+  const [isProductAnalyst, setIsProductAnalyst] = useRecoilState(isProductAnalystState);
+
   const router = useRouter();
   const { pathname } = router;
+
   const [formData, setFormData] = useState({
     cta_text: "",
     cta_type: "",
     cta_color: "",
     cta_class: "",
   });
+
+  const [superProperty, setSuperProperty] = useState({
+    name: "",
+    value: "",
+  });
+
+  const [eventProperties, setEventProperties] = useState([
+    {
+      name: "",
+      value: "",
+      type: "String",
+      propertyType: "Event Property",
+      sample_value: "",
+    },
+  ]);
+
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { isOpen, selectedEvent } = eventDrawer;
 
   useEffect(() => {
     const propertyPairs = selectedEvent?.eventProperties?.split(", ") || [];
@@ -43,22 +69,6 @@ const EventDrawer = ({ isShowSave = true }) => {
     });
   }, [selectedEvent]);
 
-  const [superProperty, setSuperProperty] = useState({
-    name: "",
-    value: "",
-  });
-  const [eventProperties, setEventProperties] = useState([
-    {
-      name: "",
-      value: "",
-      type: "String", // Default type
-      propertyType: "Event Property", // Default type
-      sample_value: "",
-    },
-  ]);
-
-  const [generatedCode, setGeneratedCode] = useState("");
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -73,7 +83,6 @@ const EventDrawer = ({ isShowSave = true }) => {
     return true;
   };
 
-  const [loading, setLoading] = useState(false);
   const handleSave = async () => {
     setLoading(true);
 
@@ -120,10 +129,8 @@ const EventDrawer = ({ isShowSave = true }) => {
         const updatedRows = totalEvents.map((event) => ({
           id: event._id,
           name: event.eventName,
-          // eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
           eventProperties: event.items
             .map((item) => {
-              // Format Event Properties
               const eventProps =
                 item.event_property
                   ?.map(
@@ -136,7 +143,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Format Super Properties
               const superProps =
                 item.super_property
                   ?.map(
@@ -147,7 +153,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Format User Properties
               const userProps =
                 item.user_property
                   ?.map(
@@ -158,7 +163,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Combine all properties into a single formatted string
               return [
                 eventProps ? `Event Properties: { ${eventProps} }` : "",
                 superProps ? `Super Properties: { ${superProps} }` : "",
@@ -177,15 +181,13 @@ const EventDrawer = ({ isShowSave = true }) => {
         }));
 
         setTableData(updatedRows);
-        //setSelectedOrganization(organizationDetails);
         showToast("Data saved successfully!");
       } catch (error) {
-        // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", error.message);
         if (error.response && error.response.status === 409) {
-          showToast(error.response.data.message); // Display the custom error message from the server
+          showToast(error.response.data.message);
         } else {
-          showToast("An unexpected error occurred. Please try again."); // Fallback for other errors
+          showToast("An unexpected error occurred. Please try again.");
         }
       } finally {
         setLoading(false);
@@ -210,10 +212,9 @@ const EventDrawer = ({ isShowSave = true }) => {
         identify: selectedEvent?.identify || false,
         unidentify: selectedEvent?.unidentify || false,
         status: selectedEvent?.status || "not started",
-        items: [], // Include existing items
+        items: [],
       };
 
-      // Add or update user properties
       if (selectedEvent?.items?.[0]?.user_property?.length > 0) {
         const userPropertyItems = selectedEvent.items[0].user_property.map(
           (userProperty) => ({
@@ -228,12 +229,10 @@ const EventDrawer = ({ isShowSave = true }) => {
           })
         );
 
-        // Replace or add user property items
-        payload.items = payload.items.filter((item) => !item.user_property); // Remove existing user_property items
+        payload.items = payload.items.filter((item) => !item.user_property);
         payload.items.push(...userPropertyItems);
       }
 
-      // Add or update event properties
       if (selectedEvent?.items?.[0]?.event_property?.length > 0) {
         const eventPropertyItems = selectedEvent.items[0].event_property.map(
           (eventProperty) => ({
@@ -258,12 +257,10 @@ const EventDrawer = ({ isShowSave = true }) => {
           })
         );
 
-        // Replace or add event property items
-        payload.items = payload.items.filter((item) => !item.event_property); // Remove existing event_property items
+        payload.items = payload.items.filter((item) => !item.event_property);
         payload.items.push(...eventPropertyItems);
       }
 
-      // Add or update system (super) properties
       if (selectedEvent?.items?.[0]?.super_property?.length > 0) {
         const superPropertyItems = selectedEvent.items[0].super_property.map(
           (superProperty) => ({
@@ -278,12 +275,10 @@ const EventDrawer = ({ isShowSave = true }) => {
           })
         );
 
-        // Replace or add super property items
-        payload.items = payload.items.filter((item) => !item.super_property); // Remove existing super_property items
+        payload.items = payload.items.filter((item) => !item.super_property);
         payload.items.push(...superPropertyItems);
       }
 
-      // Include event ID for updates
       if (selectedEvent?._id) {
         payload.event_id = selectedEvent._id;
       }
@@ -292,11 +287,6 @@ const EventDrawer = ({ isShowSave = true }) => {
       console.log("Payload being sent:", payload);
 
       try {
-        // setLoading(true);
-        // setError(null);
-        // setSuccessMessage(null);
-
-        // Send POST request to save data
         const saveResponse = await axios.post("/api/save", payload);
         const response = await axios.get(
           `/api/organizations?organization_id=${currentOrganization.id}`
@@ -307,10 +297,8 @@ const EventDrawer = ({ isShowSave = true }) => {
         const updatedRows = events.map((event) => ({
           id: event._id,
           name: event.eventName,
-          // eventProperties: event.items.map((item) => `${item.property}:${item.value}`).join(', '),
           eventProperties: event.items
             .map((item) => {
-              // Format Event Properties
               const eventProps =
                 item.event_property
                   ?.map(
@@ -323,7 +311,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Format Super Properties
               const superProps =
                 item.super_property
                   ?.map(
@@ -334,7 +321,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Format User Properties
               const userProps =
                 item.user_property
                   ?.map(
@@ -345,7 +331,6 @@ const EventDrawer = ({ isShowSave = true }) => {
                   )
                   .join("; ") || "";
 
-              // Combine all properties into a single formatted string
               return [
                 eventProps ? `Event Properties: { ${eventProps} }` : "",
                 superProps ? `Super Properties: { ${superProps} }` : "",
@@ -361,12 +346,11 @@ const EventDrawer = ({ isShowSave = true }) => {
         setTableData(updatedRows);
         setSelectedOrganization(organizationDetails);
       } catch (error) {
-        // setError("Failed to save event data. Please try again.");
         console.error("Error saving event:", error.message);
         if (error.response && error.response.status === 409) {
-          showToast(error.response.data.message); // Display the custom error message from the server
+          showToast(error.response.data.message);
         } else {
-          showToast("An unexpected error occurred. Please try again."); // Fallback for other errors
+          showToast("An unexpected error occurred. Please try again.");
         }
       } finally {
         setLoading(false);
@@ -384,8 +368,8 @@ const EventDrawer = ({ isShowSave = true }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full  w-120 bg-gray-100 shadow-lg transform transition-transform duration-300 z-50 ${
-        isEventDrawerOpen ? "translate-x-0" : "translate-x-full"
+      className={`fixed top-0 right-0 h-full w-120 bg-gray-100 shadow-lg transform transition-transform duration-300 z-50 ${
+        isOpen ? "translate-x-0" : "translate-x-full"
       }`}
       style={{
         zIndex: 1100,
@@ -414,7 +398,7 @@ const EventDrawer = ({ isShowSave = true }) => {
           </div>
 
           <button
-            onClick={() => toggleEventDrawer(false)}
+            onClick={() => setEventDrawer({ isOpen: false, selectedEvent: null })}
             className="text-gray-500 hover:text-gray-800"
           >
             ✕
@@ -439,7 +423,7 @@ const EventDrawer = ({ isShowSave = true }) => {
                 <button
                   onClick={handleSave}
                   className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
-                  disabled={loading} // Disable button when loading
+                  disabled={loading}
                 >
                   {loading ? (
                     <svg
@@ -468,7 +452,7 @@ const EventDrawer = ({ isShowSave = true }) => {
                 </button>
 
                 <button
-                  onClick={() => toggleEventDrawer(false)}
+                  onClick={() => setEventDrawer({ isOpen: false, selectedEvent: null })}
                   className="text-gray-500 hover:text-gray-800"
                 >
                   Cancel
@@ -477,7 +461,6 @@ const EventDrawer = ({ isShowSave = true }) => {
             </div>
           </div>
         )}
-        {/* Footer */}
       </div>
     </div>
   );

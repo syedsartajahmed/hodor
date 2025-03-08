@@ -1,17 +1,21 @@
 import React from "react";
-import { useAppContext } from "@/context/AppContext";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { tableDataState, drawerState } from "@/recoil/atom";
 
 const NameCellRenderer = ({ params }) => {
-  const { tableData, toggleDrawer } = useAppContext();
+  const tableData = useRecoilValue(tableDataState);
+  const setDrawerState = useSetRecoilState(drawerState);
 
   const handleClick = () => {
     const event = tableData.find((row) => row.id === params.row.id);
-    toggleDrawer(true, event);
+    if (event) {
+      setDrawerState({ isOpen: true, event });
+    }
   };
 
   return (
     <div
-      onClick={() => handleClick()}
+      onClick={handleClick}
       style={{
         cursor: "pointer",
         flex: 1,

@@ -12,7 +12,13 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import styled from "@emotion/styled";
-import { useAppContext } from "@/context/AppContext";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  isEventDrawerOpenState,
+  selectedEventState,
+  currentOrganizationState,
+  isProductAnalystState,
+} from "@/recoil/atom";
 import showToast from "@/utils/toast";
 
 const CodeBox = styled(Box)`
@@ -34,40 +40,26 @@ const SmallNote = styled(Typography)`
   padding-bottom: 10px;
 `;
 
-const DrawerPropertiesWithEnvironment = ({
-  generatedCode,
-  setGeneratedCode,
-  triggerCode,
-  functionName,
-}) => {
+const DrawerPropertiesWithEnvironment = ({ generatedCode, setGeneratedCode, triggerCode, functionName }) => {
   const [environment, setEnvironment] = useState("Frontend");
   const [instructions, setInstructions] = useState("");
   const [initCode, setInitCode] = useState("");
   const [token, setToken] = useState("");
 
-  const {
-    isEventDrawerOpen,
-    toggleEventDrawer,
-    selectedEvent,
-    setAllEvents,
-    currentOrganization,
-    setTableData,
-    setSelectedOrganization,
-    isProductAnalyst,
-  } = useAppContext();
+  const isEventDrawerOpen = useRecoilValue(isEventDrawerOpenState);
+  const selectedEvent = useRecoilValue(selectedEventState);
+  const currentOrganization = useRecoilValue(currentOrganizationState);
+  const isProductAnalyst = useRecoilValue(isProductAnalystState);
 
   const analyticsProvider = isProductAnalyst ? "Mixpanel" : "RudderAnalytics";
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedToken = currentOrganization?.applicationDetails?.token;
-      if (storedToken) {
-        console.log("Stored token:", storedToken);
-        setToken(storedToken);
-        updateInitCode(storedToken);
-      }
+    const storedToken = currentOrganization?.applicationDetails?.token;
+    if (storedToken) {
+      setToken(storedToken);
+      updateInitCode(storedToken);
     }
-  }, []);
+  }, [currentOrganization]);
 
   const handleTokenChange = (event) => {
     const newToken = event.target.value;
@@ -82,52 +74,20 @@ const DrawerPropertiesWithEnvironment = ({
     if (value === "Frontend") {
       setInstructions(
         isProductAnalyst
-          ? `
-# Installation Instructions
-# via npm
-npm install --save mixpanel-browser
-
-# via yarn
-yarn add mixpanel-browser
-`
-          : `
-# Installation Instructions
-# via npm
-npm install --save @rudderstack/rudder-sdk-js
-
-# via yarn
-yarn add @rudderstack/rudder-sdk-js
-`
+          ? `# Installation Instructions\n# via npm\nnpm install --save mixpanel-browser\n\n# via yarn\nyarn add mixpanel-browser\n`
+          : `# Installation Instructions\n# via npm\nnpm install --save @rudderstack/rudder-sdk-js\n\n# via yarn\nyarn add @rudderstack/rudder-sdk-js\n`
       );
       updateInitCode(token);
     } else if (value === "Backend") {
       setInstructions(
         isProductAnalyst
-          ? `
-# Installation Instructions for Backend
-npm install --save mixpanel
-yarn add mixpanel
-`
-          : `
-# Installation Instructions for Backend
-npm install --save @rudderstack/rudder-sdk-node
-yarn add @rudderstack/rudder-sdk-node
-`
+          ? `# Installation Instructions for Backend\nnpm install --save mixpanel\nyarn add mixpanel\n`
+          : `# Installation Instructions for Backend\nnpm install --save @rudderstack/rudder-sdk-node\nyarn add @rudderstack/rudder-sdk-node\n`
       );
       setInitCode(
         isProductAnalyst
-          ? `
-// Backend Initialization
-const Mixpanel = require('mixpanel');
-const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
-`
-          : `
-// Backend Initialization
-const Analytics = require('@rudderstack/rudder-sdk-node');
-const client = new Analytics('${
-              token || "YOUR_WRITE_KEY"
-            }', 'https://your-data-plane-url');
-`
+          ? `const Mixpanel = require('mixpanel');\nconst mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');`
+          : `const Analytics = require('@rudderstack/rudder-sdk-node');\nconst client = new Analytics('${token || "YOUR_WRITE_KEY"}', 'https://your-data-plane-url');`
       );
     } else {
       setInstructions(`Chrome integration will be added later.`);
@@ -136,33 +96,15 @@ const client = new Analytics('${
   };
 
   const updateInitCode = (newToken) => {
-    if (isProductAnalyst) {
-      setInitCode(`
-import mixpanel from 'mixpanel-browser';
-
-mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
-  debug: true,
-  track_pageview: true,
-});
-`);
-    } else {
-      setInitCode(`
-import * as rudderanalytics from '@rudderstack/rudder-sdk-js';
-
-rudderanalytics.load('${
-        newToken || "YOUR_WRITE_KEY"
-      }', 'https://your-data-plane-url', {
-  logLevel: 'DEBUG',
-  configUrl: 'https://api.rudderlabs.com',
-});
-`);
-    }
+    setInitCode(
+      isProductAnalyst
+        ? `import mixpanel from 'mixpanel-browser';\n\nmixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {\n  debug: true,\n  track_pageview: true,\n});`
+        : `import * as rudderanalytics from '@rudderstack/rudder-sdk-js';\n\nrudderanalytics.load('${newToken || "YOUR_WRITE_KEY"}', 'https://your-data-plane-url', {\n  logLevel: 'DEBUG',\n  configUrl: 'https://api.rudderlabs.com',\n});`
+    );
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("Copied to clipboard!");
-    });
+    navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard!"));
   };
 
   useEffect(() => {
@@ -180,196 +122,14 @@ rudderanalytics.load('${
         </Select>
       </FormControl>
 
-      {["Frontend", "Backend"].includes(environment) && (
-        <Box mt={2}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            {analyticsProvider} Token
-          </Typography>
-          <SmallNote>
-            Enter your {analyticsProvider}{" "}
-            {isProductAnalyst ? "project token" : "write key"}. This will be
-            used in the initialization code.
-          </SmallNote>
-          <TextField
-            fullWidth
-            label={`${analyticsProvider} ${
-              isProductAnalyst ? "Token" : "Write Key"
-            }`}
-            value={currentOrganization?.applicationDetails?.token}
-            onChange={handleTokenChange}
-            variant="outlined"
-          />
-        </Box>
-      )}
-
-      {instructions && (
-        <Box mt={2}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            1. Installation Instructions
-          </Typography>
-          <CodeBox>
-            {instructions}
-            <IconButton
-              onClick={() => copyToClipboard(instructions)}
-              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </CodeBox>
-        </Box>
-      )}
-
-      <Box mt={2}>
-        <Typography
-          sx={{
-            textDecoration: "underline",
-            textDecorationColor: "#000000",
-            textDecorationThickness: "2px",
-          }}
-          variant="h6"
-          gutterBottom
-        >
-          2. Create a Separate File
-        </Typography>
-        <SmallNote>
-          For better organization, create a file such as{" "}
-          <strong>utils/{analyticsProvider.toLowerCase()}.js</strong> (or
-          <strong> lib/{analyticsProvider.toLowerCase()}.js</strong>) and place
-          the initialization code there.
-        </SmallNote>
-      </Box>
-
       {initCode && (
         <Box mt={2}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            3. {analyticsProvider} Initialization
+          <Typography variant="h6" gutterBottom>
+            Initialization Code
           </Typography>
-          <SmallNote>
-            Add this initialization code inside your newly created file (e.g.,{" "}
-            <strong>{analyticsProvider.toLowerCase()}.js</strong>) before using{" "}
-            {analyticsProvider}.
-          </SmallNote>
           <CodeBox>
             {initCode}
-            <IconButton
-              onClick={() => copyToClipboard(initCode)}
-              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </CodeBox>
-        </Box>
-      )}
-
-      {generatedCode && (
-        <Box mt={4}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            4. Generated Code
-          </Typography>
-          <SmallNote>
-            Place this code in the same file where you set up{" "}
-            {analyticsProvider}, or in another file if you prefer to keep it
-            separate.
-          </SmallNote>
-          <CodeBox>
-            {generatedCode}
-            <IconButton
-              onClick={() => copyToClipboard(generatedCode)}
-              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </CodeBox>
-        </Box>
-      )}
-
-      {functionName && (
-        <Box mt={4}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            5. Function Import
-          </Typography>
-          <SmallNote>
-            Use this import statement to invoke the generated function.
-          </SmallNote>
-          <CodeBox>
-            {`import { ${functionName} } from '../utils/${analyticsProvider.toLowerCase()}';`}
-            <IconButton
-              onClick={() =>
-                copyToClipboard(
-                  `import { ${functionName} } from '../utils/${analyticsProvider.toLowerCase()}';`
-                )
-              }
-              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </CodeBox>
-        </Box>
-      )}
-
-      {triggerCode && (
-        <Box mt={4}>
-          <Typography
-            sx={{
-              textDecoration: "underline",
-              textDecorationColor: "#000000",
-              textDecorationThickness: "2px",
-            }}
-            variant="h6"
-            gutterBottom
-          >
-            6. Trigger Code
-          </Typography>
-          <SmallNote>
-            Call this function wherever you want to trigger {analyticsProvider}{" "}
-            tracking.
-          </SmallNote>
-          <CodeBox>
-            {triggerCode}
-            <IconButton
-              onClick={() => copyToClipboard(triggerCode)}
-              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
-            >
+            <IconButton onClick={() => copyToClipboard(initCode)} sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}>
               <ContentCopyIcon />
             </IconButton>
           </CodeBox>

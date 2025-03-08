@@ -64,6 +64,7 @@ async function handler(req, res) {
     case "POST":
       try {
         const { name } = req.body;
+        console.log("Received POST request with body:", req.body);
 
         // Check if name is provided
         if (!name) {

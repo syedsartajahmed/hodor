@@ -3,19 +3,24 @@ import Header from "@/components/Header";
 import EventDrawer from "@/components/EventDrawer";
 import Table from "@/components/Table";
 import List from "@/components/List";
-import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Navbar from "@/components/Navbar";
+import { useSetRecoilState, useRecoilState } from "recoil";
+import {
+  selectedOrganizationState,
+  tableDataState,
+  showListState,
+  currentOrganizationState,
+  allEventsState,
+} from "@/recoil/atoms";
 
 const Index = () => {
-  const {
-    setSelectedOrganization,
-    setTableData,
-    showList,
-    setCurrentOrganization,
-    setAllEvents,
-  } = useAppContext();
+  const setSelectedOrganization = useSetRecoilState(selectedOrganizationState);
+  const setTableData = useSetRecoilState(tableDataState);
+  const setCurrentOrganization = useSetRecoilState(currentOrganizationState);
+  const setAllEvents = useSetRecoilState(allEventsState);
+  const [showList] = useRecoilState(showListState);
 
   const router = useRouter();
   const { id } = router.query;
@@ -32,15 +37,10 @@ const Index = () => {
         `/api/organizations?organization_id=${organizationId}`
       );
       const organizationDetails = response.data;
-
-      console.log(
-        "Fetched organization details:",
-        organizationDetails.applications?.[0]?.events
-      );
+      
       const events = organizationDetails.applications?.[0]?.events || [];
       setAllEvents(events);
-      console.log("Fetched organization details:", events);
-      console.log(organizationDetails.applications?.[0]["_id"] || null);
+      
       const firstApplication = organizationDetails.applications?.[0] || {};
 
       setCurrentOrganization({
@@ -60,7 +60,6 @@ const Index = () => {
         name: event.eventName,
         eventProperties: event.items
           .map((item) => {
-            // Format Event Properties
             const eventProps =
               item.event_property
                 ?.map(
@@ -71,19 +70,16 @@ const Index = () => {
                 )
                 .join("; ") || "";
 
-            // Format Super Properties
             const superProps =
               item.super_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Format User Properties
             const userProps =
               item.user_property
                 ?.map((prop) => `${prop.name || "N/A"}: ${prop.value || "N/A"}`)
                 .join("; ") || "";
 
-            // Combine all properties into a single formatted string
             return [
               eventProps ? `Event Properties: { ${eventProps} }` : "",
               superProps ? `Super Properties: { ${superProps} }` : "",
@@ -100,21 +96,14 @@ const Index = () => {
       setTableData(updatedRows);
       setSelectedOrganization(organizationDetails);
     } catch (err) {
-      //setError("Failed to fetch organization details");
       console.error(err);
-    } finally {
-      //setLoading(false);
     }
   };
 
   return (
     <>
       <Navbar />
-      <Header
-        isShowCopy={true}
-        isShowMasterEvents={true}
-        isShowDownload={true}
-      />
+      <Header isShowCopy={true} isShowMasterEvents={true} isShowDownload={true} />
       {showList ? <List /> : <Table page={"dashboard"} />}
       <EventDrawer />
     </>

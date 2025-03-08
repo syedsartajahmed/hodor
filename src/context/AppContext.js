@@ -1,100 +1,91 @@
-import React, { createContext, useContext, useState } from "react";
-import { rows } from "@/constants/tableValue";
+import { atom, selector } from 'recoil';
 
-const AppContext = createContext();
+export const tableDataState = atom({
+  key: 'tableDataState',
+  default: [],
+});
 
-export const useAppContext = () => useContext(AppContext);
+export const selectedOrganizationState = atom({
+  key: 'selectedOrganizationState',
+  default: null,
+});
 
-export const AppProvider = ({ children }) => {
-  const [tableData, setTableData] = useState([]);
-  const [selectedOrganization, setSelectedOrganization] = useState(null); // New State
-  const [isOrgDrawerOpen, setIsOrgDrawerOpen] = useState(false); // Left drawer
-  const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false); // Right drawer
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showList, setShowList] = useState(false);
-  const [currentOrganization, setCurrentOrganization] = useState({
+export const isOrgDrawerOpenState = atom({
+  key: 'isOrgDrawerOpenState',
+  default: false,
+});
+
+export const isEventDrawerOpenState = atom({
+  key: 'isEventDrawerOpenState',
+  default: false,
+});
+
+export const selectedEventState = atom({
+  key: 'selectedEventState',
+  default: null,
+});
+
+export const isDrawerOpenState = atom({
+  key: 'isDrawerOpenState',
+  default: false,
+});
+
+export const showListState = atom({
+  key: 'showListState',
+  default: false,
+});
+
+export const currentOrganizationState = atom({
+  key: 'currentOrganizationState',
+  default: {
     id: null,
     name: null,
     applicationId: null,
     applicationDetails: {},
-  });
-  const [allEvents, setAllEvents] = useState([]);
+  },
+});
 
-  const [isProductAnalyst, setIsProductAnalyst] = useState(true);
+export const allEventsState = atom({
+  key: 'allEventsState',
+  default: [],
+});
 
-  const toggleOrgDrawer = (open) => {
-    setIsOrgDrawerOpen(open);
-  };
+export const isProductAnalystState = atom({
+  key: 'isProductAnalystState',
+  default: true,
+});
 
-  const toggleEventDrawer = (open, event = null) => {
-    setIsEventDrawerOpen(open); // Ensure this toggles the drawer's visibility
-    setSelectedEvent(event); // Set the selected event data
-    //if (!open) setSelectedEvent([]);
-  };
+export const toggleOrgDrawerSelector = selector({
+  key: 'toggleOrgDrawerSelector',
+  get: ({ get }) => get(isOrgDrawerOpenState),
+  set: ({ set }, newValue) => set(isOrgDrawerOpenState, newValue),
+});
 
-  const toggleDrawer = (open, event = null) => {
-    setIsDrawerOpen(open);
-    setIsEventDrawerOpen(open);
-    //setSelectedEvent(event);
-    if (event) {
-      setSelectedEvent(event);
-    } else {
-      setSelectedEvent(null);
-    }
-    console.log("Selected Event:", event);
-    //if (!open) setSelectedEvent([]);
-  };
+export const toggleEventDrawerSelector = selector({
+  key: 'toggleEventDrawerSelector',
+  get: ({ get }) => get(isEventDrawerOpenState),
+  set: ({ set }, { open, event = null }) => {
+    set(isEventDrawerOpenState, open);
+    set(selectedEventState, event);
+  },
+});
 
-  const selectOrganization = (organization) => {
-    setCurrentOrganization({
-      id: organization._id,
-      name: organization.name,
-      applicationId: organization.applications?.[0] || null,
-    });
-  };
-
-  const addEvent = (event) => {
-    console.log("Adding event:", event);
-    setTableData((prev) => [
-      ...prev,
+export const addEventSelector = selector({
+  key: 'addEventSelector',
+  get: ({ get }) => get(tableDataState),
+  set: ({ set, get }, event) => {
+    const prevTableData = get(tableDataState);
+    set(tableDataState, [
+      ...prevTableData,
       {
         id: Date.now(),
         ...event,
-        stakeholders: "",
-        category: "",
-        source: "",
-        action: "",
-        platform: "",
+        stakeholders: '',
+        category: '',
+        source: '',
+        action: '',
+        platform: '',
       },
     ]);
-    console.log(tableData);
-  };
-
-  const value = {
-    tableData,
-    addEvent, // Ensure this is included in the context value
-    isDrawerOpen,
-    toggleDrawer,
-    selectedEvent,
-    setTableData,
-    selectedOrganization,
-    setSelectedOrganization,
-    isOrgDrawerOpen,
-    toggleOrgDrawer,
-    isEventDrawerOpen,
-    toggleEventDrawer,
-    setCurrentOrganization,
-    currentOrganization,
-    selectOrganization,
-    showList,
-    setShowList,
-    setSelectedEvent,
-    setAllEvents,
-    allEvents,
-    isProductAnalyst,
-    setIsProductAnalyst,
-  };
-
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
-};
+  },
+});

@@ -1,19 +1,23 @@
 import "@/styles/globals.css";
-
-// export default function App({ Component, pageProps }) {
-//   return <Component {...pageProps} />;
-// }
+import moengage from "@moengage/web-sdk";
 import { useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import * as React from "react";
 import { CssBaseline } from "@mui/material";
-import { AppProvider } from "@/context/AppContext";
-import { Analytics } from '@vercel/analytics/next';
+import { RecoilRoot } from "recoil";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function MyApp({ Component, pageProps }) {
-
+  return (
+    <RecoilRoot>
+      <CssBaseline />
+      <Component {...pageProps} />
+      <ToastContainer />
+      <Analytics />
+    </RecoilRoot>
+  );
+}
 
   // useEffect(() => {
   //   if (window.mixpanel) {
@@ -26,12 +30,3 @@ export default function MyApp({ Component, pageProps }) {
   //     });
   //   }
   // }, []);
-  return (
-    <AppProvider>
-      <CssBaseline />
-      <Component {...pageProps} />
-      <ToastContainer />
-      <Analytics />
-    </AppProvider>
-  );
-}

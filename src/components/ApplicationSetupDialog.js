@@ -6,13 +6,13 @@ import {
   DialogActions,
   TextField,
   Button,
-  MenuItem,
 } from "@mui/material";
+import { useSetRecoilState } from "recoil";
+import { applicationSetupState } from "@/recoil/atom";
 
 const ApplicationSetupDialog = ({
   open,
   onClose,
-  onSubmit,
   isEdit = false,
   initialData = {},
 }) => {
@@ -23,7 +23,8 @@ const ApplicationSetupDialog = ({
     apiSecret: "",
   });
 
-  // Sync formData with initialData when initialData changes
+  const setApplicationSetup = useSetRecoilState(applicationSetupState);
+
   useEffect(() => {
     setFormData({
       projectId: initialData.projectId || "",
@@ -31,7 +32,7 @@ const ApplicationSetupDialog = ({
       serviceAccountPassword: initialData.serviceAccountPassword || "",
       apiSecret: initialData.apiSecret || "",
     });
-  }, [initialData]);
+  }, [JSON.stringify(initialData)]); // ✅ Ensures effect runs only when `initialData` actually changes
 
   const handleChange = (e) => {
     setFormData({
@@ -41,8 +42,8 @@ const ApplicationSetupDialog = ({
   };
 
   const handleSubmit = () => {
-    // localStorage.setItem("mixpanelToken", formData.token);
-    onSubmit(formData);
+    setApplicationSetup(formData);
+    onClose();
   };
 
   return (
@@ -83,7 +84,6 @@ const ApplicationSetupDialog = ({
           label="API Secret"
           value={formData.apiSecret}
           onChange={handleChange}
-          //type="password"
         />
       </DialogContent>
       <DialogActions>

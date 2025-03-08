@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "@/context/AppContext";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import axios from "axios";
+import {
+  isOrgDrawerOpenState,
+  selectedOrganizationState,
+  organizationsState,
+  allEventsState,
+} from "@/recoil/atoms";
 
 const OrganizationDrawer = () => {
-  const {
-    isOrgDrawerOpen,
-    toggleOrgDrawer,
-    setSelectedOrganization,
-    selectOrganization,
-    setAllEvents,
-  } = useAppContext();
+  const [isOrgDrawerOpen, setOrgDrawerOpen] = useRecoilState(isOrgDrawerOpenState);
+  const setSelectedOrganization = useSetRecoilState(selectedOrganizationState);
+  const setAllEvents = useSetRecoilState(allEventsState);
+  const [organizations, setOrganizations] = useRecoilState(organizationsState);
 
-  const [organizations, setOrganizations] = useState([]);
   const [newOrgName, setNewOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Fetch organizations when the drawer is opened
   useEffect(() => {
     fetchOrganizations();
   }, []);
@@ -27,8 +27,8 @@ const OrganizationDrawer = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get("/api/organizations"); // Replace with your API endpoint
-      setOrganizations(response.data); // Assuming the response is an array of organizations
+      const response = await axios.get("/api/organizations");
+      setOrganizations(response.data);
     } catch (err) {
       setError("Failed to fetch organizations");
       console.error(err);
@@ -42,13 +42,11 @@ const OrganizationDrawer = () => {
     try {
       setLoading(true);
       setError(null);
-
       const newOrganization = { name: newOrgName };
-      await axios.post("/api/organizations", newOrganization); // Call POST API to add a new organization
-
+      await axios.post("/api/organizations", newOrganization);
       setSuccessMessage("Organization added successfully!");
-      setNewOrgName(""); // Clear the input
-      fetchOrganizations(); // Refetch the latest list of organizations
+      setNewOrgName("");
+      fetchOrganizations();
     } catch (err) {
       setError("Failed to add organization");
       console.error(err);
@@ -61,18 +59,10 @@ const OrganizationDrawer = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await axios.get(
-        `/api/organizations?organization_id=${organizationId}`
-      );
-
+      const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
       const organizationDetails = response.data;
       const events = organizationDetails.applications?.[0]?.events || [];
       setAllEvents(events);
-
-      // Handle the fetched data (e.g., update the state)
-      console.log("Fetched organization details:", organizationDetails);
-      //setSelectedOrganization(organizationDetails);
     } catch (err) {
       setError("Failed to fetch organization details");
       console.error(err);

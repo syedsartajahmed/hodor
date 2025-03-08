@@ -1,10 +1,11 @@
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { useAppContext } from "@/context/AppContext";
+import React, { useState } from "react";
+import { useRecoilState } from "recoil";
+import { categoriesState } from "@/recoil/atom";
 import showToast from "@/utils/toast";
 
 const NewCategoryModal = ({ open, setOpen }) => {
-  const { categories, setCategories } = useAppContext();
+  const [categories, setCategories] = useRecoilState(categoriesState);
   const [categoryName, setCategoryName] = useState("");
 
   const handleClose = () => {
@@ -18,18 +19,9 @@ const NewCategoryModal = ({ open, setOpen }) => {
       return;
     }
 
-    setCategories((prev) => {
-      const updatedCategories = [...prev, categoryName];
-      console.log("Updated Categories:", updatedCategories);
-      return updatedCategories;
-    });
-
+    setCategories((prev) => [...prev, categoryName]);
     handleClose();
   };
-
-  useEffect(() => {
-    console.log("categories", categories);
-  }, [categories]);
 
   return (
     <Modal

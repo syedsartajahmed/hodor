@@ -1,25 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Header from "@/components/Header";
 import EventDrawer from "@/components/EventDrawer";
 import Table from "@/components/Table";
 import List from "@/components/List";
-import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSetRecoilState, useRecoilValue } from "recoil";
+import {
+  selectedOrganizationState,
+  tableDataState,
+  showListState,
+  currentOrganizationState,
+  allEventsState,
+} from "@/recoil/atom";
 
 const Index = () => {
-  const {
-    setSelectedOrganization,
-    setTableData,
-    showList,
-    setCurrentOrganization,
-    setAllEvents,
-  } = useAppContext();
+  const setSelectedOrganization = useSetRecoilState(selectedOrganizationState);
+  const setTableData = useSetRecoilState(tableDataState);
+  const showList = useRecoilValue(showListState);
+  const setCurrentOrganization = useSetRecoilState(currentOrganizationState);
+  const setAllEvents = useSetRecoilState(allEventsState);
 
   const router = useRouter();
-  const { organization, id } = router.query;
+  const { id } = router.query;
 
   useEffect(() => {
     if (id) {
@@ -95,10 +100,7 @@ const Index = () => {
       setTableData(updatedRows);
       setSelectedOrganization(organizationDetails);
     } catch (err) {
-      //setError("Failed to fetch organization details");
       console.error(err);
-    } finally {
-      //setLoading(false);
     }
   };
 
