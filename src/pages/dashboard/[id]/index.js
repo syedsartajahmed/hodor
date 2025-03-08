@@ -13,7 +13,7 @@ import {
   showListState,
   currentOrganizationState,
   allEventsState,
-} from "@/recoil/atoms";
+} from "@/recoil/atom";
 
 const Index = () => {
   const setSelectedOrganization = useSetRecoilState(selectedOrganizationState);

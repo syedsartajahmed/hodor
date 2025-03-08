@@ -6,7 +6,7 @@ import List from "@/components/List";
 import axios from "axios";
 import Navbar from "@/components/Navbar";
 import { useSetRecoilState, useRecoilValue } from "recoil";
-import { tableDataState, showListState } from "@/recoil/atoms";
+import { tableDataState, showListState } from "@/recoil/atom";
 
 const MasterEvents = () => {
   const setTableData = useSetRecoilState(tableDataState);
