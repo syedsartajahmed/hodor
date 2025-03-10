@@ -21,23 +21,20 @@ import {
   DialogTitle,
   Dialog,
 } from "@mui/material";
-import {
-  ContentCopy as ContentCopyIcon,
-  Add as AddIcon,
-  Info as InfoIcon,
-  ExpandMore as ExpandMoreIcon,
-  Delete as DeleteIcon,
-  Close,
-} from "@mui/icons-material";
-import styled from "@emotion/styled";
-import showToast from "@/utils/toast";
-import { useRecoilState } from "recoil";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import AddIcon from "@mui/icons-material/Add";
+import InfoIcon from "@mui/icons-material/Info";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Close } from "@mui/icons-material";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   selectedEventState,
-  eventPropertiesState,
-  superPropertiesState,
-  userPropertiesState,
+  isProductAnalystState,
 } from "@/recoil/atom";
+import DrawerPropertiesWithEnvironment from "./DrawerPropertiesWithEnvironment";
+import styled from "@emotion/styled";
+import showToast from "@/utils/toast";
 
 const DrawerProperties = () => {
   const CodeBox = styled(Box)`
@@ -58,86 +55,1104 @@ const DrawerProperties = () => {
   const [showUnidentifyMessage, setShowUnidentifyMessage] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
   const [triggerCode, setTriggerCode] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
   const [functionName, setFunctionName] = useState("");
-  
   const [selectedEvent, setSelectedEvent] = useRecoilState(selectedEventState);
-  const [eventProperties, setEventProperties] = useRecoilState(eventPropertiesState);
-  const [superProperties, setSuperProperties] = useRecoilState(superPropertiesState);
-  const [userProperties, setUserProperties] = useRecoilState(userPropertiesState);
+  const isProductAnalyst = useRecoilValue(isProductAnalystState);
+
+  const [eventProperties, setEventProperties] = useState([
+    {
+      name: "",
+      value: "",
+      property_definition: "",
+      type: "String",
+      sample_value: "",
+    },
+  ]);
+
+  const [superProperties, setSuperProperties] = useState([
+    { name: "", value: "" },
+  ]);
+
+  const [userProperties, setUserProperties] = useState([
+    { name: "", value: "" },
+  ]);
+
+  const [stakeholders, setStakeholders] = useState([]);
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [action, setAction] = useState("");
+  const [platforms, setPlatforms] = useState([]);
+  const [source, setSource] = useState([]);
+  const [organization, setOrganization] = useState("");
+  const [isMasterEventPage, setIsMasterEventPage] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMasterEventPage(
+        window.location.pathname.includes("master-event") ||
+          window.location.pathname.includes("master-events")
+      );
+    }
+  }, []);
+
+  const stakeholderOptions = [
+    "Executive Sponsor",
+    "Main Point of Contact",
+    "Product Lead",
+    "Product Team",
+    "Marketing / Growth",
+    "Customer Success",
+    "Technical Lead",
+    "Technical Team",
+    "Data Team",
+  ];
+
+  const platformOptions = [
+    "Web",
+    "Android",
+    "iOS",
+    "Server Side",
+    "All Client Side",
+    "All Mobile",
+    "All Platforms",
+  ];
+
+  const sourceOptions = ["Website", "Backend", "Android", "iOS"];
+
+  const methodCallOptions = [
+    "Identify",
+    "Reset",
+    "Track",
+    "Register Once",
+    "Register",
+    "Unregister",
+    "People Set",
+    "People Set Once",
+    "People Increment",
+    "People Unset",
+    "People Append",
+    "People Union",
+    "Time Event",
+    "Opt In Tracking",
+    "Opt Out Tracking",
+  ];
+
+  const dataTypeOptions = [
+    "String",
+    "Numeric",
+    "Boolean",
+    "Date",
+    "List",
+    "Incremental",
+  ];
 
   const handleEventPropertyChange = (index, field, value) => {
-    setEventProperties((prevProperties) => {
-      const updatedProperties = [...prevProperties];
+    const updatedProperties = [...eventProperties];
+    if (field === "methodCall") {
+      updatedProperties[index]["method_call"] = value;
       updatedProperties[index][field] = value;
-      return updatedProperties;
+    } else if (field === "type") {
+      updatedProperties[index]["data_type"] = value;
+      updatedProperties[index][field] = value;
+    } else {
+      updatedProperties[index][field] = value;
+    }
+
+    setEventProperties(updatedProperties);
+
+    setSelectedEvent((prevEvent) => {
+      const updatedItems = [...(prevEvent.items || [])];
+      if (updatedItems[0]) {
+        updatedItems[0] = {
+          ...updatedItems[0],
+          event_property: updatedProperties,
+        };
+      } else {
+        updatedItems[0] = {
+          user_property: [],
+          event_property: updatedProperties,
+          super_property: [],
+        };
+      }
+      return {
+        ...prevEvent,
+        items: updatedItems,
+      };
     });
   };
 
   const handleSuperPropertyChange = (index, field, value) => {
-    setSuperProperties((prevProperties) => {
-      const updatedProperties = [...prevProperties];
-      updatedProperties[index][field] = value;
-      return updatedProperties;
+    const updatedProperties = [...superProperties];
+    updatedProperties[index][field] = value;
+    setSuperProperties(updatedProperties);
+
+    setSelectedEvent((prevEvent) => {
+      const updatedItems = [...(prevEvent.items || [])];
+      if (updatedItems[0]) {
+        updatedItems[0] = {
+          ...updatedItems[0],
+          super_property: updatedProperties,
+        };
+      } else {
+        updatedItems[0] = {
+          user_property: [],
+          event_property: [],
+          super_property: updatedProperties,
+        };
+      }
+      return {
+        ...prevEvent,
+        items: updatedItems,
+      };
     });
   };
 
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleConfirmDelete = () => {
+    handleCloseDialog();
+    handleDelete();
+  };
+
   const handleUserPropertyChange = (index, field, value) => {
-    setUserProperties((prevProperties) => {
-      const updatedProperties = [...prevProperties];
-      updatedProperties[index][field] = value;
-      return updatedProperties;
+    const updatedProperties = [...userProperties];
+    updatedProperties[index][field] = value;
+    setUserProperties(updatedProperties);
+
+    setSelectedEvent((prevEvent) => {
+      const updatedItems = [...(prevEvent.items || [])];
+      if (updatedItems[0]) {
+        updatedItems[0] = {
+          ...updatedItems[0],
+          user_property: updatedProperties,
+        };
+      } else {
+        updatedItems[0] = {
+          user_property: updatedProperties,
+          event_property: [],
+          super_property: [],
+        };
+      }
+      return {
+        ...prevEvent,
+        items: updatedItems,
+      };
+    });
+  };
+
+  const addUserProperty = () => {
+    setUserProperties((prev) => {
+      const updated = [...prev, { name: "", value: "" }];
+      setSelectedEvent((prevEvent) => ({
+        ...prevEvent,
+        user_properties: updated,
+      }));
+      return updated;
     });
   };
 
   const addEventProperty = () => {
-    setEventProperties((prev) => [
-      ...prev,
-      { name: "", value: "", type: "String", sample_value: "", method_call: "Track" },
-    ]);
+    setEventProperties((prev) => {
+      const updated = [
+        ...prev,
+        {
+          name: "",
+          value: "",
+          property_definition: "",
+          type: "String",
+          sample_value: "",
+          method_call: "Track",
+        },
+      ];
+      setSelectedEvent((prevEvent) => ({
+        ...prevEvent,
+        add_event_properties: updated,
+      }));
+      return updated;
+    });
   };
 
   const addSuperProperty = () => {
-    setSuperProperties((prev) => [...prev, { name: "", value: "" }]);
+    setSuperProperties((prev) => {
+      const updated = [...prev, { name: "", value: "" }];
+      setSelectedEvent((prevEvent) => ({
+        ...prevEvent,
+        system_properties: updated,
+      }));
+      return updated;
+    });
   };
 
-  const addUserProperty = () => {
-    setUserProperties((prev) => [...prev, { name: "", value: "" }]);
+  const handleStakeholdersChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setStakeholders(typeof value === "string" ? value.split(",") : value);
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      stakeholders: value,
+    }));
   };
 
-  const handleCloseDialog = () => setOpenDialog(false);
-  const handleConfirmDelete = () => {
-    handleCloseDialog();
-    // handleDelete(); // Implement delete logic
+  const handlePlatformsChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setPlatforms(typeof value === "string" ? value.split(",") : value);
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      platform: value,
+    }));
+  };
+
+  const handleSourceChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setSource(typeof value === "string" ? value.split(",") : value);
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      source: value,
+    }));
+  };
+
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value);
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      category: event.target.value,
+    }));
+  };
+
+  const handleDescriptionChange = (event) => {
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      description: event.target.value,
+      event_definition: event.target.value,
+    }));
+    setDescription(event.target.value);
+  };
+
+  const handleEventNameChange = (event) => {
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      name: event.target.value,
+    }));
+  };
+
+  const statusOptions = ["not started", "in progress", "ready to implement"];
+
+  const handleStatusChange = (event) => {
+    const newStatus = event.target.value;
+    setSelectedEvent((prevEvent) => ({
+      ...prevEvent,
+      status: newStatus,
+    }));
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("Copied to clipboard!");
+    });
   };
 
   return (
-    <Box>
-      <Typography variant="h6">Drawer Properties</Typography>
-      <Button onClick={addEventProperty} startIcon={<AddIcon />}>
-        Add Event Property
-      </Button>
-      <Button onClick={addSuperProperty} startIcon={<AddIcon />}>
-        Add Super Property
-      </Button>
-      <Button onClick={addUserProperty} startIcon={<AddIcon />}>
-        Add User Property
-      </Button>
+    <Box
+      sx={{ p: 2, maxWidth: 600, backgroundColor: "#fafafa", borderRadius: 2 }}
+    >
+      {triggerCode && (
+        <Box mt={0} mb={3}>
+          <Typography
+            sx={{
+              textDecoration: "underline",
+              textDecorationColor: "#000000",
+              textDecorationThickness: "2px",
+            }}
+            variant="h6"
+            gutterBottom
+          >
+            Trigger Code
+          </Typography>
+          <CodeBox>
+            {triggerCode}
+            <IconButton
+              onClick={() => copyToClipboard(triggerCode)}
+              sx={{ position: "absolute", top: 8, right: 8, color: "#ffffff" }}
+            >
+              <ContentCopyIcon />
+            </IconButton>
+          </CodeBox>
+        </Box>
+      )}
 
+    
+<Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Typography fontWeight="bold">Code Generator</Typography>
+            <Tooltip title="Info about Code Generator">
+              <IconButton sx={{ ml: 1 }}>
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <DrawerPropertiesWithEnvironment
+              generatedCode={generatedCode}
+              functionName={functionName}
+              setGeneratedCode={setGeneratedCode}
+              triggerCode={triggerCode}
+            />
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2,
+          mt: 5,
+          mb: 1,
+        }}
+      >
+        <TextField
+          label="Event Name"
+          value={selectedEvent?.name || ""}
+          onChange={handleEventNameChange}
+          fullWidth
+        />
+        {!isMasterEventPage && (
+          <FormControl fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={selectedEvent?.status || "not started"}
+              onChange={handleStatusChange}
+              fullWidth
+            >
+              {statusOptions.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+      </Box>
+      <TextField
+        label="Description"
+        value={selectedEvent?.event_definition || ""}
+        onChange={handleDescriptionChange}
+        fullWidth
+        margin="normal"
+        variant="outlined"
+        InputLabelProps={{
+          shrink: true,
+        }}
+        sx={{
+          mb: 2,
+        }}
+      />
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2,
+          mt: 0,
+          mb: 1,
+        }}
+      >
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Stakeholders</InputLabel>
+          <Select
+            multiple
+            //need to chagne here
+            value={stakeholders}
+            onChange={handleStakeholdersChange}
+            renderValue={(selected) => selected?.join(", ")}
+          >
+            {stakeholderOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                <Checkbox checked={stakeholders.indexOf(option) > -1} />
+                <ListItemText primary={option} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="Category"
+          value={selectedEvent?.category}
+          onChange={handleCategoryChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          sx={{
+            mb: 1,
+          }}
+        />
+      </Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2,
+          mt: 0,
+          mb: 1,
+        }}
+      >
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Platforms</InputLabel>
+          <Select
+            multiple
+            value={platforms}
+            onChange={handlePlatformsChange}
+            renderValue={(selected) => selected?.join(", ")}
+          >
+            {platformOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                <Checkbox checked={platforms.indexOf(option) > -1} />
+                <ListItemText primary={option} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Source</InputLabel>
+          <Select
+            multiple
+            value={source}
+            onChange={handleSourceChange}
+            renderValue={(selected) => selected?.join(", ")}
+          >
+            {sourceOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                <Checkbox checked={source.indexOf(option) > -1} />
+                <ListItemText primary={option} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      {isMasterEventPage ? (
+        <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+          <InputLabel>Industry</InputLabel>
+          <Select
+            value={selectedEvent?.organization || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedEvent((prevEvent) => ({
+                ...prevEvent,
+                organization: value,
+              }));
+            }}
+          >
+            {["EdTech", "FinTech", "Consumer Tech", "Healthcare"].map(
+              (option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              )
+            )}
+          </Select>
+        </FormControl>
+      ) : (
+        []
+      )}
+
+      {/* Actions Heading */}
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        Actions
+      </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        {!showUserProperties && !showLogEvent && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" color="textSecondary">
+              Add actions to proceed.
+            </Typography>
+          </Box>
+        )}
+        {!showUserProperties && (
+          <Button
+            variant="outlined"
+            color="primary"
+            sx={{ mr: 2, mt: 1 }}
+            startIcon={<AddIcon />}
+            onClick={() => setShowUserProperties(true)}
+          >
+            Add Update User Properties
+          </Button>
+        )}
+        {!showLogEvent && (
+          <Button
+            variant="outlined"
+            color="primary"
+            sx={{ mt: 1 }}
+            startIcon={<AddIcon />}
+            onClick={() => setShowLogEvent(true)}
+          >
+            Add Log Event
+          </Button>
+        )}
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          sx={{ mr: 2, mt: 1 }}
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setShowIdentifyMessage(true);
+            setSelectedEvent((prevEvent) => ({
+              ...prevEvent,
+              identify: true,
+              unidentify: false,
+            }));
+          }}
+          disabled={showUnidentifyMessage || showIdentifyMessage}
+        >
+          Identify
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          sx={{ mt: 1 }}
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setShowUnidentifyMessage(true);
+            setSelectedEvent((prevEvent) => ({
+              ...prevEvent,
+              identify: false,
+              unidentify: true,
+            }));
+          }}
+          disabled={showUnidentifyMessage || showIdentifyMessage}
+        >
+          Unidentify
+        </Button>
+        {(showIdentifyMessage || showUnidentifyMessage) && (
+          <IconButton
+            onClick={() => {
+              setShowIdentifyMessage(false);
+              setShowUnidentifyMessage(false);
+              setSelectedEvent((prevEvent) => ({
+                ...prevEvent,
+                identify: false,
+                unidentify: false,
+              }));
+            }}
+            sx={{ color: "error.main" }}
+            size="small"
+          >
+            <DeleteIcon />
+          </IconButton>
+        )}
+      </Box>
+
+      {showIdentifyMessage && (
+        <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
+          <strong>Identify User:</strong> Identify the user in your analytics
+          tool such that they go from anonymous to a user with a user ID.
+        </Typography>
+      )}
+
+      {showUnidentifyMessage && (
+        <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
+          <strong>Unidentify User:</strong> Unidentify the user in your
+          analytics tool such that they go from an identified user with a user
+          ID to an anonymous user.
+        </Typography>
+      )}
+
+      {showUserProperties && (
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div className="flex items-center justify-between w-full ">
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Typography fontWeight="bold">
+                  Update User Properties
+                </Typography>
+                <Tooltip title="Info about Update User Properties">
+                  <IconButton sx={{ ml: 1 }}>
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </div>
+              <IconButton
+                onClick={() => {
+                  setShowUserProperties(false);
+                  setUserProperties([]);
+
+                  setSelectedEvent((prevEvent) => {
+                    const updatedItems = [...(prevEvent.items || [])];
+
+                    if (updatedItems[0]) {
+                      updatedItems[0] = {
+                        ...updatedItems[0],
+                        user_property: [],
+                      };
+                    }
+                    return {
+                      ...prevEvent,
+                      items: updatedItems,
+                    };
+                  });
+                }}
+                sx={{ color: "error.main", marginRight: "25px" }}
+                size="small"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </div>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                USER PROPERTIES
+              </Typography>
+              {userProperties.map((property, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
+                  }}
+                >
+                  {/* Cross Icon at Top Right */}
+                  <IconButton
+                    onClick={() => {
+                      const updatedProperties = [...userProperties];
+                      updatedProperties.splice(index, 1);
+                      setUserProperties(updatedProperties);
+
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].user_property = updatedProperties;
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff", // Keep text/icon color white for contrast
+                      backgroundColor: "#8a8a8a", // Grey color from the scrollbar
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa", // Slightly darker grey for hover effect
+                      },
+                      borderRadius: "50%", // Circular button
+                      width: "30px", // Consistent size
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
+
+                  {/* First Row: Name, Value, and Property Definition */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="User Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleUserPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <TextField
+                      label="User Property Value"
+                      value={property.value}
+                      onChange={(e) =>
+                        handleUserPropertyChange(index, "value", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Definition and Data Type */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <TextField
+                      label="Property Definition"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleUserPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.data_type || ""}
+                        onChange={(e) =>
+                          handleUserPropertyChange(
+                            index,
+                            "data_type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+              ))}
+              <Button variant="text" color="primary" onClick={addUserProperty}>
+                + Add User Property
+              </Button>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      )}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
-          <DialogContentText>Are you sure you want to delete this?</DialogContentText>
+          <DialogContentText>
+            Are you sure you want to delete this record? This action cannot be
+            undone.
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="primary">
-            Cancel
+            No
           </Button>
-          <Button onClick={handleConfirmDelete} color="secondary">
-            Delete
+          <Button onClick={handleConfirmDelete} color="error">
+            Yes
           </Button>
         </DialogActions>
       </Dialog>
+
+      {showLogEvent && (
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <div className="flex items-center justify-between w-full">
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Typography fontWeight="bold">Log Event</Typography>
+                <Tooltip title="Info about Log Event">
+                  <IconButton sx={{ ml: 1 }}>
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </div>
+              <IconButton
+                onClick={() => {
+                  setShowLogEvent(false);
+                  setEventProperties([]);
+
+                  setSelectedEvent((prevEvent) => {
+                    const updatedItems = [...(prevEvent.items || [])];
+
+                    if (updatedItems[0]) {
+                      updatedItems[0] = {
+                        ...updatedItems[0],
+                        event_property: [],
+                      };
+                    }
+                    return {
+                      ...prevEvent,
+                      items: updatedItems,
+                    };
+                  });
+                }}
+                sx={{ color: "error.main", marginRight: "25px" }}
+                size="small"
+              >
+                <DeleteIcon />
+              </IconButton>
+            </div>
+          </AccordionSummary>
+
+          <AccordionDetails>
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                EVENT PROPERTIES
+              </Typography>
+              {eventProperties.map((property, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
+                  }}
+                >
+                  {/* Cross Icon at Top Right */}
+                  <IconButton
+                    onClick={() => {
+                      const updatedProperties = [...eventProperties];
+                      updatedProperties.splice(index, 1);
+                      setEventProperties(updatedProperties);
+
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].event_property = updatedProperties;
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff", // White icon color for contrast
+                      backgroundColor: "#8a8a8a", // Dark red background
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa", // Even darker red on hover
+                      },
+                      borderRadius: "50%", // Circular button
+                      width: "30px", // Consistent size
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
+
+                  {/* First Row: Method Call and Property Description */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Method Call</InputLabel>
+                      <Select
+                        value={property.method_call}
+                        onChange={(e) =>
+                          handleEventPropertyChange(
+                            index,
+                            "methodCall",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {methodCallOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Property Description"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleEventPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Name, Data Type, and Sample Value */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleEventPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.type}
+                        onChange={(e) =>
+                          handleEventPropertyChange(
+                            index,
+                            "type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Sample Value"
+                      value={property.sample_value || ""}
+                      onChange={(e) =>
+                        handleEventPropertyChange(
+                          index,
+                          "sample_value",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+                </Box>
+              ))}
+              <Button variant="text" color="primary" onClick={addEventProperty}>
+                + Add Event Property
+              </Button>
+            </Box>
+
+            <Box sx={{ backgroundColor: "#f9f9f9", p: 2, borderRadius: "8px" }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                SYSTEM PROPERTIES (SUPER PROPERTIES)
+              </Typography>
+              {superProperties.map((property, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #e0e0e0",
+                    p: 2,
+                    borderRadius: "8px",
+                    backgroundColor: "#ffffff",
+                    position: "relative",
+                  }}
+                >
+                  {/* Cross Icon at Top Right */}
+                  <IconButton
+                    onClick={() => {
+                      const updatedProperties = [...superProperties];
+                      updatedProperties.splice(index, 1);
+                      setSuperProperties(updatedProperties);
+
+                      setSelectedEvent((prevEvent) => {
+                        const updatedItems = [...(prevEvent.items || [])];
+                        if (updatedItems[0]) {
+                          updatedItems[0].super_property = updatedProperties;
+                        }
+                        return { ...prevEvent, items: updatedItems };
+                      });
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: "-10px",
+                      right: "-10px",
+                      color: "#fff",
+                      backgroundColor: "#8a8a8a",
+                      "&:hover": {
+                        backgroundColor: "#aaaaaa",
+                      },
+                      borderRadius: "50%",
+                      width: "30px",
+                      height: "30px",
+                      boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <Close />
+                  </IconButton>
+
+                  {/* First Row: Name, Value, and Property Definition */}
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Super Property Name"
+                      value={property.name}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(index, "name", e.target.value)
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <TextField
+                      label="Super Property Value"
+                      value={property.value}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(
+                          index,
+                          "value",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                  </Box>
+
+                  {/* Second Row: Property Definition and Data Type */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <TextField
+                      label="Property Definition"
+                      value={property.property_definition || ""}
+                      onChange={(e) =>
+                        handleSuperPropertyChange(
+                          index,
+                          "property_definition",
+                          e.target.value
+                        )
+                      }
+                      fullWidth
+                      margin="dense"
+                    />
+                    <FormControl fullWidth margin="dense">
+                      <InputLabel>Data Type</InputLabel>
+                      <Select
+                        value={property.data_type || ""}
+                        onChange={(e) =>
+                          handleSuperPropertyChange(
+                            index,
+                            "data_type",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {dataTypeOptions.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+              ))}
+              <Button variant="text" color="primary" onClick={addSuperProperty}>
+                + Add System Property
+              </Button>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      )}
     </Box>
   );
 };

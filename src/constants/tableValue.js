@@ -1,11 +1,35 @@
-import { atom, useRecoilValue } from "recoil";
 import NameCellRenderer from "@/components/NameCellRender";
 
 export const columns = [
-  { Header: "Name", accessor: "name" },
-  { Header: "Email", accessor: "email" },
-  // Add other columns here
+  {
+    field: "name",
+    headerName: "NAME",
+    renderCell: (params) => <NameCellRenderer params={params} />,
+    flex: 1,
+  },
+  {
+    field: "stakeholders",
+    headerName: "STAKEHOLDERS",
+    flex: 1,
+  },
+  {
+    field: "category",
+    headerName: "CATEGORY",
+    flex: 1,
+  },
+  {
+    field: "eventProperties",
+    headerName: "EVENT PROPERTIES",
+    flex: 1,
+  },
+  {
+    field: "source",
+    headerName: "SOURCE",
+    flex: 1,
+  },
+  {
+    field: "platform",
+    headerName: "PLATFORM",
+    flex: 1,
+  },
 ];
-export const useColumns = () => {
-  return useRecoilValue(columnsState);
-};

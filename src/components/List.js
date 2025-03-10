@@ -9,15 +9,20 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { tableDataState, drawerState } from "../recoil/atom"; // Import Recoil atoms
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  tableDataState,
+  isDrawerOpenState,
+  isEventDrawerOpenState,
+  selectedEventState,
+} from "@/recoil/atom";
 
 const List = () => {
-  // Recoil state
-  const tableData = useRecoilValue(tableDataState); // Read-only tableData
-  const [drawer, setDrawer] = useRecoilState(drawerState); // Drawer state
+  const tableData = useRecoilValue(tableDataState);
+  const setIsDrawerOpen = useSetRecoilState(isDrawerOpenState);
+  const setIsEventDrawerOpen = useSetRecoilState(isEventDrawerOpenState);
+  const setSelectedEvent = useSetRecoilState(selectedEventState);
 
-  // Function to group data by category
   const groupByCategory = (data) => {
     return data.reduce((groups, item) => {
       const { category } = item;
@@ -31,12 +36,6 @@ const List = () => {
 
   const groupedData = groupByCategory(tableData);
 
-  // Function to toggle the drawer
-  const toggleDrawer = (open, event) => {
-    setDrawer({ open, event });
-  };
-
-  // Table columns
   const columns = [
     "NAME",
     "STAKEHOLDERS",
@@ -47,6 +46,17 @@ const List = () => {
     "SOURCE",
     "ACTION",
   ];
+
+  const toggleDrawer = (open, event = null) => {
+    setIsDrawerOpen(open);
+    setIsEventDrawerOpen(open);
+    if (event) {
+      setSelectedEvent(event);
+    } else {
+      setSelectedEvent(null);
+    }
+    console.log("Selected Event:", event);
+  };
 
   return (
     <TableContainer

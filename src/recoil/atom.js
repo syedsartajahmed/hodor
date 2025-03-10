@@ -50,10 +50,6 @@ export const selectedEventState = atom({
     key: "superPropertiesState",
     default: [{ name: "", value: "" }],
   });
-  export const tableDataState = atom({
-    key: "tableDataState",
-    default: [],
-  });
   export const addEventSelector = selector({
     key: "addEventSelector",
     get: ({ get }) => get(tableDataState),
@@ -68,12 +64,7 @@ export const selectedEventState = atom({
   export const selectedOrganizationState = atom({
     key: "selectedOrganizationState",
     default: null,
-  });
-  export const drawerState = atom({
-    key: "drawerState",
-    default: false,
-  });
-  
+  });  
 // State to store the list of organizations
 export const organizationsState = atom({
   key: "organizationsState",
@@ -155,20 +146,18 @@ export const uploadingState = atom({
   default: false, // Default is not uploading
 });
 
-// Atom for event drawer state
-export const eventDrawerState = atom({
-  key: "eventDrawerState",
-  default: {
-    isOpen: false,
-    selectedEvent: null,
-  },
-});
 // Atom for new organization name
 export const newOrganizationNameState = atom({
   key: "newOrganizationNameState",
   default: "", // Default value is an empty string
 });
-
+export const drawerState = atom({
+  key: 'drawerState',
+  default: {
+    isOpen: false,
+    selectedEvent: null,
+  },
+});
 // Atom for open/close add organization dialog
 export const openAddDialogState = atom({
   key: "openAddDialogState",
@@ -179,4 +168,58 @@ export const openAddDialogState = atom({
 export const openDeleteDialogState = atom({
   key: "openDeleteDialogState",
   default: false, // Default value is false
+});
+
+// Define Recoil atoms
+export const environmentState = atom({
+  key: 'environmentState',
+  default: 'Frontend',
+});
+
+export const instructionsState = atom({
+  key: 'instructionsState',
+  default: '',
+});
+
+export const initCodeState = atom({
+  key: 'initCodeState',
+  default: '',
+});
+
+export const tokenState = atom({
+  key: 'tokenState',
+  default: '',
+});
+
+export const tableDataState = atom({
+  key: "tableDataState",
+  default: [], // Default empty array for table data
+});
+
+export const isDrawerOpenState = atom({
+  key: "isDrawerOpenState",
+  default: { open: false, event: null }, // Initial drawer state
+});
+
+// Left drawer (Organization)
+export const isOrgDrawerOpenState = atom({
+  key: "isOrgDrawerOpenState",
+  default: false,
+});
+
+export const eventDrawerState = atom({
+  key: 'eventDrawerState',
+  default: {
+    isEventDrawerOpen: false,
+    selectedEvent: null,
+    isProductAnalyst: false,
+  },
+});
+
+export const organizationState = atom({
+  key: 'organizationState',
+  default: {
+    currentOrganization: null,
+    allEvents: [],
+  },
 });

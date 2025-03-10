@@ -1,16 +1,13 @@
 import React from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { tableDataState, drawerState } from "@/recoil/atom";
+import { useRecoilState } from "recoil";
+import { eventDrawerState } from "@/recoil/atom"; // Adjust the import path as necessary
 
 const NameCellRenderer = ({ params }) => {
-  const tableData = useRecoilValue(tableDataState);
-  const setDrawerState = useSetRecoilState(drawerState);
+  const [drawerState, setDrawerState] = useRecoilState(eventDrawerState);
 
   const handleClick = () => {
-    const event = tableData.find((row) => row.id === params.row.id);
-    if (event) {
-      setDrawerState({ isOpen: true, event });
-    }
+    const event = params.api.getRowNode(params.row.id).data; // Get the row data directly from params
+    setDrawerState({ isEventDrawerOpen: true, selectedEvent: event }); // Open the drawer and set the selected event
   };
 
   return (

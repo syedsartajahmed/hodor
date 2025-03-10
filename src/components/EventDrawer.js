@@ -1,27 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import {
-  eventDrawerState,
-  allEventsState,
-  currentOrganizationState,
-  tableDataState,
-  selectedOrganizationState,
-  isProductAnalystState,
-} from "../recoil/atom";
+import { useRecoilState } from "recoil";
 import axios from "axios";
 import { useRouter } from "next/router";
 import DrawerProperties from "./DrawerProperties";
 import showToast from "@/utils/toast";
+import { eventDrawerState, organizationState } from "@/recoil/atom";
 
 const EventDrawer = ({ isShowSave = true }) => {
-  // Recoil state
-  const [eventDrawer, setEventDrawer] = useRecoilState(eventDrawerState);
-  const [allEvents, setAllEvents] = useRecoilState(allEventsState);
-  const currentOrganization = useRecoilValue(currentOrganizationState);
-  const [tableData, setTableData] = useRecoilState(tableDataState);
-  const [selectedOrganization, setSelectedOrganization] = useRecoilState(selectedOrganizationState);
-  const [isProductAnalyst, setIsProductAnalyst] = useRecoilState(isProductAnalystState);
-
+  const [drawerState, setDrawerState] = useRecoilState(eventDrawerState);
+  const [organizationData, setOrganizationData] = useRecoilState(organizationState);
   const router = useRouter();
   const { pathname } = router;
 
@@ -32,28 +19,8 @@ const EventDrawer = ({ isShowSave = true }) => {
     cta_class: "",
   });
 
-  const [superProperty, setSuperProperty] = useState({
-    name: "",
-    value: "",
-  });
-
-  const [eventProperties, setEventProperties] = useState([
-    {
-      name: "",
-      value: "",
-      type: "String",
-      propertyType: "Event Property",
-      sample_value: "",
-    },
-  ]);
-
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const { isOpen, selectedEvent } = eventDrawer;
-
   useEffect(() => {
-    const propertyPairs = selectedEvent?.eventProperties?.split(", ") || [];
+    const propertyPairs = drawerState.selectedEvent?.eventProperties?.split(", ") || [];
     const parsedProperties = {};
 
     propertyPairs.forEach((pair) => {
@@ -67,7 +34,9 @@ const EventDrawer = ({ isShowSave = true }) => {
       cta_color: parsedProperties.cta_color || "",
       cta_class: parsedProperties.cta_class || "",
     });
-  }, [selectedEvent]);
+  }, [drawerState.selectedEvent]);
+
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,48 +48,40 @@ const EventDrawer = ({ isShowSave = true }) => {
 
   const validRequest = () => {
     const { cta_text, cta_type, cta_color, cta_class } = formData;
-    if (!cta_text || !cta_type || !cta_color || !cta_class) return false;
-    return true;
+    return cta_text && cta_type && cta_color && cta_class;
   };
 
   const handleSave = async () => {
     setLoading(true);
 
-    if (
-      pathname === "/master-event" ||
-      pathname === "/dashboard/[id]/master-events"
-    ) {
+    const selectedEvent = drawerState.selectedEvent;
+
+    if (pathname === "/master-event" || pathname === "/dashboard/[id]/master-events") {
       const payload = {
         id: selectedEvent?._id,
         eventName: selectedEvent?.name || "Unnamed Event",
-        event_definition:
-          selectedEvent?.event_definition || "No description provided",
+        event_definition: selectedEvent?.event_definition || "No description provided",
         platform: selectedEvent.platform || [],
         stakeholders: selectedEvent.stakeholders || [],
         category: selectedEvent.category || "Uncategorized",
         source: selectedEvent.source || [],
         action: selectedEvent.action || "No action",
-        items:
-          selectedEvent?.items?.map((item) => ({
-            user_property: item.user_property || [],
-            event_property:
-              item.event_property?.map((prop) => ({
-                property_name: prop.property_name || prop.name,
-                sample_value: prop.sample_value || prop.value,
-                data_type: prop.data_type || prop.type,
-                property_type: prop.property_type,
-                property_definition:
-                  prop.property_definition || "Event property definition",
-                method_call: prop.method_call || "Track",
-              })) || [],
-            super_property: item.super_property || [],
+        items: selectedEvent?.items?.map((item) => ({
+          user_property: item.user_property || [],
+          event_property: item.event_property?.map((prop) => ({
+            property_name: prop.property_name || prop.name,
+            sample_value: prop.sample_value || prop.value,
+            data_type: prop.data_type || prop.type,
+            property_type: prop.property_type,
+            property_definition: prop.property_definition || "Event property definition",
+            method_call: prop.method_call || "Track",
           })) || [],
+          super_property: item.super_property || [],
+        })) || [],
         identify: selectedEvent.identify || false,
         unidentify: selectedEvent.unidentify || false,
         organization: selectedEvent.organization,
       };
-
-      console.log("Payload being sent:", payload);
 
       try {
         const response = await axios.post("/api/master-events", payload);
@@ -131,42 +92,31 @@ const EventDrawer = ({ isShowSave = true }) => {
           name: event.eventName,
           eventProperties: event.items
             .map((item) => {
-              const eventProps =
-                item.event_property
-                  ?.map(
-                    (prop) =>
-                      `Property Name: ${prop.property_name || "N/A"}, Value: ${
-                        prop.sample_value || "N/A"
-                      }, Data Type: ${prop.data_type || "N/A"}, Method Call: ${
-                        prop.method_call || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
+              const eventProps = item.event_property
+                ?.map(
+                  (prop) =>
+                    `Property Name: ${prop.property_name || "N/A"}, Value: ${prop.sample_value || "N/A"}, Data Type: ${prop.data_type || "N/A"}, Method Call: ${prop.method_call || "N/A"}`
+                )
+                .join("; ") || "";
 
-              const superProps =
-                item.super_property
-                  ?.map(
-                    (prop) =>
-                      `Name: ${prop.name || "N/A"}, Value: ${
-                        prop.value || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
+              const superProps = item.super_property
+                ?.map(
+                  (prop) =>
+                    `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
+                )
+                .join("; ") || "";
 
-              const userProps =
-                item.user_property
-                  ?.map(
-                    (prop) =>
-                      `Name: ${prop.name || "N/A"}, Value: ${
-                        prop.value || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
+              const userProps = item.user_property
+                ?.map(
+                  (prop) =>
+                    `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
+                )
+                .join("; ") || "";
 
               return [
                 eventProps ? `Event Properties: { ${eventProps} }` : "",
                 superProps ? `Super Properties: { ${superProps} }` : "",
-                userProps ? `User Properties: { ${userProps} }` : "",
+                userProps ? `User  Properties: { ${userProps} }` : "",
               ]
                 .filter(Boolean)
                 .join(", ");
@@ -180,7 +130,7 @@ const EventDrawer = ({ isShowSave = true }) => {
           ...event,
         }));
 
-        setTableData(updatedRows);
+        setOrganizationData((prev) => ({ ...prev, allEvents: updatedRows }));
         showToast("Data saved successfully!");
       } catch (error) {
         console.error("Error saving event:", error.message);
@@ -198,12 +148,10 @@ const EventDrawer = ({ isShowSave = true }) => {
         return;
       }
       const payload = {
-        organization_id: currentOrganization?.id || null,
-        application_id:
-          currentOrganization?.applicationId || "default_application_id",
+        organization_id: organizationData.currentOrganization?.id || null,
+        application_id: organizationData.currentOrganization?.applicationId || "default_application_id",
         eventName: selectedEvent?.name || "Unnamed Event",
-        event_definition:
-          selectedEvent?.event_definition || "No description provided",
+        event_definition: selectedEvent?.event_definition || "No description provided",
         stakeholders: selectedEvent?.stakeholders || [],
         category: selectedEvent?.category || "Uncategorized",
         source: selectedEvent?.source || [],
@@ -215,6 +163,7 @@ const EventDrawer = ({ isShowSave = true }) => {
         items: [],
       };
 
+      // Add or update user properties
       if (selectedEvent?.items?.[0]?.user_property?.length > 0) {
         const userPropertyItems = selectedEvent.items[0].user_property.map(
           (userProperty) => ({
@@ -233,26 +182,17 @@ const EventDrawer = ({ isShowSave = true }) => {
         payload.items.push(...userPropertyItems);
       }
 
+      // Add or update event properties
       if (selectedEvent?.items?.[0]?.event_property?.length > 0) {
         const eventPropertyItems = selectedEvent.items[0].event_property.map(
           (eventProperty) => ({
             event_property: {
-              property_name:
-                eventProperty?.name || eventProperty?.property_name || null,
-              sample_value:
-                eventProperty?.sample_value ||
-                eventProperty?.sample_value ||
-                null,
-              data_type:
-                eventProperty?.dataType || eventProperty?.data_type || null,
-              property_type:
-                eventProperty?.type || eventProperty?.property_type || null,
-              property_definition:
-                eventProperty?.description ||
-                eventProperty?.property_definition ||
-                null,
-              method_call:
-                eventProperty?.methodCall || eventProperty?.method_call || null,
+              property_name: eventProperty?.name || eventProperty?.property_name || null,
+              sample_value: eventProperty?.sample_value || null,
+              data_type: eventProperty?.dataType || eventProperty?.data_type || null,
+              property_type: eventProperty?.type || eventProperty?.property_type || null,
+              property_definition: eventProperty?.description || eventProperty?.property_definition || null,
+              method_call: eventProperty?.methodCall || eventProperty?.method_call || null,
             },
           })
         );
@@ -261,6 +201,7 @@ const EventDrawer = ({ isShowSave = true }) => {
         payload.items.push(...eventPropertyItems);
       }
 
+      // Add or update system (super) properties
       if (selectedEvent?.items?.[0]?.super_property?.length > 0) {
         const superPropertyItems = selectedEvent.items[0].super_property.map(
           (superProperty) => ({
@@ -283,68 +224,15 @@ const EventDrawer = ({ isShowSave = true }) => {
         payload.event_id = selectedEvent._id;
       }
 
-      console.log("selectedEvent being sent:", selectedEvent);
-      console.log("Payload being sent:", payload);
-
       try {
         const saveResponse = await axios.post("/api/save", payload);
         const response = await axios.get(
-          `/api/organizations?organization_id=${currentOrganization.id}`
+          `/api/organizations?organization_id=${organizationData.currentOrganization.id}`
         );
         const organizationDetails = response.data;
         const events = organizationDetails.applications?.[0]?.events || [];
-        setAllEvents(events);
-        const updatedRows = events.map((event) => ({
-          id: event._id,
-          name: event.eventName,
-          eventProperties: event.items
-            .map((item) => {
-              const eventProps =
-                item.event_property
-                  ?.map(
-                    (prop) =>
-                      `Property Name: ${prop.property_name || "N/A"}, Value: ${
-                        prop.sample_value || "N/A"
-                      }, Data Type: ${prop.data_type || "N/A"}, Method Call: ${
-                        prop.method_call || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
-
-              const superProps =
-                item.super_property
-                  ?.map(
-                    (prop) =>
-                      `Name: ${prop.name || "N/A"}, Value: ${
-                        prop.value || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
-
-              const userProps =
-                item.user_property
-                  ?.map(
-                    (prop) =>
-                      `Name: ${prop.name || "N/A"}, Value: ${
-                        prop.value || "N/A"
-                      }`
-                  )
-                  .join("; ") || "";
-
-              return [
-                eventProps ? `Event Properties: { ${eventProps} }` : "",
-                superProps ? `Super Properties: { ${superProps} }` : "",
-                userProps ? `User Properties: { ${userProps} }` : "",
-              ]
-                .filter(Boolean)
-                .join(", ");
-            })
-            .join("; "),
-          ...event,
-        }));
+        setOrganizationData((prev) => ({ ...prev, allEvents: events }));
         showToast("Data saved successfully!");
-        setTableData(updatedRows);
-        setSelectedOrganization(organizationDetails);
       } catch (error) {
         console.error("Error saving event:", error.message);
         if (error.response && error.response.status === 409) {
@@ -358,18 +246,14 @@ const EventDrawer = ({ isShowSave = true }) => {
     }
   };
 
-  const generateFunctionName = (eventName) => {
-    return eventName.trim().toLowerCase().replace(/\s+/g, "_") + "_event";
-  };
-
   const handleToggle = () => {
-    setIsProductAnalyst(!isProductAnalyst);
+    setDrawerState((prev) => ({ ...prev, isProductAnalyst: !prev.isProductAnalyst }));
   };
 
   return (
     <div
       className={`fixed top-0 right-0 h-full w-120 bg-gray-100 shadow-lg transform transition-transform duration-300 z-50 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
+        drawerState.isEventDrawerOpen ? "translate-x-0" : "translate-x-full"
       }`}
       style={{
         zIndex: 1100,
@@ -379,17 +263,17 @@ const EventDrawer = ({ isShowSave = true }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">
-            {selectedEvent?.name || "Event Details"}
+            {drawerState.selectedEvent?.name || "Event Details"}
           </h2>
           <div className="flex items-center space-x-2">
             <span className="text-base font-bold">
-              {isProductAnalyst ? "Product Analyst" : "CDP"}
+              {drawerState.isProductAnalyst ? "Product Analyst" : "CDP"}
             </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 className="sr-only peer"
-                checked={isProductAnalyst}
+                checked={drawerState.isProductAnalyst}
                 onChange={handleToggle}
               />
               <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-[#2d2d2d] peer focus:outline-none peer-focus:ring-2 peer-focus:ring-[#2d2d2d] transition"></div>
@@ -398,7 +282,7 @@ const EventDrawer = ({ isShowSave = true }) => {
           </div>
 
           <button
-            onClick={() => setEventDrawer({ isOpen: false, selectedEvent: null })}
+            onClick={() => setDrawerState((prev) => ({ ...prev, isEventDrawerOpen: false }))}
             className="text-gray-500 hover:text-gray-800"
           >
             ✕
@@ -423,7 +307,7 @@ const EventDrawer = ({ isShowSave = true }) => {
                 <button
                   onClick={handleSave}
                   className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
-                  disabled={loading}
+                  disabled={loading} // Disable button when loading
                 >
                   {loading ? (
                     <svg
@@ -452,7 +336,7 @@ const EventDrawer = ({ isShowSave = true }) => {
                 </button>
 
                 <button
-                  onClick={() => setEventDrawer({ isOpen: false, selectedEvent: null })}
+                  onClick={() => setDrawerState((prev) => ({ ...prev, isEventDrawerOpen: false }))}
                   className="text-gray-500 hover:text-gray-800"
                 >
                   Cancel
@@ -461,6 +345,7 @@ const EventDrawer = ({ isShowSave = true }) => {
             </div>
           </div>
         )}
+        {/* Footer */}
       </div>
     </div>
   );

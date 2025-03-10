@@ -1,6 +1,4 @@
 import { columns } from "@/constants/tableValue";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-import { tableDataState, drawerState, selectedEventState } from "@/recoil/atom";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import React from "react";
@@ -9,6 +7,13 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import axios from "axios";
 import { useRouter } from "next/router";
 import showToast from "@/utils/toast";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  tableDataState,
+  isDrawerOpenState,
+  isEventDrawerOpenState,
+  selectedEventState,
+} from "@/recoil/atom";
 
 const Table = ({
   page,
@@ -17,9 +22,12 @@ const Table = ({
   isEventPage = false,
 }) => {
   const tableData = useRecoilValue(tableDataState);
+  const setIsDrawerOpen = useSetRecoilState(isDrawerOpenState);
+  const setIsEventDrawerOpen = useSetRecoilState(isEventDrawerOpenState);
   const setSelectedEvent = useSetRecoilState(selectedEventState);
-  const setDrawerState = useSetRecoilState(drawerState);
+
   const router = useRouter();
+  const { pathname } = router;
 
   const handleCopy = async (rowData) => {
     const { query } = router;
@@ -41,8 +49,10 @@ const Table = ({
   };
 
   const handleRowClick = (rowData) => {
+    console.log(rowData.row);
     setSelectedEvent(rowData.row);
-    setDrawerState({ isOpen: true, event: rowData.row });
+    setIsDrawerOpen(true);
+    setIsEventDrawerOpen(true);
   };
 
   const enhancedColumns = [
@@ -77,7 +87,6 @@ const Table = ({
           },
         ]
       : []),
-
     ...(isShowCopy
       ? [
           {
@@ -94,33 +103,34 @@ const Table = ({
         ]
       : []),
   ];
-  console.log(tableData);
-    return (
+
+  return (
     <div className="mx-10 mt-5 mb-[261px]">
       <Box sx={{ height: "100%", width: "100%" }}>
-      <DataGrid
-  rows={tableData.map((row) => ({ ...row, id: row.id || row._id }))} // Ensure 'id' exists
-  getRowClassName={() => "bg-lightgray-50"}
-  columns={enhancedColumns}
-  onRowClick={handleRowClick}
-  disableColumnFilter
-  hideFooterPagination
-  hideFooter
-  disableColumnMenu
-  disableRowSelectionOnClick
-  sx={{
-    "& .MuiDataGrid-columnHeaders": {
-      backgroundColor: "rgb(243 244 246)",
-      borderBottom: "1px solid rgba(224, 224, 224, 1)",
-    },
-    "& .MuiDataGrid-columnHeader, & .MuiDataGrid-cell": {
-      borderRight: "1px solid rgba(224, 224, 224, 1)",
-    },
-    "& .MuiDataGrid-columnHeader:last-child, & .MuiDataGrid-cell:last-child": {
-      borderRight: "none",
-    },
-  }}
-/>
+        <DataGrid
+          rows={tableData}
+          getRowClassName={(params) => "bg-lightgray-50"}
+          columns={enhancedColumns}
+          onRowClick={handleRowClick}
+          disableColumnFilter
+          hideFooterPagination
+          hideFooter
+          disableColumnMenu
+          disableRowSelectionOnClick
+          sx={{
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "rgb(243 244 246)",
+              borderBottom: "1px solid rgba(224, 224, 224, 1)",
+            },
+            "& .MuiDataGrid-columnHeader, & .MuiDataGrid-cell": {
+              borderRight: "1px solid rgba(224, 224, 224, 1)",
+            },
+            "& .MuiDataGrid-columnHeader:last-child, & .MuiDataGrid-cell:last-child":
+              {
+                borderRight: "none",
+              },
+          }}
+        />
       </Box>
     </div>
   );
