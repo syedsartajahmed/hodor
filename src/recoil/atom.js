@@ -216,10 +216,38 @@ export const eventDrawerState = atom({
   },
 });
 
+
+export const stakeholdersState = atom({
+  key: 'stakeholdersState',
+  default: [],
+});
+
+export const categoryState = atom({
+  key: 'categoryState',
+  default: "",
+});
+
+export const descriptionState = atom({
+  key: 'descriptionState',
+  default: "",
+});
+
+export const actionState = atom({
+  key: 'actionState',
+  default: "",
+});
+
+export const platformsState = atom({
+  key: 'platformsState',
+  default: [],
+});
+
+export const sourceState = atom({
+  key: 'sourceState',
+  default: [],
+});
+
 export const organizationState = atom({
   key: 'organizationState',
-  default: {
-    currentOrganization: null,
-    allEvents: [],
-  },
+  default: "",
 });

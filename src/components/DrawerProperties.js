@@ -359,6 +359,490 @@ const DrawerProperties = () => {
       showToast("Copied to clipboard!");
     });
   };
+  const generateCode = () => {
+    // Convert event name to proper format (camelCase for functions, snake_case for events)
+    const eventName = selectedEvent?.name?.trim()
+      ? selectedEvent.name
+          .trim()
+          .replace(/([a-z])([A-Z])/g, "$1_$2")
+          .replace(/[_\s]+/g, "_")
+          .toLowerCase()
+      : "unnamed_event";
+
+    const callFunctionName = eventName
+      .split("_")
+      .map((word, index) =>
+        index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+      )
+      .join("");
+    setFunctionName(callFunctionName);
+    // Group properties by method call
+    const methodGroups = {};
+    eventProperties.forEach((prop) => {
+      if (prop.method_call?.trim()) {
+        if (!methodGroups[prop.method_call]) {
+          methodGroups[prop.method_call] = [];
+        }
+        methodGroups[prop.method_call].push(prop);
+      }
+    });
+
+    // Generate code for each method type
+    const generateMethodCode = (properties, methodType) => {
+      console.log(properties, methodType);
+      if (isProductAnalyst) {
+        switch (methodType) {
+          case "Track":
+            const validProperties = properties.filter((prop) =>
+              prop.name?.trim()
+            );
+            if (validProperties.length === 0) return "";
+            return `mixpanel.track("${eventName}", {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"], // ${prop.type}`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Register":
+            return `mixpanel.register({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Register Once":
+            return `mixpanel.register_once({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "People Set":
+            return `mixpanel.people.set({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "People Set Once":
+            return `mixpanel.people.set_once({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "People Increment":
+            return `mixpanel.people.increment(${
+              properties.length === 1
+                ? `"${properties[0].name}", data["${properties[0].sample_value}"]`
+                : `{
+      ${properties
+        .map((prop) => `"${prop.name}": data["${prop.sample_value}"]`)
+        .join(",\n    ")}
+    }`
+            });`;
+
+          case "People Unset":
+            return `mixpanel.people.unset([
+      ${properties.map((prop) => `"${prop.name}"`).join(",\n    ")}
+    ]);`;
+
+          case "People Append":
+            return `mixpanel.people.append({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              Array.isArray(prop.sample_value)
+                ? JSON.stringify(prop.sample_value)
+                : `${prop.sample_value}`
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "People Union":
+            return `mixpanel.people.union({
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data.${
+              Array.isArray(prop.sample_value)
+                ? JSON.stringify(prop.sample_value)
+                : `["${prop.sample_value}"]`
+            }`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Time Event":
+            return `mixpanel.time_event("${eventName}");`;
+
+          case "Opt In Tracking":
+            return "mixpanel.opt_in_tracking();";
+
+          case "Opt Out Tracking":
+            return "mixpanel.opt_out_tracking();";
+
+          default:
+            return "";
+        }
+      } else {
+        switch (methodType) {
+          case "Track":
+            const validProperties = properties.filter((prop) =>
+              prop.name?.trim()
+            );
+            if (validProperties.length === 0) return "";
+            return `rudderanalytics.track("${eventName}", {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"], // ${prop.type}`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Register":
+            return `rudderanalytics.identify(
+    rudderanalytics.getAnonymousId(),
+    {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"]`
+        )
+        .join(",\n        ")}
+    }
+  );`;
+
+          case "Identify":
+            return `rudderanalytics.identify(userId, {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          case "Reset":
+            return "rudderanalytics.reset();";
+
+          case "Page":
+            return `rudderanalytics.page();`;
+
+          case "Group":
+            return `rudderanalytics.group(groupId, {
+      ${properties
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String"
+                ? `${prop.sample_value}`
+                : prop.sample_value
+            }"]`
+        )
+        .join(",\n    ")}
+    });`;
+
+          default:
+            return "";
+        }
+      }
+    };
+
+    // Generate code for each method group
+    const method_call = Object.entries(methodGroups)
+      .map(([method, props]) => generateMethodCode(props, method))
+      .filter((code) => code)
+      .join("\n\n  ");
+
+    // Generate identify/unidentify code if needed
+    // const identifyCode = selectedEvent?.identify
+    //   ? "\n  mixpanel.identify(userId);"
+    //   : "";
+    // const unidentifyCode = selectedEvent?.unidentify
+    //   ? "\n  mixpanel.reset();"
+    //   : "";
+
+    const identifyCode = selectedEvent?.identify
+      ? !isProductAnalyst
+        ? "\n  rudderanalytics.identify(userId);"
+        : "\n  mixpanel.identify(userId);"
+      : "";
+
+    const unidentifyCode = selectedEvent?.unidentify
+      ? !isProductAnalyst
+        ? "\n  rudderanalytics.reset();"
+        : "\n  mixpanel.reset();"
+      : "";
+
+    // Generate super properties code
+    //   const superPropsCode =
+    //     superProperties.filter((prop) => prop.name?.trim() && prop.value?.trim())
+    //       .length > 0
+    //       ? `\n  mixpanel.register({
+    //   ${superProperties
+    //     .filter((prop) => prop.name?.trim() && prop.value?.trim())
+    //     .map(
+    //       (prop) =>
+    //         `"${prop.name}": data["${
+    //           prop.type === "String" ? `${prop.name}` : prop.name
+    //         }"],`
+    //     )
+    //     .join("\n    ")}
+    // });`
+    //       : "";
+
+    const superPropsCode =
+      superProperties.filter((prop) => prop.name?.trim() && prop.value?.trim())
+        .length > 0
+        ? isProductAnalyst
+          ? `\n  mixpanel.register({
+    ${superProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map(
+        (prop) =>
+          `"${prop.name}": data["${
+            prop.type === "String" ? `${prop.name}` : prop.name
+          }"]`
+      )
+      .join(",\n    ")}
+  });`
+          : `\n  rudderanalytics.identify(
+    rudderanalytics.getAnonymousId(),
+    {
+      ${superProperties
+        .filter((prop) => prop.name?.trim() && prop.value?.trim())
+        .map(
+          (prop) =>
+            `"${prop.name}": data["${
+              prop.type === "String" ? `${prop.name}` : prop.name
+            }"]`
+        )
+        .join(",\n      ")}
+    }
+  );`
+        : "";
+
+    // Generate user properties code
+    const userPropsCode =
+      userProperties.filter((prop) => prop.name?.trim() && prop.value?.trim())
+        .length > 0
+        ? `\n  mixpanel.people.set({
+    ${userProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map(
+        (prop) =>
+          `"${prop.name}": data["${
+            prop.type === "String" ? `${prop.value}` : prop.value
+          }"]`
+      )
+      .join(",\n    ")}
+  });`
+        : "";
+    const exampleSuperProps = superProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map((prop) => `${prop.name}: "${prop.value}",`)
+      .join("\n    ");
+
+    const exampleUserProps = userProperties
+      .filter((prop) => prop.name?.trim() && prop.value?.trim())
+      .map((prop) => `${prop.name}: "${prop.value}",`)
+      .join("\n    ");
+
+    // Combine all code parts
+    const code = `// ${
+      selectedEvent?.event_definition || "Track user interaction"
+    }
+export function ${callFunctionName}(${
+      selectedEvent?.identify && userProperties.length > 0 ? "userId, " : ""
+    }data) {${identifyCode}${unidentifyCode}${superPropsCode}${userPropsCode}
+  ${method_call}
+}
+`;
+
+    const secondCode = `// ${
+      selectedEvent?.event_definition || "Track user interaction"
+    }
+${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
+  ${[...eventProperties]
+    .filter((prop) => prop.name?.trim())
+    .map(
+      (prop) =>
+        `${prop.name}: ${
+          prop.type === "String"
+            ? `"${prop.sample_value}"`
+            : `"${prop.sample_value}"`
+        }`
+    )
+    .join(",\n  ")}${
+      eventProperties.filter((prop) => prop.name?.trim()).length > 0 ? ", " : ""
+    }
+  ${exampleSuperProps}
+  ${exampleUserProps}
+});`;
+
+    // const secondCode = `${callFunctionName}(
+    //   ${selectedEvent?.identify ? '"user123", ' : ''}{
+    //     ${[...eventProperties]
+    //       .map(
+    //         (prop) => `${prop.name}: ${
+    //           prop.type === 'String' ? `"${prop.sample_value}"` : `"${prop.sample_value}"`
+    //         }`
+    //       )
+    //       .join(',\n    ')}${eventProperties.length > 0 ? ',' : ''}
+    //     ${exampleSuperProps}
+    //   }
+    // );`;
+
+    setGeneratedCode(code);
+    setTriggerCode(secondCode);
+  };
+
+  useEffect(() => {
+    if (selectedEvent) {
+      generateCode();
+    }
+  }, [
+    selectedEvent,
+    eventProperties,
+    superProperties,
+    userProperties,
+    isProductAnalyst,
+  ]);
+
+  useEffect(() => {
+    // if (selectedEvent && isInitialLoad.current) {
+    if (selectedEvent) {
+      generateCode();
+
+      isInitialLoad.current = false;
+
+      // Initialize values from `selectedEvent`
+      console.log(selectedEvent);
+
+      setDescription(selectedEvent.event_definition || "");
+      setStakeholders(selectedEvent.stakeholders || []);
+      setCategory(selectedEvent.category || "");
+      setPlatforms(selectedEvent.platform || []);
+      setSource(selectedEvent.source || []);
+
+      // Event properties
+      if (
+        selectedEvent.items?.some((item) => item.event_property?.length > 0)
+      ) {
+        const eventProps = selectedEvent.items.flatMap((item) =>
+          item.event_property.map((prop) => ({
+            name: prop.property_name,
+            value: prop.sample_value || "",
+            type: prop.data_type || "String",
+            sample_value: prop.sample_value || "",
+            method_call: prop.method_call || "",
+            property_definition: prop.property_definition || "",
+          }))
+        );
+        setEventProperties(eventProps);
+        setShowLogEvent(true);
+      } else {
+        console.log("nnononn");
+        setEventProperties([
+          {
+            name: "",
+            value: "",
+            type: "String",
+            sample_value: "",
+            method_call: "Track",
+            property_definition: "",
+          },
+        ]);
+        setShowLogEvent(false);
+      }
+
+      // Super properties
+      if (
+        selectedEvent.items?.some((item) => item.super_property?.length > 0)
+      ) {
+        const superProps = selectedEvent.items.flatMap((item) =>
+          item.super_property.map((prop) => ({
+            name: prop.name,
+            value: prop.value || "",
+            data_type: prop.data_type || "",
+            property_definition: prop.property_definition || "",
+          }))
+        );
+        setSuperProperties(superProps);
+      } else {
+        setSuperProperties([{ name: "", value: "" }]);
+      }
+
+      // User properties
+      if (selectedEvent.items?.some((item) => item.user_property?.length > 0)) {
+        console.log("adfafafaaa");
+        const userProps = selectedEvent.items.flatMap((item) =>
+          item.user_property.map((prop) => ({
+            name: prop.name,
+            value: prop.value || "",
+            data_type: prop.data_type || "",
+            property_definition: prop.property_definition || "",
+          }))
+        );
+        setUserProperties(userProps);
+        setShowUserProperties(true);
+      } else {
+        setUserProperties([{ name: "", value: "" }]);
+        setShowUserProperties(false);
+      }
+      console.log(selectedEvent.identify);
+
+      setShowIdentifyMessage(selectedEvent.identify || false);
+      setShowUnidentifyMessage(selectedEvent.unidentify || false);
+      generateCode();
+    }
+  }, [selectedEvent?.id]);
+
 
   return (
     <Box
