@@ -10,6 +10,12 @@ import {
   openAppSetupState,
   newOrgIdState,
 } from "@/recoil/atom";
+import Avatar from "@mui/material/Avatar";
+import BusinessIcon from "@mui/icons-material/Business";
+import WorkIcon from "@mui/icons-material/Work";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CorporateFareIcon from "@mui/icons-material/CorporateFare";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { useRouter } from "next/router";
 import {
   Box,
@@ -160,7 +166,6 @@ const Organizations = () => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start",
-        height: "100vh",
         backgroundColor: "#f5f5f5",
       }}
     >
@@ -201,6 +206,7 @@ const Organizations = () => {
           padding: "0 20px",
           flexWrap: "wrap",
           justifyContent: "center",
+          paddingBottom:"5rem",
         }}
       >
         {/* Add Organization Card */}
@@ -236,59 +242,76 @@ const Organizations = () => {
 
         {/* Existing Organizations */}
         {organizations.map((org) => (
-          <Card
-            key={org._id}
-            sx={{
-              width: "300px",
-              minHeight: "150px",
-              textAlign: "center",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-              borderRadius: "12px",
-              cursor: "pointer",
-              backgroundColor: "#ffffff",
-              position: "relative",
-              "&:hover": {
-                boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
-                transform: "translateY(-5px)",
-                transition: "all 0.3s ease",
-              },
-            }}
-          >
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteOrganization(org);
-              }}
-              sx={{
-                position: "absolute",
-                top: "0px",
-                right: "0px",
-                color: "#d32f2f",
-                zIndex: 10,
-              }}
-            >
-          <DeleteIcon />
-          </IconButton>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-              onClick={() => handleCardClick(org)}
-            >
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                sx={{ cursor: "pointer" }}
-              >
-                {org.name}
-              </Typography>
-            </Box>
-          </Card>
-        ))}
+  <Card
+    key={org._id}
+    sx={{
+      width: "300px",
+      minHeight: "150px",
+      textAlign: "center",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+      borderRadius: "12px",
+      cursor: "pointer",
+      backgroundColor: "#ffffff",
+      position: "relative",
+      "&:hover": {
+        boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+        transform: "translateY(-5px)",
+        transition: "all 0.3s ease",
+      },
+    }}
+  >
+    {/* Delete Icon Button */}
+    <IconButton
+      onClick={(e) => {
+        e.stopPropagation();
+        handleDeleteOrganization(org);
+      }}
+      sx={{
+        position: "absolute",
+        top: "0px",
+        right: "0px",
+        color: "#d32f2f",
+        zIndex: 10,
+      }}
+    >
+      <DeleteIcon />
+    </IconButton>
+
+    {/* Card Content */}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        padding: "20px",
+      }}
+      onClick={() => handleCardClick(org)}
+    >
+      {/* Organization Icon */}
+      <Avatar
+        sx={{
+          width: "60px",
+          height: "60px",
+          backgroundColor: "black", // Customize the background color
+          marginBottom: "16px", // Space between icon and text
+        }}
+      >
+        <BusinessIcon /> {/* Use an appropriate icon for organizations */}
+      </Avatar>
+
+      {/* Organization Name */}
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{ cursor: "pointer" }}
+      >
+        {org.name}
+      </Typography>
+    </Box>
+  </Card>
+))}
       </Box>
 
       {/* Add Organization Dialog */}

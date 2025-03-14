@@ -71,9 +71,12 @@ const Header = ({
   const [uploading, setUploading] = useRecoilState(uploadingState);
   const router = useRouter();
   const isMasterEventsPath = router.pathname.includes("/master-event");
+  if (!Array.isArray(tableData)) {
+    console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
+  }
 
-  const eventSize = tableData.length;
-
+  const safeTableData = Array.isArray(tableData) ? tableData : []; // Ensure tableData is an array
+const eventSize = safeTableData.length;  // Use safeTableData here
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -135,7 +138,7 @@ const Header = ({
     let code = "";
     let filename = "";
 
-    if (isProductAnalyst) {
+   // if (isProductAnalyst) {
       switch (selectedSource) {
         case "Website":
           code = generateWebsiteCode(filteredEvents, mixpanelToken);
@@ -157,11 +160,11 @@ const Header = ({
           showToast("Unsupported platform");
           return;
       }
-    } else {
+    /*} else {
       switch (selectedSource) {
         case "Website":
-          code = generateRudderStackWebsiteCode(filteredEvents, writeKey);
-          filename = "rudderstack-web.js";
+          code = generateWebsiteCode(filteredEvents, mixpanelToken);
+          filename = "mixpanel-web.js";
           break;
         case "Backend":
           code = generateRudderStackBackendCode(filteredEvents, writeKey);
@@ -179,7 +182,7 @@ const Header = ({
           showToast("Unsupported platform");
           return;
       }
-    }
+    }*/
 
     const blob = new Blob([code], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
@@ -196,15 +199,30 @@ const Header = ({
   const handleMasterEvents = async () => {
     router.push(`${window.location.pathname}/master-events`);
   };
+  const generateRudderStackWebsiteCode = (events, writeKey) => {
+  };
+  const generateRudderStackBackendCode = (events, writeKey) => {
+  };
 
-  const handleOrganizationSelection = async (selected) => {
-    setSelectedOrganizations(selected);
+  const generateRudderStackAndroidCode = (events) => {
+  };
+
+  const generateRudderStackIOSCode = (events) => {
+  };
+
+  const generateRudderStackEventCode = (events, importSection, platform) => {
+  };
+
+  const handleOrganizationSelection = async (selected, setSelectedOrganizations, setTableData, safeTableData) => {
+    // Update the selected organizations state
   
     try {
+      // Fetch data based on the selected organizations
       const response = await axios.get(`/api/master-events`, {
         params: { organization: selected.join(",") },
       });
   
+      // Process the response data
       const updatedRows = response.data.totalEvents.map((event) => ({
         id: event._id,
         name: event.eventName,
@@ -243,7 +261,8 @@ const Header = ({
         ...event,
       }));
   
-      setTableData(updatedRows); // Use Recoil setter
+      // Update the table data state
+      setTableData(updatedRows);
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     }
@@ -454,7 +473,6 @@ const Header = ({
       const updatedRows = totalEvents.map((event) => ({
         id: event._id,
         name: event.eventName,
-
         eventProperties: event.items
           .map((item) => {
             const eventProps =
@@ -492,6 +510,7 @@ const Header = ({
         groupProperty: event.groupProperty,
         source: event.source,
         action: event.action,
+        platform: event.platform,
         ...event,
       }));
 
@@ -499,14 +518,513 @@ const Header = ({
     } catch (err) {
       console.error(err);
     }
+  };  const generateWebsiteCode = (events, mixpanelToken) => {
+    const importSection = `
+//  # Installation Instructions
+//  # via npm
+//  npm install --save mixpanel-browser
+
+//  # via yarn
+//  yarn add mixpanel-browser
+
+// Use these functions wherever needed by importing them from './utils/mixpanel.js' and calling them like functionName(userId, data).
+${generatePlatformImportComment(functionNames, "web")}
+
+import mixpanel from "mixpanel-browser";
+mixpanel.init("${mixpanelToken}", {
+  debug: true,
+  track_pageview: true,
+});
+  `;
+
+    return generateEventCode(events, importSection, "web");
   };
 
+  // Helper function to generate code for Backend platform
+  const generateBackendCode = (events, mixpanelToken) => {
+    const importSection = `
+//  # Installation Instructions for Backend
+//  npm install --save mixpanel
+//  yarn add mixpanel
+
+// Use these functions wherever needed by requiring them from './utils/mixpanel.js'
+${generatePlatformImportComment(functionNames, "backend")}
+
+const Mixpanel = require("mixpanel");
+const mixpanel = Mixpanel.init("${mixpanelToken}", {});
+  `;
+
+    return generateEventCode(events, importSection, "backend");
+  };
+
+  // Helper function to generate code for Android platform
+  const generateAndroidCode = (events) => {
+    const importSection = `
+import com.mixpanel.android.mpmetrics.MixpanelAPI
+import org.json.JSONObject
+import android.content.Context
+
+${generatePlatformImportComment(functionNames, "android")}
+
+const val MIXPANEL_TOKEN = "YOUR_PROJECT_TOKEN"
+
+// Initialize Mixpanel in your Application class:
+// MixpanelAPI.getInstance(this, MIXPANEL_TOKEN)
+  `;
+
+    return generateEventCode(events, importSection, "android");
+  };
+
+  // Helper function to generate code for iOS platform
+  const generateIOSCode = (events) => {
+    const importSection = `
+import Mixpanel
+
+${generatePlatformImportComment(functionNames, "ios")}
+
+// Initialize Mixpanel in your AppDelegate:
+// Mixpanel.initialize(token: "YOUR_PROJECT_TOKEN", trackAutomaticEvents: false)
+  `;
+
+    return generateEventCode(events, importSection, "ios");
+  };
+  const generatePlatformImportComment = (functionNames, platform) => {
+    switch (platform) {
+      case "web":
+        return `// import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
+      
+      case "backend":
+        return `// const { ${functionNames.join(", ")} } = require('./utils/mixpanel.js');`;
+      
+      case "android":
+        return `// Import these functions from MixpanelTracking.kt
+  // import com.yourdomain.analytics.MixpanelTracking.${functionNames.join("\n// import com.yourdomain.analytics.MixpanelTracking.")}`;
+      
+      case "ios":
+        return `// Import these functions from MixpanelTracking.swift
+  // import MixpanelTracking // Make sure this file is in your project
+  // Available functions: ${functionNames.join(", ")}`;
+      
+      default:
+        return "";
+    }
+  };
+  const functionNames = allEvents.map((event) => {
+    const name = event?.eventName
+      ?.trim()
+      .replace(/([a-z])([A-Z])/g, "$1_$2")
+      .replace(/[_\s]+/g, "_")
+      .toLowerCase();
+    return name
+      ?.split("_")
+      .map((word, index) =>
+        index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+      )
+      .join("");
+  });
+  const generateEventCode = (events, importSection, platform) => {
+    const formatEventName = (name) => {
+      const eventName = name?.trim()
+        ? name
+            .trim()
+            .replace(/([a-z])([A-Z])/g, "$1_$2")
+            .replace(/[_\s]+/g, "_")
+            .toLowerCase()
+        : "unnamed_event";
+
+      const camelCase = eventName
+        .split("_")
+        .map((word, index) =>
+          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join("");
+
+      return { snakeCase: eventName, camelCase };
+    };
+
+    const generateMethodCode = (
+      properties,
+      methodType,
+      eventName,
+      platform
+    ) => {
+      switch (platform) {
+        case "web":
+        case "backend":
+          return generateJSMethodCode(properties, methodType, eventName);
+        case "android":
+          return generateKotlinMethodCode(properties, methodType, eventName);
+        case "ios":
+          return generateSwiftMethodCode(properties, methodType, eventName);
+        default:
+          return "";
+      }
+    };
+
+    const generateJSMethodCode = (properties, methodType, eventName) => {
+      switch (methodType) {
+        case "Track":
+          return `mixpanel.track("${eventName}", {
+  ${properties
+    ?.map(
+      (prop) =>
+        `"${prop?.property_name}": data["${prop?.property_name}"], // ${prop?.property_type}`
+    )
+    .join(",\n    ")}
+});`;
+
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register" ? "register" : "register_once";
+          return `mixpanel.${registerMethod}({
+  ${properties
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
+});`;
+
+        case "People Set":
+        case "People Set Once":
+          const setMethod = methodType === "People Set" ? "set" : "set_once";
+          return `mixpanel.people.${setMethod}({
+  ${properties
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
+});`;
+
+        default:
+          return "";
+      }
+    };
+
+    const generateKotlinMethodCode = (properties, methodType, eventName) => {
+      switch (methodType) {
+        case "Track":
+          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).track("${eventName}", 
+  JSONObject().apply {
+      ${properties
+        ?.map(
+          (prop) =>
+            `put("${prop?.property_name}", data["${prop?.property_name}"]) // ${prop?.property_type}`
+        )
+        .join("\n        ")}
+  })`;
+
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register"
+              ? "registerSuperProperties"
+              : "registerSuperPropertiesOnce";
+          return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).${registerMethod}(
+  JSONObject().apply {
+      ${properties
+        ?.map(
+          (prop) =>
+            `put("${prop?.property_name}", data["${prop?.property_name}"])`
+        )
+        .join("\n        ")}
+  })`;
+
+        default:
+          return "";
+      }
+    };
+
+    const generateSwiftMethodCode = (properties, methodType, eventName) => {
+      switch (methodType) {
+        case "Track":
+          return `Mixpanel.mainInstance().track(
+  event: "${eventName}",
+  properties: [
+      ${properties
+        ?.map(
+          (prop) =>
+            `"${prop?.property_name}": data["${prop?.property_name}"] as Any // ${prop?.property_type}`
+        )
+        .join(",\n        ")}
+  ])`;
+
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register"
+              ? "registerSuperProperties"
+              : "registerSuperPropertiesOnce";
+          return `Mixpanel.mainInstance().${registerMethod}([
+  ${properties
+    ?.map(
+      (prop) =>
+        `"${prop?.property_name}": data["${prop?.property_name}"] as Any`
+    )
+    .join(",\n    ")}
+])`;
+
+        default:
+          return "";
+      }
+    };
+
+
+    const generateExampleInvocation = (event, platform) => {
+      const { camelCase: functionName } = formatEventName(event?.eventName);
+
+      // Combine all properties from event, user, and super properties
+      const allProperties = [
+        ...(event.items[0]?.event_property || []),
+        ...(event.items[0]?.user_property || []),
+        ...(event.items[0]?.super_property || []),
+      ];
+
+      // Generate example data based on property types and value sources
+      const exampleData = allProperties.reduce((acc, prop) => {
+        let propertyName = prop.property_name || prop.name; // Use `property_name` or fallback to `name`
+        let exampleValue;
+
+        if (prop.sample_value) {
+          // Use sample_value if provided
+          exampleValue = JSON.stringify(prop.sample_value);
+        } else {
+          // Infer example value based on `data_type` or fallback
+          switch (prop.data_type?.toLowerCase() || "") {
+            case "string":
+              exampleValue = `"example_${propertyName}"`;
+              break;
+            case "number":
+              exampleValue = 123; // Example numeric value
+              break;
+            case "boolean":
+              exampleValue = true; // Example boolean value
+              break;
+            default:
+              exampleValue = `"example_value"`; // Default fallback
+          }
+        }
+
+        if (propertyName) {
+          acc[propertyName] = exampleValue;
+        }
+
+        return acc;
+      }, {});
+
+      const formattedData = Object.entries(exampleData)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(",\n  ");
+
+      // Platform-specific example invocation
+      switch (platform) {
+        case "web":
+        case "backend":
+          return `// Example invocation:
+// ${event?.event_definition || "Track user interaction"}
+${functionName}(${event?.identify ? '"user123", ' : ""}{
+  ${formattedData}
+});`;
+
+        case "android":
+          return `// Example invocation:
+// ${event?.event_definition || "Track user interaction"}
+val data = mapOf(
+  ${formattedData.split(",\n  ").join(",\n  ").replace(/:/g, " to")}
+)
+${functionName}(context${event?.identify ? ', "user123"' : ""}, data)`;
+
+        case "ios":
+          return `// Example invocation:
+// ${event?.event_definition || "Track user interaction"}
+let data: [String: Any] = [
+  ${formattedData}
+]
+${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
+
+        default:
+          return "";
+      }
+    };
+
+    const eventsCode = events.map((event) => {
+      const { snakeCase: eventName, camelCase: functionName } = formatEventName(
+        event?.eventName
+      );
+
+      // Group properties by method call
+      const methodGroups = {};
+      event.items[0]?.event_property?.forEach((prop) => {
+        if (!methodGroups[prop?.method_call]) {
+          methodGroups[prop?.method_call] = [];
+        }
+        methodGroups[prop?.method_call].push(prop);
+      });
+
+      const methodCalls = Object.entries(methodGroups)
+        .map(([method, props]) =>
+          generateMethodCode(props, method, eventName, platform)
+        )
+        .filter((code) => code)
+        .join("\n\n    ");
+
+      const superPropsCode = generateSuperPropertiesCode(
+        event.items[0]?.super_property,
+        platform
+      );
+
+      const userPropsCode = generateUserPropertiesCode(
+        event.items[0]?.user_property,
+        platform
+      );
+
+      const identifyCode = generateIdentifyCode(event?.identify, platform);
+      const unidentifyCode = generateUnidentifyCode(
+        event?.unidentify,
+        platform
+      );
+
+      const functionSignature = getFunctionSignature(
+        platform,
+        functionName,
+        event?.identify
+      );
+
+      const exampleInvocation = generateExampleInvocation(event, platform);
+
+      return `
+  // ${event?.event_definition || "Track user interaction"}
+  ${functionSignature} {${identifyCode}${unidentifyCode}
+    ${superPropsCode}
+    ${userPropsCode}
+    ${methodCalls}
+  }
+  
+  ${exampleInvocation}`;
+    });
+
+    return `${importSection}
+  
+  ${eventsCode.join("\n\n")}`;
+  };
+  const generateSuperPropertiesCode = (superProperties, platform) => {
+    if (!superProperties?.length) return "";
+
+    const propsString = superProperties
+      .map((prop) => `"${prop?.name}": data["${prop?.name}"]`)
+      .join(",\n        ");
+
+    switch (platform) {
+      case "web":
+      case "backend":
+        return `mixpanel.register({
+      ${propsString}
+  });`;
+      case "android":
+        return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).registerSuperProperties(
+      JSONObject().apply {
+          ${superProperties
+            .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
+            .join("\n            ")}
+      }
+  )`;
+      case "ios":
+        return `Mixpanel.mainInstance().registerSuperProperties([
+      ${propsString}
+  ])`;
+      default:
+        return "";
+    }
+  };
+
+  // Helper function to generate user properties code
+  const generateUserPropertiesCode = (userProperties, platform) => {
+    if (!userProperties?.length) return "";
+
+    const propsString = userProperties
+      .map((prop) => `"${prop?.name}": data["${prop?.name}"]`)
+      .join(",\n        ");
+
+    switch (platform) {
+      case "web":
+      case "backend":
+        return `mixpanel.people.set({
+      ${propsString}
+  });`;
+      case "android":
+        return `MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).people.set(
+      JSONObject().apply {
+          ${userProperties
+            .map((prop) => `put("${prop.name}", data["${prop.name}"])`)
+            .join("\n            ")}
+      }
+  )`;
+      case "ios":
+        return `Mixpanel.mainInstance().people.set(properties: [
+      ${propsString}
+  ])`;
+      default:
+        return "";
+    }
+  };
+
+  // Helper function to generate identify code
+  const generateIdentifyCode = (shouldIdentify, platform) => {
+    if (!shouldIdentify) return "";
+
+    switch (platform) {
+      case "web":
+      case "backend":
+        return "\n    mixpanel.identify(userId);";
+      case "android":
+        return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).identify(userId);";
+      case "ios":
+        return "\n    Mixpanel.mainInstance().identify(distinctId: userId)";
+      default:
+        return "";
+    }
+  };
+
+  // Helper function to generate unidentify code
+  const generateUnidentifyCode = (shouldUnidentify, platform) => {
+    if (!shouldUnidentify) return "";
+
+    switch (platform) {
+      case "web":
+      case "backend":
+        return "\n    mixpanel.reset();";
+      case "android":
+        return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).reset();";
+      case "ios":
+        return "\n    Mixpanel.mainInstance().reset()";
+      default:
+        return "";
+    }
+  };
+
+  // Helper function to generate function signatures
+  const getFunctionSignature = (platform, functionName, hasUserId) => {
+    switch (platform) {
+      case "web":
+      case "backend":
+        return `export function ${functionName}(${
+          hasUserId ? "userId, " : ""
+        }data)`;
+      case "android":
+        return `fun ${functionName}(context: Context, ${
+          hasUserId ? "userId: String, " : ""
+        }data: Map<String, Any>)`;
+      case "ios":
+        return `func ${functionName}(${
+          hasUserId ? "userId: String, " : ""
+        }data: [String: Any])`;
+      default:
+        return "";
+    }
+  };
   return (
     <>
       <Box
         display="flex"
         flexDirection="row"
         alignItems="center"
+        justifyContent="space-between"
         padding={2}
         borderBottom="1px solid #e0e0e0"
         gap={2}
@@ -516,74 +1034,213 @@ const Header = ({
         }}
       >
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            onClick={handleOrganizationClick}
-            sx={{
-              cursor: currentOrganization?.name ? "pointer" : "default",
-              color: currentOrganization?.name ? "#333" : "#888",
-              backgroundColor: "#f0f0f0",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              "&:hover": currentOrganization?.name && {
-                textDecoration: "underline",
-                backgroundColor: "#e0e0e0",
-              },
-            }}
-          >
-            {isMasterEventsPath
-              ? "Master Events"
-              : currentOrganization?.name || "Organization"}{" "}
-            ({eventSize})
-          </Typography>
+        <Typography
+  variant="h6"
+  fontWeight="bold"
+  onClick={handleOrganizationClick}
+  sx={{
+    cursor: currentOrganization?.name ? "pointer" : "default",
+    color: currentOrganization?.name ? "white" : "black", // Set font color to white when active
+    backgroundColor: currentOrganization?.name ? "black" : "#ffff", // Set background to black when active
+    padding: "4px 8px",
+    borderRadius: "8px", // Rounded corners
+    "&:hover": currentOrganization?.name && {
+      textDecoration: "underline",
+      backgroundColor: "#333", // Darker background on hover
+    },
+  }}
+>
+  {isMasterEventsPath
+    ? "Master Events"
+    : currentOrganization?.name || "Organization"}{" "}
+  ({eventSize})
+</Typography>
+      { /*</Box>
+        <Box display="flex" alignItems="center">*/}
+         <Box display="flex" alignItems="center" gap={2}>
+  {/* ToggleButtonGroup */}
+  <ToggleButtonGroup
+    value={view}
+    exclusive
+    onChange={handleViewChange}
+    aria-label="view toggle"
+    sx={{
+      width: "200px", // Set the same width as the FormControl
+      height: "56px", // Match the height of the Select component
+    }}
+  >
+    <ToggleButton
+      value="category"
+      aria-label="category view"
+      onClick={() => setShowList(true)}
+      sx={{
+        width: "50%", // Each ToggleButton takes half the width
+        height: "100%", // Full height of the ToggleButtonGroup
+      }}
+    >
+      Category
+    </ToggleButton>
+    <ToggleButton
+      value="list"
+      aria-label="list view"
+      onClick={() => setShowList(false)}
+      sx={{
+        width: "50%", // Each ToggleButton takes half the width
+        height: "100%", // Full height of the ToggleButtonGroup
+      }}
+    >
+      List
+    </ToggleButton>
+  </ToggleButtonGroup>
 
-          <Button variant="contained" color="secondary" onClick={handleOpen}>
-            + New Event
-          </Button>
+  {/* FormControl with Select */}
+  {isShowFilter && (
+    <FormControl sx={{ minWidth: 200, height: "56px" }}>
+      <InputLabel
+        id="organization-filter-label"
+        sx={{
+          color: "black", // Black font color for the label
+          "&.Mui-focused": {
+            color: "black", // Black font color when the label is focused
+          },
+        }}
+      >
+        Organizations
+      </InputLabel>
+      <Select
+        labelId="organization-filter-label"
+        multiple
+        value={selectedOrganizations}
+        onChange={(e) => {
+          const selected = e.target.value;
+          console.log("Selected Organizations:", selected);
+          setSelectedOrganizations(selected);
+          handleOrganizationSelection(selected, setSelectedOrganizations, setTableData, safeTableData);
+        }}
+        renderValue={(selected) => selected.join(", ")}
+        sx={{
+          color: "black", // Black font color for the selected value
+          height: "56px", // Match the height of the ToggleButtonGroup
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black", // Black border color
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black", // Black border color on hover
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black", // Black border color when focused
+          },
+        }}
+      >
+        {Array.isArray(safeTableData) ? (
+          Array.from(
+            new Set(
+              safeTableData
+                .map((event) => event.organization)
+                .filter((org) => org && org.trim() !== "")
+            )
+          )
+            .concat(
+              selectedOrganizations.filter(
+                (org) => !safeTableData.some((e) => e.organization === org)
+              )
+            )
+            .map((org) => (
+              <MenuItem
+                key={org}
+                value={org}
+                sx={{
+                  color: "black", // Black font color for MenuItem
+                  "&.Mui-selected": {
+                    backgroundColor: "#f0f0f0", // Light gray background for selected item
+                  },
+                  "&:hover": {
+                    backgroundColor: "#e0e0e0", // Darker gray background on hover
+                  },
+                }}
+              >
+                <Checkbox
+                  checked={selectedOrganizations.includes(org)}
+                  sx={{
+                    color: "black", // Black color for the checkbox border
+                    "&.Mui-checked": {
+                      color: "black", // Black color for the checked checkbox
+                    },
+                  }}
+                />
+                <ListItemText primary={org} />
+              </MenuItem>
+            ))
+        ) : (
+          <MenuItem disabled>
+            <ListItemText primary="No data available" />
+          </MenuItem>
+        )}
+      </Select>
+    </FormControl>
+  )}
+</Box>
         </Box>
-
-        <Box display="flex" alignItems="center">
-          <ToggleButtonGroup
-            value={view}
-            exclusive
-            onChange={handleViewChange}
-            aria-label="view toggle"
-          >
-            <ToggleButton
-              value="category"
-              aria-label="category view"
-              onClick={() => setShowList(true)}
-            >
-              Category
-            </ToggleButton>
-            <ToggleButton
-              value="list"
-              aria-label="list view"
-              onClick={() => setShowList(false)}
-            >
-              List
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
         <Box display="flex" alignItems="center" gap={2}>
           {isShowCopy && (
-            <Button variant="outlined" onClick={handleCopy}>
+            <Button variant="outlined"
+             onClick={handleCopy}
+             sx={{
+              color: "black", // White font color
+              borderRadius: "8px", // Rounded corners
+              borderColor:"black",
+              "&:hover": {
+                color:"white",
+                backgroundColor: "#333", // Darker background on hover
+              },
+            }}>
               Copy URL
             </Button>
           )}
           {isShowMasterEvents && (
-            <Button variant="outlined" onClick={handleMasterEvents}>
+            <Button variant="outlined"
+             onClick={handleMasterEvents}
+             sx={{
+              color: "black", // White font color
+              borderRadius: "8px", // Rounded corners
+              borderColor:"black",
+              "&:hover": {
+                color:"white",
+                backgroundColor: "#333", // Darker background on hover
+              },
+            }}>
               Master Events
             </Button>
           )}
+
+<Button
+  variant="contained"
+  onClick={handleOpen}
+  sx={{
+    backgroundColor: "black", // Dark black background
+    color: "white", // White font color
+    borderRadius: "8px", // Rounded corners
+    "&:hover": {
+      backgroundColor: "#333", // Darker background on hover
+    },
+  }}
+>
+  + New Event
+</Button>
           {isShowDownload && (
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={handleDownloadButtonClick}
-            >
+              sx={{
+                color: "black", // White font color
+                borderRadius: "8px", // Rounded corners
+                borderColor:"black",
+                "&:hover": {
+                  backgroundColor: "#333", // Darker background on hover
+                  color:"white",
+                },
+              }}>
               Download
             </Button>
           )}
@@ -626,55 +1283,22 @@ const Header = ({
           </Button>
         </DialogActions>
       </Dialog>
-          {isShowFilter && (
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="organization-filter-label">
-                Organizations
-              </InputLabel>
-              <Select
-                labelId="organization-filter-label"
-                multiple
-                value={selectedOrganizations}
-                onChange={(e) =>
-                  handleOrganizationSelection(
-                    e.target.value,
-                    setSelectedOrganizations,
-                    setTableData,
-                    tableData
-                  )
-                }
-                renderValue={(selected) => selected.join(", ")}
-              >
-                {Array.from(
-                  new Set(
-                    tableData
-                      .map((event) => event.organization)
-                      .filter((org) => org && org.trim() !== "")
-                  )
-                )
-                  .concat(
-                    selectedOrganizations.filter(
-                      (org) => !tableData.some((e) => e.organization === org)
-                    )
-                  )
-                  .map((org) => (
-                    <MenuItem key={org} value={org}>
-                      <Checkbox checked={selectedOrganizations.includes(org)} />
-                      <ListItemText primary={org} />
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          )}
-        </Box>
-        {isMasterEventsPath && (
+      {isMasterEventsPath && (
           <Box display="flex" alignItems="center" gap={2}>
             <Button
               variant="outlined"
               startIcon={<UploadIcon />}
               component="label"
               disabled={uploading}
-            >
+              sx={{
+                color: "black", // White font color
+                borderRadius: "8px", // Rounded corners
+                borderColor:"black",
+                "&:hover": {
+                  backgroundColor: "#333", // Darker background on hover
+                  color:"white",
+                },
+              }}>
               Upload CSV
               <input
                 type="file"
@@ -684,7 +1308,7 @@ const Header = ({
               />
             </Button>
           </Box>
-        )}
+        )}</Box>
 
         <ApplicationSetupDialog
           open={openAppSetup}

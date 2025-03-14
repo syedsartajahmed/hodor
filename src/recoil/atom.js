@@ -1,10 +1,4 @@
-import { atom,selector } from "recoil";
-    
-  export const allEventsState = atom({
-    key: "allEventsState",
-    default: [],
-  });
-    
+import { atom,selector } from "recoil";    
 
 export const showListState = atom({
     key: "showListState",
@@ -53,7 +47,13 @@ export const selectedEventState = atom({
   export const addEventSelector = selector({
     key: "addEventSelector",
     get: ({ get }) => get(tableDataState),
-    set: ({ set }, newValue) => set(tableDataState, newValue),
+    set: ({ set, get }, newEvent) => {
+      const currentTableData = get(tableDataState);
+      const updatedTableData = Array.isArray(currentTableData)
+        ? [...currentTableData, { ...newEvent, id: Date.now() }] // Add a unique id
+        : [{ ...newEvent, id: Date.now() }]; // Add a unique id
+      set(tableDataState, updatedTableData);
+    },
   });
   
   export const categoriesState = atom({
@@ -75,78 +75,20 @@ export const applicationSetupState = atom({
     default: {},
   });
 // State to store the currently selected organization
-export const currentOrganizationState = atom({
-  key: "currentOrganizationState",
-  default: null,
-});
-
 export const isEventDrawerOpenState = atom({
     key: "isEventDrawerOpenState",
     default: false,
   });
-  export const isProductAnalystState = atom({
-    key: "isProductAnalystState",
-    default: false,
-  });
-  export const userPropertiesState = atom({
+export const userPropertiesState = atom({
     key: "userPropertiesState",
     default: [], // Set an appropriate default value
   });
-// Atom for managing the view state (e.g., 'list' or 'category')
-export const viewState = atom({
-  key: 'viewState', // Unique key for this atom
-  default: 'list', // Default value
-});
 
-// Atom for managing the open state of a modal (e.g., AddEventModal)
-export const openState = atom({
-  key: 'openState',
-  default: false, // Default is closed
-});
-
-// Atom for managing the open state of the category modal
-export const categoryOpenState = atom({
-  key: 'categoryOpenState',
-  default: false, // Default is closed
-});
-
-// Atom for managing the selected organizations in the filter
-export const selectedOrganizationsState = atom({
-  key: 'selectedOrganizationsState',
-  default: [], // Default is an empty array
-});
-
-// Atom for managing the open state of the source selection dialog
-export const openSourceDialogState = atom({
-  key: 'openSourceDialogState',
-  default: false, // Default is closed
-});
-
-// Atom for managing the selected source (e.g., 'Website', 'Backend', etc.)
-export const selectedSourceState = atom({
-  key: 'selectedSourceState',
-  default: '', // Default is an empty string
-});
-
-// Atom for managing the open state of the application setup dialog
-export const openAppSetupState = atom({
-  key: 'openAppSetupState',
-  default: false, // Default is closed
-});
-
-// Atom for managing the new organization ID
-export const newOrgIdState = atom({
+  export const newOrgIdState = atom({
   key: 'newOrgIdState',
   default: null, // Default is null
 });
 
-// Atom for managing the uploading state (e.g., during CSV upload)
-export const uploadingState = atom({
-  key: 'uploadingState',
-  default: false, // Default is not uploading
-});
-
-// Atom for new organization name
 export const newOrganizationNameState = atom({
   key: "newOrganizationNameState",
   default: "", // Default value is an empty string
@@ -191,10 +133,7 @@ export const tokenState = atom({
   default: '',
 });
 
-export const tableDataState = atom({
-  key: "tableDataState",
-  default: [], // Default empty array for table data
-});
+
 
 export const isDrawerOpenState = atom({
   key: "isDrawerOpenState",
@@ -207,12 +146,13 @@ export const isOrgDrawerOpenState = atom({
   default: false,
 });
 
+
 export const eventDrawerState = atom({
   key: 'eventDrawerState',
   default: {
     isEventDrawerOpen: false,
     selectedEvent: null,
-    isProductAnalyst: false,
+    isProductAnalyst: false, // Ensure this is included
   },
 });
 
@@ -251,3 +191,79 @@ export const organizationState = atom({
   key: 'organizationState',
   default: "",
 });
+
+export const isProductAnalystState = atom({
+  key: 'isProductAnalystState',
+  default: false, // Default value
+});
+
+// recoil/atoms.js
+
+// Atom for table data
+
+// Atom for current organization
+export const currentOrganizationState = atom({
+  key: 'currentOrganizationState',
+  default: null, // Default value is null
+});
+
+// Atom for all events
+export const allEventsState = atom({
+  key: 'allEventsState',
+  default: [], // Default value is an empty array
+});
+
+// Atom for managing table data
+export const tableDataState = atom({
+  key: "tableDataState", // unique ID for the atom
+  default: [], // default value
+});
+
+// Atom for managing selected view
+export const viewState = atom({
+  key: "viewState",
+  default: "list", // default value (could be 'category', 'list', etc.)
+});
+
+// Atom for managing whether to show the modal or not
+export const openState = atom({
+  key: "openState",
+  default: false,
+});
+
+// Atom for managing category modal state
+export const categoryOpenState = atom({
+  key: "categoryOpenState",
+  default: false,
+});
+
+// Atom for managing selected organizations
+export const selectedOrganizationsState = atom({
+  key: "selectedOrganizationsState",
+  default: [],
+});
+
+// Atom for managing open source dialog state
+export const openSourceDialogState = atom({
+  key: "openSourceDialogState",
+  default: false,
+});
+
+// Atom for managing selected source for download
+export const selectedSourceState = atom({
+  key: "selectedSourceState",
+  default: "",
+});
+
+// Atom for managing app setup modal state
+export const openAppSetupState = atom({
+  key: "openAppSetupState",
+  default: false,
+});
+
+// Atom for managing file upload state
+export const uploadingState = atom({
+  key: "uploadingState",
+  default: false,
+});
+addEventSelector

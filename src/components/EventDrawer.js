@@ -4,11 +4,14 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import DrawerProperties from "./DrawerProperties";
 import showToast from "@/utils/toast";
-import { eventDrawerState, organizationState } from "@/recoil/atom";
+import { eventDrawerState, organizationState,isProductAnalystState } from "@/recoil/atom";
+import { selectedEventState } from "@/recoil/atom"; // Import the selectedEventState atom
 
 const EventDrawer = ({ isShowSave = true }) => {
+  const [selectedEvent, setSelectedEvent] = useRecoilState(selectedEventState); // Use selectedEventState
   const [drawerState, setDrawerState] = useRecoilState(eventDrawerState);
   const [organizationData, setOrganizationData] = useRecoilState(organizationState);
+  const [isProductAnalyst, setIsProductAnalyst] = useRecoilState(isProductAnalystState);
   const router = useRouter();
   const { pathname } = router;
 
@@ -20,7 +23,11 @@ const EventDrawer = ({ isShowSave = true }) => {
   });
 
   useEffect(() => {
-    const propertyPairs = drawerState.selectedEvent?.eventProperties?.split(", ") || [];
+    console.log("isProductAnalyst updated:", drawerState.isProductAnalyst);
+  }, [drawerState.isProductAnalyst]);
+
+  useEffect(() => {
+    const propertyPairs = selectedEvent?.eventProperties?.split(", ") || []; // Use selectedEvent
     const parsedProperties = {};
 
     propertyPairs.forEach((pair) => {
@@ -34,7 +41,7 @@ const EventDrawer = ({ isShowSave = true }) => {
       cta_color: parsedProperties.cta_color || "",
       cta_class: parsedProperties.cta_class || "",
     });
-  }, [drawerState.selectedEvent]);
+  }, [selectedEvent]); // Use selectedEvent
 
   const [loading, setLoading] = useState(false);
 
@@ -46,26 +53,28 @@ const EventDrawer = ({ isShowSave = true }) => {
     });
   };
 
-  const validRequest = () => {
-    const { cta_text, cta_type, cta_color, cta_class } = formData;
-    return cta_text && cta_type && cta_color && cta_class;
-  };
-
   const handleSave = async () => {
     setLoading(true);
 
-    const selectedEvent = drawerState.selectedEvent;
+    // Check if selectedEvent is defined
+    if (!selectedEvent) {
+      showToast("No event data to save.");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Selected Event:", selectedEvent); // Debugging
 
     if (pathname === "/master-event" || pathname === "/dashboard/[id]/master-events") {
       const payload = {
         id: selectedEvent?._id,
         eventName: selectedEvent?.name || "Unnamed Event",
         event_definition: selectedEvent?.event_definition || "No description provided",
-        platform: selectedEvent.platform || [],
-        stakeholders: selectedEvent.stakeholders || [],
-        category: selectedEvent.category || "Uncategorized",
-        source: selectedEvent.source || [],
-        action: selectedEvent.action || "No action",
+        platform: selectedEvent?.platform || [],
+        stakeholders: selectedEvent?.stakeholders || [],
+        category: selectedEvent?.category || "Uncategorized",
+        source: selectedEvent?.source || [],
+        action: selectedEvent?.action || "No action",
         items: selectedEvent?.items?.map((item) => ({
           user_property: item.user_property || [],
           event_property: item.event_property?.map((prop) => ({
@@ -78,9 +87,9 @@ const EventDrawer = ({ isShowSave = true }) => {
           })) || [],
           super_property: item.super_property || [],
         })) || [],
-        identify: selectedEvent.identify || false,
-        unidentify: selectedEvent.unidentify || false,
-        organization: selectedEvent.organization,
+        identify: selectedEvent?.identify || false,
+        unidentify: selectedEvent?.unidentify || false,
+        organization: selectedEvent?.organization,
       };
 
       try {
@@ -116,7 +125,7 @@ const EventDrawer = ({ isShowSave = true }) => {
               return [
                 eventProps ? `Event Properties: { ${eventProps} }` : "",
                 superProps ? `Super Properties: { ${superProps} }` : "",
-                userProps ? `User  Properties: { ${userProps} }` : "",
+                userProps ? `User Properties: { ${userProps} }` : "",
               ]
                 .filter(Boolean)
                 .join(", ");
@@ -247,7 +256,9 @@ const EventDrawer = ({ isShowSave = true }) => {
   };
 
   const handleToggle = () => {
-    setDrawerState((prev) => ({ ...prev, isProductAnalyst: !prev.isProductAnalyst }));
+    const newValue = !drawerState.isProductAnalyst;
+    setIsProductAnalyst(newValue); // Update the global state
+    setDrawerState((prev) => ({ ...prev, isProductAnalyst: newValue })); // Update the drawer state
   };
 
   return (
@@ -263,7 +274,7 @@ const EventDrawer = ({ isShowSave = true }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">
-            {drawerState.selectedEvent?.name || "Event Details"}
+            {selectedEvent?.name || "Event Details"} {/* Use selectedEvent */}
           </h2>
           <div className="flex items-center space-x-2">
             <span className="text-base font-bold">

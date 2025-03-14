@@ -94,7 +94,12 @@ const DrawerProperties = () => {
       );
     }
   }, []);
-
+  useEffect(() => {
+    if (selectedEvent) {
+      generateCode();
+    }
+  }, [isProductAnalyst, selectedEvent]);
+  
   const stakeholderOptions = [
     "Executive Sponsor",
     "Main Point of Contact",
@@ -892,6 +897,7 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
               functionName={functionName}
               setGeneratedCode={setGeneratedCode}
               triggerCode={triggerCode}
+              isProductAnalyst={isProductAnalyst} // Pass the state
             />
           </Box>
         </AccordionDetails>

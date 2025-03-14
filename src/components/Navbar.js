@@ -21,27 +21,31 @@ const Navbar = ({ hideHeader = false }) => {
       />
 
       {!hideHeader && (
-        <div>
-          {/* Right-end Navigation Links */}
-          <div className="flex gap-8 text-2xl font-semibold">
-            <button
-              className={`hover:opacity-65 transition-opacity cursor-pointer ${
-                isActive("/organizations") ? "opacity-70" : ""
-              }`}
-              onClick={() => router.push("/organizations")}
-            >
-              Organizations
-            </button>
-            <button
-              className={`hover:opacity-65 transition-opacity cursor-pointer ${
-                isActive("/master-event") ? "opacity-70" : ""
-              }`}
-              onClick={() => router.push("/master-event")}
-            >
-              Master Events
-            </button>
-          </div>
-        </div>
+       <div>
+       {/* Right-end Navigation Links */}
+       <div className="flex gap-8 text-2xl font-semibold">
+         <button
+           className={`hover:opacity-65 transition-opacity cursor-pointer px-4 py-2 rounded-lg ${
+             isActive("/organizations")
+               ? "bg-black text-white"
+               : "bg-transparent text-black"
+           }`}
+           onClick={() => router.push("/organizations")}
+         >
+           Organizations
+         </button>
+         <button
+           className={`hover:opacity-65 transition-opacity cursor-pointer px-4 py-2 rounded-lg ${
+             isActive("/master-event")
+               ? "bg-black text-white"
+               : "bg-transparent text-black"
+           }`}
+           onClick={() => router.push("/master-event")}
+         >
+           Master Events
+         </button>
+       </div>
+     </div>
       )}
     </div>
   );
