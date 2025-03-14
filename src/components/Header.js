@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -18,8 +18,11 @@ import {
   Radio,
   FormControlLabel,
   RadioGroup,
+  Drawer,
+  IconButton
 } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close"; // Import the Close icon
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
 import AddEventModal from "./AddEventModal";
 import NewCategoryModal from "./NewCategory";
@@ -59,6 +62,7 @@ const Header = ({
   const allEvents = useRecoilValue(allEventsState);
   const isProductAnalyst = useRecoilValue(isProductAnalystState);
   const [showList, setShowList] = useRecoilState(showListState);
+  const [openDrawer, setOpenDrawer] = useState(false);
 
   const [view, setView] = useRecoilState(viewState);
   const [open, setOpen] = useRecoilState(openState);
@@ -1181,7 +1185,49 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
   )}
 </Box>
         </Box>
-        <Box display="flex" alignItems="center" gap={2}>
+
+<IconButton
+        onClick={() => setOpenDrawer(true)}
+        sx={{ color: "black", marginRight: 2 }}
+      >
+        <MenuIcon />
+      </IconButton>
+
+      {/* Drawer (Hamburger Menu) */}
+      <Drawer
+        anchor="right"
+        open={openDrawer}
+        transitionDuration={500} // 500ms animation
+        SlideProps={{
+          direction: "left", // Customize slide direction
+        }}
+        onClose={() => setOpenDrawer(false)}
+        sx={{
+          "& .MuiDrawer-paper": { // Target the paper (content) inside the Drawer
+            height:400,
+            width: 300, // Set the width of the drawer
+            padding: 2, // Add padding
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#f5f5f5", // Set background color
+            borderRadius:2,
+          },
+        }}      > <IconButton
+        onClick={() => setOpenDrawer(false)} // Close the drawer when clicked
+        sx={{
+          position: "absolute", // Position the icon absolutely
+          top: 8, // Adjust top position
+          right: 8, // Adjust right position
+          color: "black", // Icon color
+          "&:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.1)", // Light hover effect
+          },
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
+        <Box display="flex" alignItems="center" gap={2} flexDirection="column">
           {isShowCopy && (
             <Button variant="outlined"
              onClick={handleCopy}
@@ -1197,21 +1243,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
               Copy URL
             </Button>
           )}
-          {isShowMasterEvents && (
-            <Button variant="outlined"
-             onClick={handleMasterEvents}
-             sx={{
-              color: "black", // White font color
-              borderRadius: "8px", // Rounded corners
-              borderColor:"black",
-              "&:hover": {
-                color:"white",
-                backgroundColor: "#333", // Darker background on hover
-              },
-            }}>
-              Master Events
-            </Button>
-          )}
+          
 
 <Button
   variant="contained"
@@ -1308,8 +1340,23 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
               />
             </Button>
           </Box>
-        )}</Box>
-
+        )}
+        {isShowMasterEvents && (
+            <Button variant="outlined"
+             onClick={handleMasterEvents}
+             sx={{
+              color: "black", // White font color
+              borderRadius: "8px", // Rounded corners
+              borderColor:"black",
+              "&:hover": {
+                color:"white",
+                backgroundColor: "#333", // Darker background on hover
+              },
+            }}>
+              Master Events
+            </Button>
+          )}</Box>
+      </Drawer>
         <ApplicationSetupDialog
           open={openAppSetup}
           onClose={() => setOpenAppSetup(false)}
