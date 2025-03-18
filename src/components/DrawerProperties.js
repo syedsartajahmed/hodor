@@ -114,15 +114,12 @@ const DrawerProperties = () => {
 
   const platformOptions = [
     "Web",
-    "Android",
-    "iOS",
     "Server Side",
-    "All Client Side",
     "All Mobile",
-    "All Platforms",
+    "Undefined",
   ];
 
-  const sourceOptions = ["Website", "Backend", "Android", "iOS"];
+  const sourceOptions = ["Web", "server", "App","Undefined"];
 
   const methodCallOptions = [
     "Identify",
@@ -152,7 +149,9 @@ const DrawerProperties = () => {
   ];
 
   const handleEventPropertyChange = (index, field, value) => {
-    const updatedProperties = [...eventProperties];
+    // Create a deep copy of the eventProperties array
+    const updatedProperties = eventProperties.map((prop) => ({ ...prop }));
+  
     if (field === "methodCall") {
       updatedProperties[index]["method_call"] = value;
       updatedProperties[index][field] = value;
@@ -162,9 +161,9 @@ const DrawerProperties = () => {
     } else {
       updatedProperties[index][field] = value;
     }
-
+  
     setEventProperties(updatedProperties);
-
+  
     setSelectedEvent((prevEvent) => {
       const updatedItems = [...(prevEvent.items || [])];
       if (updatedItems[0]) {

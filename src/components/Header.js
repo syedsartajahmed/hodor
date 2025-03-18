@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -49,7 +49,9 @@ import {
   newOrgIdState,
   uploadingState,
 } from "../recoil/atom";
+import { filteredTableDataState } from '../recoil/selector'; // or '../recoil/atom' if you added it there
 import { useRouter } from "next/router";
+import { screenLoaded } from "../utils/mixpanel";
 
 const Header = ({
   isShowCopy = false,
@@ -57,6 +59,8 @@ const Header = ({
   isShowDownload = false,
   isShowFilter = false,
 }) => {
+  const filteredTableData = useRecoilValue(filteredTableDataState);
+  console.log('Filtered Table Data:', filteredTableData);
   const [tableData, setTableData] = useRecoilState(tableDataState);
   const currentOrganization = useRecoilValue(currentOrganizationState);
   const allEvents = useRecoilValue(allEventsState);
@@ -78,7 +82,9 @@ const Header = ({
   if (!Array.isArray(tableData)) {
     console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
   }
-
+  useEffect(() => {
+    screenLoaded({ user_channel: "web", screen_name: "Hodor Home" });
+  }, []);
   const safeTableData = Array.isArray(tableData) ? tableData : []; // Ensure tableData is an array
 const eventSize = safeTableData.length;  // Use safeTableData here
 
@@ -87,7 +93,10 @@ const eventSize = safeTableData.length;  // Use safeTableData here
       setView(newView);
     }
   };
-
+  const handleIndustrySelection = (event) => {
+    const selected = event.target.value;
+    setSelectedOrganizations(selected); // Update the state with the new selection
+  };
   const handleOpen = () => setOpen(true);
 
   const handleCopy = () => {
@@ -144,11 +153,11 @@ const eventSize = safeTableData.length;  // Use safeTableData here
 
    // if (isProductAnalyst) {
       switch (selectedSource) {
-        case "Website":
+        case "Web":
           code = generateWebsiteCode(filteredEvents, mixpanelToken);
           filename = "mixpanel-web.js";
           break;
-        case "Backend":
+        case "server":
           code = generateBackendCode(filteredEvents, mixpanelToken);
           filename = "mixpanel-backend.js";
           break;
@@ -160,10 +169,30 @@ const eventSize = safeTableData.length;  // Use safeTableData here
           code = generateIOSCode(filteredEvents);
           filename = "MixpanelTracking.swift";
           break;
+          case "App":
+            // Generate both Android and iOS files
+            const androidCode = generateAndroidCode(filteredEvents);
+            const iosCode = generateIOSCode(filteredEvents);
+        
+            // Function to trigger file downloads
+            downloadFile("MixpanelTracking.kt", androidCode);
+            downloadFile("MixpanelTracking.swift", iosCode);
+            
+            showToast("Android & iOS files generated!");
+            return; 
         default:
           showToast("Unsupported platform");
           return;
       }
+      function downloadFile(filename, content) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }      
     /*} else {
       switch (selectedSource) {
         case "Website":
@@ -334,6 +363,7 @@ const eventSize = safeTableData.length;  // Use safeTableData here
                 newFormattedData.push(formatForTable(savedEvent));
               }
             } catch (error) {
+              console.log(error); 
               showToast(
                 error.response?.data?.message || 
                 "Failed to save event. Please try again."
@@ -381,21 +411,21 @@ const eventSize = safeTableData.length;  // Use safeTableData here
               }`
           )
           .join("; ") || "";
-
+  
         const superProps = item.super_property
           ?.map(
             (prop) =>
               `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
           )
           .join("; ") || "";
-
+  
         const userProps = item.user_property
           ?.map(
             (prop) =>
               `Name: ${prop.name || "N/A"}, Value: ${prop.value || "N/A"}`
           )
           .join("; ") || "";
-
+  
         return [
           eventProps ? `Event Properties: { ${eventProps} }` : "",
           superProps ? `Super Properties: { ${superProps} }` : "",
@@ -405,18 +435,38 @@ const eventSize = safeTableData.length;  // Use safeTableData here
           .join(", ");
       })
       .join("; "),
-    stakeholders: savedEvent.stakeholders?.split(',') || [],
+    stakeholders: Array.isArray(savedEvent.stakeholders)
+      ? savedEvent.stakeholders
+      : savedEvent.stakeholders?.split(",") || [],
+  
     category: savedEvent.category,
-    source: savedEvent.source?.split(',') || [],
+    
+    source: Array.isArray(savedEvent.source)
+      ? savedEvent.source
+      : savedEvent.source?.split(",") || [],
+  
     action: savedEvent.action,
-    platform: savedEvent.platform?.split(',') || [],
+  
+    platform: Array.isArray(savedEvent.platform)
+      ? savedEvent.platform
+      : savedEvent.platform?.split(",") || [],
+  
     organization: savedEvent.organization,
   });
-
+  
   const processCSVData = (rows) => {
     const eventGroups = rows.reduce((acc, row) => {
       if (!row.eventName) return acc;
-      
+  
+      const validPlatforms = ["Web", "Server Side", "All Mobile"];
+      const validSources = ["web", "server side", "app"];
+      const isValidPlatform = validPlatforms.includes(row.platform);
+      const isValidSource = validSources.includes(row.source);
+      const platform = validPlatforms.includes(row.platform) ? row.platform : "Undefined";
+      const source = validSources.includes(row.source) ? row.source : "Undefined";
+            
+
+  
       if (!acc[row.eventName]) {
         acc[row.eventName] = {
           eventName: row.eventName,
@@ -424,9 +474,9 @@ const eventSize = safeTableData.length;  // Use safeTableData here
           action: row.action || "default",
           stakeholders: row.stakeholders,
           category: row.category,
-          source: row.source,
-          platform: row.platform,
           organization: row.organization,
+          platform, // Only add if valid
+          source, // Only add if valid
           items: [{
             event_property: [],
             user_property: [],
@@ -434,27 +484,27 @@ const eventSize = safeTableData.length;  // Use safeTableData here
           }]
         };
       }
-
+  
       const property = {
-        property_name: row['Property Name'],
-        property_definition: row['Property Definition'],
-        data_type: row['Data Type'],
-        sample_value: row['Sample Values'],
-        method_call: row['Method Call']
+        property_name: row["Property Name"],
+        property_definition: row["Property Definition"],
+        data_type: row["Data Type"],
+        sample_value: row["Sample Values"],
+        method_call: row["Method Call"]
       };
-
-      switch (row['Property Type']) {
-        case 'Event Property':
+  
+      switch (row["Property Type"]) {
+        case "Event Property":
           acc[row.eventName].items[0].event_property.push(property);
           break;
-        case 'User Property':
+        case "User Property":
           acc[row.eventName].items[0].user_property.push({
             name: property.property_name,
             value: property.sample_value,
             type: property.data_type
           });
           break;
-        case 'Super Property':
+        case "Super Property":
           acc[row.eventName].items[0].super_property.push({
             name: property.property_name,
             value: property.sample_value,
@@ -462,12 +512,13 @@ const eventSize = safeTableData.length;  // Use safeTableData here
           });
           break;
       }
-
+  
       return acc;
     }, {});
-
+  
     return Object.values(eventGroups);
   };
+  
 
   const fetchMasterEvents = async () => {
     try {
@@ -1037,28 +1088,32 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
           zIndex: 1000,
         }}
       >
-        <Box display="flex" alignItems="center" gap={2}>
-        <Typography
-  variant="h6"
-  fontWeight="bold"
-  onClick={handleOrganizationClick}
-  sx={{
-    cursor: currentOrganization?.name ? "pointer" : "default",
-    color: currentOrganization?.name ? "white" : "black", // Set font color to white when active
-    backgroundColor: currentOrganization?.name ? "black" : "#ffff", // Set background to black when active
-    padding: "4px 8px",
-    borderRadius: "8px", // Rounded corners
-    "&:hover": currentOrganization?.name && {
-      textDecoration: "underline",
-      backgroundColor: "#333", // Darker background on hover
-    },
-  }}
->
-  {isMasterEventsPath
-    ? "Master Events"
-    : currentOrganization?.name || "Organization"}{" "}
-  ({eventSize})
-</Typography>
+     <Box display="flex" alignItems="center" gap={2}>
+  <Typography
+    variant="h6"
+    fontWeight="bold"
+    onClick={isMasterEventsPath ? undefined : handleOrganizationClick}
+    sx={{
+      cursor: isMasterEventsPath
+        ? "default"
+        : currentOrganization?.name
+        ? "pointer"
+        : "default",
+      color: currentOrganization?.name ? "white" : "black",
+      backgroundColor: currentOrganization?.name ? "black" : "#ffff",
+      padding: "4px 8px",
+      borderRadius: "8px",
+      "&:hover": !isMasterEventsPath && currentOrganization?.name && {
+        textDecoration: "underline",
+        backgroundColor: "#333",
+      },
+    }}
+  >
+    {isMasterEventsPath
+      ? "Master Events"
+      : currentOrganization?.name || "Organization"}{" "}
+    ({eventSize})
+  </Typography>
       { /*</Box>
         <Box display="flex" alignItems="center">*/}
          <Box display="flex" alignItems="center" gap={2}>
@@ -1099,90 +1154,85 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
 
   {/* FormControl with Select */}
   {isShowFilter && (
-    <FormControl sx={{ minWidth: 200, height: "56px" }}>
-      <InputLabel
-        id="organization-filter-label"
-        sx={{
-          color: "black", // Black font color for the label
-          "&.Mui-focused": {
-            color: "black", // Black font color when the label is focused
-          },
-        }}
-      >
-        Organizations
-      </InputLabel>
-      <Select
-        labelId="organization-filter-label"
-        multiple
-        value={selectedOrganizations}
-        onChange={(e) => {
-          const selected = e.target.value;
-          console.log("Selected Organizations:", selected);
-          setSelectedOrganizations(selected);
-          handleOrganizationSelection(selected, setSelectedOrganizations, setTableData, safeTableData);
-        }}
-        renderValue={(selected) => selected.join(", ")}
-        sx={{
-          color: "black", // Black font color for the selected value
-          height: "56px", // Match the height of the ToggleButtonGroup
-          "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: "black", // Black border color
-          },
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "black", // Black border color on hover
-          },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "black", // Black border color when focused
-          },
-        }}
-      >
-        {Array.isArray(safeTableData) ? (
-          Array.from(
-            new Set(
-              safeTableData
-                .map((event) => event.organization)
-                .filter((org) => org && org.trim() !== "")
-            )
-          )
-            .concat(
-              selectedOrganizations.filter(
-                (org) => !safeTableData.some((e) => e.organization === org)
+        <FormControl sx={{ minWidth: 200, height: "56px" }}>
+          <InputLabel
+            id="organization-filter-label"
+            sx={{
+              color: "black",
+              "&.Mui-focused": {
+                color: "black",
+              },
+            }}
+          >
+            Industry
+          </InputLabel>
+          <Select
+            labelId="organization-filter-label"
+            multiple
+            value={selectedOrganizations}
+            onChange={handleIndustrySelection}
+            renderValue={(selected) => selected.join(", ")}
+            sx={{
+              color: "black",
+              height: "56px",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "black",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "black",
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "black",
+              },
+            }}
+          >
+            {Array.isArray(safeTableData) ? (
+              Array.from(
+                new Set(
+                  safeTableData
+                    .map((event) => event.organization)
+                    .filter((org) => org && org.trim() !== "")
+                )
               )
-            )
-            .map((org) => (
-              <MenuItem
-                key={org}
-                value={org}
-                sx={{
-                  color: "black", // Black font color for MenuItem
-                  "&.Mui-selected": {
-                    backgroundColor: "#f0f0f0", // Light gray background for selected item
-                  },
-                  "&:hover": {
-                    backgroundColor: "#e0e0e0", // Darker gray background on hover
-                  },
-                }}
-              >
-                <Checkbox
-                  checked={selectedOrganizations.includes(org)}
-                  sx={{
-                    color: "black", // Black color for the checkbox border
-                    "&.Mui-checked": {
-                      color: "black", // Black color for the checked checkbox
-                    },
-                  }}
-                />
-                <ListItemText primary={org} />
+                .concat(
+                  selectedOrganizations.filter(
+                    (org) => !safeTableData.some((e) => e.organization === org)
+                  )
+                )
+                .map((org) => (
+                  <MenuItem
+                    key={org}
+                    value={org}
+                    sx={{
+                      color: "black",
+                      "&.Mui-selected": {
+                        backgroundColor: "#f0f0f0",
+                      },
+                      "&:hover": {
+                        backgroundColor: "#e0e0e0",
+                      },
+                    }}
+                  >
+                    <Checkbox
+                      checked={selectedOrganizations.includes(org)}
+                      sx={{
+                        color: "black",
+                        "&.Mui-checked": {
+                          color: "black",
+                        },
+                      }}
+                    />
+                    <ListItemText primary={org} />
+                  </MenuItem>
+                ))
+            ) : (
+              <MenuItem disabled>
+                <ListItemText primary="No data available" />
               </MenuItem>
-            ))
-        ) : (
-          <MenuItem disabled>
-            <ListItemText primary="No data available" />
-          </MenuItem>
-        )}
-      </Select>
-    </FormControl>
-  )}
+            )}
+          </Select>
+        </FormControl>
+      )}
 </Box>
         </Box>
 

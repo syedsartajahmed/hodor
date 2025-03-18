@@ -14,6 +14,7 @@ import {
   isEventDrawerOpenState,
   selectedEventState,
 } from "@/recoil/atom";
+import { filteredTableDataState } from '../recoil/selector'; // or '../recoil/atom' if you added it there
 
 const Table = ({
   page,
@@ -21,6 +22,7 @@ const Table = ({
   isShowOrganization = false,
   isEventPage = false,
 }) => {
+  const filteredTableData = useRecoilValue(filteredTableDataState);
   const tableData = useRecoilValue(tableDataState);
   const setIsDrawerOpen = useSetRecoilState(isDrawerOpenState);
   const setIsEventDrawerOpen = useSetRecoilState(isEventDrawerOpenState);
@@ -103,12 +105,13 @@ const Table = ({
         ]
       : []),
   ];
+  const rowsToDisplay = filteredTableData.length > 0 ? filteredTableData : tableData;
 
   return (
     <div className="mx-10 mt-5 mb-[261px]">
       <Box sx={{ height: "100%", width: "100%" }}>
         <DataGrid
-          rows={tableData}
+          rows={rowsToDisplay}
           getRowClassName={(params) => "bg-lightgray-50"}
           columns={enhancedColumns}
           onRowClick={handleRowClick}

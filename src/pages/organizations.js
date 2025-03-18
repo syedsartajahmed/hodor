@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   organizationsState,
@@ -9,6 +9,7 @@ import {
   selectedOrganizationState,
   openAppSetupState,
   newOrgIdState,
+  tableDataState
 } from "@/recoil/atom";
 import Avatar from "@mui/material/Avatar";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -40,27 +41,29 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 const Organizations = () => {
   const router = useRouter();
-
+  
   // Recoil state
   const [organizations, setOrganizations] = useRecoilState(organizationsState);
   const setCurrentOrganization = useSetRecoilState(currentOrganizationState);
-  const [newOrganizationName, setNewOrganizationName] = useRecoilState(
-    newOrganizationNameState
-  );
+  const [newOrganizationName, setNewOrganizationName] = useRecoilState(newOrganizationNameState);
   const [openAddDialog, setOpenAddDialog] = useRecoilState(openAddDialogState);
-  const [openDeleteDialog, setOpenDeleteDialog] = useRecoilState(
-    openDeleteDialogState
-  );
-  const [selectedOrganization, setSelectedOrganization] = useRecoilState(
-    selectedOrganizationState
-  );
+  const [openDeleteDialog, setOpenDeleteDialog] = useRecoilState(openDeleteDialogState);
+  const [selectedOrganization, setSelectedOrganization] = useRecoilState(selectedOrganizationState);
   const [openAppSetup, setOpenAppSetup] = useRecoilState(openAppSetupState);
   const [newOrgId, setNewOrgId] = useRecoilState(newOrgIdState);
+  
+  // State to store event sizes for organizations
+  const [eventSizes, setEventSizes] = useState({});
 
-  // Fetch organizations on component mount
   useEffect(() => {
     fetchOrganizations();
   }, []);
+
+  useEffect(() => {
+    if (organizations.length > 0) {
+      fetchAllEventSizes();
+    }
+  }, [organizations]);
 
   const fetchOrganizations = async () => {
     try {
@@ -71,6 +74,26 @@ const Organizations = () => {
     }
   };
 
+  const fetchTableData = async (organizationId) => {
+    try {
+      const response = await axios.get(`/api/organizations?organization_id=${organizationId}`);
+      const events =  response.data.applications?.[0]?.events || [];
+      return events.length;
+    } catch (err) {
+      console.error("Failed to fetch events", err);
+      return 0;
+    }
+  };
+
+  const fetchAllEventSizes = async () => {
+    const sizes = {};
+    for (const org of organizations) {
+      sizes[org._id] = await fetchTableData(org._id);
+    }
+    console.log("Event Sizes:", sizes); // Log the sizes object
+    setEventSizes(sizes);
+  };
+
   const handleCardClick = (organization) => {
     setCurrentOrganization({
       id: organization._id,
@@ -79,6 +102,7 @@ const Organizations = () => {
     });
     router.push(`/dashboard/${organization._id}`);
   };
+
 
   const handleAddOrganization = () => {
     setOpenAddDialog(true);
@@ -307,7 +331,7 @@ const Organizations = () => {
         fontWeight="bold"
         sx={{ cursor: "pointer" }}
       >
-        {org.name}
+        {org.name} ({eventSizes[org._id]})
       </Typography>
     </Box>
   </Card>

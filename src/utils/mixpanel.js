@@ -1,32 +1,46 @@
+import mixpanel from "mixpanel-browser";
 
-// Add this to your common file before calling Mixpanel init:
-import mixpanel from 'mixpanel-browser';
+const MIXPANEL_TOKEN = "d5278bec8f08ca3379a158ad5e0bca33"; // Use .env variable
 
-// Initialize Mixpanel with tracking options
-mixpanel.init('d46d915c637daa47331afa606e81f7d5', {
-  debug: true,
-  track_pageview: true,
-});
+const Mixpanel = {
+  init: () => {
+    if (typeof window !== "undefined" && MIXPANEL_TOKEN) {
+      mixpanel.init(MIXPANEL_TOKEN, { debug: true, track_pageview: true });
+    }
+  },
+  track: (event, data = {}) => {
+    if (typeof window !== "undefined") {
+      mixpanel.track(event, data);
+    }
+  },
+  identify: (userId) => {
+    if (typeof window !== "undefined") {
+      mixpanel.identify(userId);
+    }
+  },
+  people: {
+    set: (data) => {
+      if (typeof window !== "undefined") {
+        mixpanel.people.set(data);
+      }
+    },
+  },
+};
 
-// when a screen or a page is loaded
-export function sceenLoaded(data) {
-    mixpanel.register({
-      "user_channel": data.user_channel
-    });
-    mixpanel.track("sceen_loaded", {
-      "screen_name": data.screen_name // String
-    });
-}
-  
-// when user clicks on the events onn the hodor home
-export function categoryClicked(data) {
-    mixpanel.register({
-      "user_channel": data.user_channel
-    });
-    mixpanel.track("category_clicked", {
-      "category_count": data.category_count, // String,
-      "category_name": data.category_name // String
-    });
+// Ensure Mixpanel is initialized before calling register or track
+export function screenLoaded(data) {
+  if (!mixpanel.__loaded) {
+    console.warn("Mixpanel not initialized yet.");
+    return;
   }
   
-  
+  mixpanel.register({ user_channel: data.user_channel });
+  mixpanel.track("screen_loaded", { screen_name: data.screen_name });
+}
+
+// Initialize Mixpanel immediately if in the browser
+if (typeof window !== "undefined") {
+  Mixpanel.init();
+}
+
+export default Mixpanel;
