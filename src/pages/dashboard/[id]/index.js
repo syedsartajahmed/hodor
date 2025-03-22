@@ -101,12 +101,12 @@ const Index = () => {
   };
 
   return (
-    <>
-      <Navbar />
+<div className="ml-64">
+<Navbar />
       <Header isShowCopy={true} isShowMasterEvents={true} isShowDownload={true} />
       {showList ? <List /> : <Table page={"dashboard"} />}
       <EventDrawer />
-    </>
+    </div>
   );
 };
 

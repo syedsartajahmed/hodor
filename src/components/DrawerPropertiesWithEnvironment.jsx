@@ -46,7 +46,7 @@ const DrawerPropertiesWithEnvironment = ({
   triggerCode,
   functionName,
 }) => {
-  const [environment, setEnvironment] = useState("Frontend");
+  const [environment, setEnvironment] = useState("Javascript");
   const [instructions, setInstructions] = useState("");
   const [initCode, setInitCode] = useState("");
   const [token, setToken] = useState("");
@@ -79,84 +79,141 @@ const DrawerPropertiesWithEnvironment = ({
     const value = event.target.value;
     setEnvironment(value);
 
-    if (value === "Frontend") {
-      setInstructions(
-        isProductAnalyst
-          ? `
-# Installation Instructions
+    switch (value) {
+      case "Javascript":
+        setInstructions(`
+# Installation Instructions for Javascript
 # via npm
 npm install --save mixpanel-browser
 
 # via yarn
 yarn add mixpanel-browser
-`
-          : `
-# Installation Instructions
-# via npm
-npm install --save @rudderstack/rudder-sdk-js
-
-# via yarn
-yarn add @rudderstack/rudder-sdk-js
-`
-      );
-      updateInitCode(token);
-    } else if (value === "Backend") {
-      setInstructions(
-        isProductAnalyst
-          ? `
-# Installation Instructions for Backend
-npm install --save mixpanel
-yarn add mixpanel
-`
-          : `
-# Installation Instructions for Backend
-npm install --save @rudderstack/rudder-sdk-node
-yarn add @rudderstack/rudder-sdk-node
-`
-      );
-      setInitCode(
-        isProductAnalyst
-          ? `
-// Backend Initialization
-const Mixpanel = require('mixpanel');
-const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
-`
-          : `
-// Backend Initialization
-const Analytics = require('@rudderstack/rudder-sdk-node');
-const client = new Analytics('${
-              token || "YOUR_WRITE_KEY"
-            }', 'https://your-data-plane-url');
-`
-      );
-    } else {
-      setInstructions(`Chrome integration will be added later.`);
-      setInitCode("");
-    }
-  };
-
-  const updateInitCode = (newToken) => {
-    if (isProductAnalyst) {
-      setInitCode(`
+`);
+        setInitCode(`
 import mixpanel from 'mixpanel-browser';
 
-mixpanel.init('${newToken || "YOUR_PROJECT_TOKEN"}', {
+mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}', {
   debug: true,
   track_pageview: true,
 });
 `);
-    } else {
-      setInitCode(`
-import * as rudderanalytics from '@rudderstack/rudder-sdk-js';
+        break;
 
-rudderanalytics.load('${
-        newToken || "YOUR_WRITE_KEY"
-      }', 'https://your-data-plane-url', {
-  logLevel: 'DEBUG',
-  configUrl: 'https://api.rudderlabs.com',
-});
+      case "Node.js":
+        setInstructions(`
+# Installation Instructions for Node.js
+npm install --save mixpanel
+
+# via yarn
+yarn add mixpanel
 `);
+        setInitCode(`
+const Mixpanel = require('mixpanel');
+const mixpanel = Mixpanel.init('${token || "YOUR_PROJECT_TOKEN"}');
+`);
+        break;
+
+      case "React Native":
+        setInstructions(`
+# Installation Instructions for React Native
+npm install --save mixpanel-react-native
+
+# via yarn
+yarn add mixpanel-react-native
+`);
+        setInitCode(`
+import { Mixpanel } from 'mixpanel-react-native';
+
+const mixpanel = new Mixpanel('${token || "YOUR_PROJECT_TOKEN"}');
+mixpanel.init();
+`);
+        break;
+
+      case "Kotlin (Android)":
+        setInstructions(`
+# Installation Instructions for Kotlin (Android)
+# Add the following to your build.gradle file:
+implementation 'com.mixpanel.android:mixpanel-android:6.0.0'
+`);
+        setInitCode(`
+val mixpanel = MixpanelAPI.getInstance(context, "${token || "YOUR_PROJECT_TOKEN"}")
+`);
+        break;
+
+      case "Swift (iOS)":
+        setInstructions(`
+# Installation Instructions for Swift (iOS)
+# Add the following to your Podfile:
+pod 'Mixpanel'
+`);
+        setInitCode(`
+import Mixpanel
+
+let mixpanel = Mixpanel.initialize(token: "${token || "YOUR_PROJECT_TOKEN"}")
+`);
+        break;
+
+      case "Flutter":
+        setInstructions(`
+# Installation Instructions for Flutter
+# Add the following to your pubspec.yaml:
+mixpanel_flutter: ^1.x.x
+`);
+        setInitCode(`
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+
+Mixpanel mixpanel;
+
+Future<void> initMixpanel() async {
+  mixpanel = await Mixpanel.init("${token || "YOUR_PROJECT_TOKEN"}");
+}
+`);
+        break;
+
+      case "PHP":
+        setInstructions(`
+# Installation Instructions for PHP
+# Add the following to your composer.json:
+"require": {
+  "mixpanel/mixpanel-php": "2.*"
+}
+`);
+        setInitCode(`
+require 'vendor/autoload.php';
+
+$mp = Mixpanel::getInstance("${token || "YOUR_PROJECT_TOKEN"}");
+`);
+        break;
+
+      case "HTTP API":
+        setInstructions(`
+# HTTP API Instructions
+# Use the following endpoint to send events:
+POST https://api.mixpanel.com/track
+`);
+        setInitCode(`
+# Example cURL request
+curl -X POST https://api.mixpanel.com/track \\
+  -d '{
+    "event": "your_event_name",
+    "properties": {
+      "token": "${token || "YOUR_PROJECT_TOKEN"}",
+      "distinct_id": "user123",
+      "your_property": "your_value"
     }
+  }'
+`);
+        break;
+
+      default:
+        setInstructions("");
+        setInitCode("");
+        break;
+    }
+  };
+
+  const updateInitCode = (newToken) => {
+    handleEnvironmentChange({ target: { value: environment } });
   };
 
   const copyToClipboard = (text) => {
@@ -174,17 +231,21 @@ rudderanalytics.load('${
       <FormControl fullWidth margin="normal">
         <InputLabel>Select Environment</InputLabel>
         <Select value={environment} onChange={handleEnvironmentChange}>
-          <MenuItem value="Frontend">Frontend</MenuItem>
-          <MenuItem value="Backend">Backend</MenuItem>
-          <MenuItem value="Chrome">Chrome</MenuItem>
+          <MenuItem value="Javascript">Javascript</MenuItem>
+          <MenuItem value="Node.js">Node.js</MenuItem>
+          <MenuItem value="React Native">React Native</MenuItem>
+          <MenuItem value="Kotlin (Android)">Kotlin (Android)</MenuItem>
+          <MenuItem value="Swift (iOS)">Swift (iOS)</MenuItem>
+          <MenuItem value="Flutter">Flutter</MenuItem>
+          <MenuItem value="PHP">PHP</MenuItem>
+          <MenuItem value="HTTP API">HTTP API</MenuItem>
         </Select>
       </FormControl>
 
-      {["Frontend", "Backend"].includes(environment) && (
+      {["Javascript", "Node.js", "React Native", "Kotlin (Android)", "Swift (iOS)", "Flutter", "PHP"].includes(environment) && (
         <Box mt={2}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -214,7 +275,6 @@ rudderanalytics.load('${
         <Box mt={2}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -238,7 +298,6 @@ rudderanalytics.load('${
       <Box mt={2}>
         <Typography
           sx={{
-            textDecoration: "underline",
             textDecorationColor: "#000000",
             textDecorationThickness: "2px",
           }}
@@ -259,7 +318,6 @@ rudderanalytics.load('${
         <Box mt={2}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -289,7 +347,6 @@ rudderanalytics.load('${
         <Box mt={4}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -319,7 +376,6 @@ rudderanalytics.load('${
         <Box mt={4}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -351,7 +407,6 @@ rudderanalytics.load('${
         <Box mt={4}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}

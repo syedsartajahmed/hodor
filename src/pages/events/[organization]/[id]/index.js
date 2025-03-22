@@ -105,13 +105,13 @@ const Index = () => {
   };
 
   return (
-    <>
-      <Navbar hideHeader={true} />
+<div className="ml-64">
+<Navbar hideHeader={true} />
       <Header isShowCopy={false} />
       {showList ? <List /> : <Table isEventPage={true} page={"dashboard"} />}
       <EventDrawer isShowSave={false} />
       <Footer />
-    </>
+    </div>
   );
 };
 

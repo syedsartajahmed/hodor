@@ -40,6 +40,7 @@ const Index = () => {
 
   return (
     <Box
+    className="ml-64"
       sx={{
         display: "flex",
         flexDirection: "column",

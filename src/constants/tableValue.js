@@ -27,9 +27,4 @@ export const columns = [
     headerName: "SOURCE",
     flex: 1,
   },
-  {
-    field: "platform",
-    headerName: "PLATFORM",
-    flex: 1,
-  },
 ];

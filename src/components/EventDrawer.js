@@ -317,7 +317,7 @@ const EventDrawer = ({ isShowSave = true }) => {
               <div className="p-4 border-t flex items-center gap-7 justify-center">
                 <button
                   onClick={handleSave}
-                  className="bg-indigo-500 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-600 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
+                  className="bg-[rgb(255,14,180)] text-white px-4 py-2 rounded-md shadow hover:bg-[#ffff] hover:text-[rgb(255,14,180)] focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 flex items-center justify-center"
                   disabled={loading} // Disable button when loading
                 >
                   {loading ? (
@@ -348,7 +348,7 @@ const EventDrawer = ({ isShowSave = true }) => {
 
                 <button
                   onClick={() => setDrawerState((prev) => ({ ...prev, isEventDrawerOpen: false }))}
-                  className="text-gray-500 hover:text-gray-800"
+                  className="text-black hover:text-[rgb(255,14,180)]"
                 >
                   Cancel
                 </button>

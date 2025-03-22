@@ -72,8 +72,8 @@ const MasterEvents = () => {
   };
 
   return (
-    <>
-      <Navbar />
+<div className="ml-64">
+<Navbar />
       <Header isShowFilter={true} />
       {showList ? (
         <List />
@@ -81,7 +81,7 @@ const MasterEvents = () => {
         <Table isShowOrganization={true} page="master-events" />
       )}
       <EventDrawer />
-    </>
+    </div>
   );
 };
 

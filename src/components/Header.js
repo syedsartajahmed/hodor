@@ -16,7 +16,7 @@ import {
   DialogTitle,
   Dialog,
   Radio,
-  FormControlLabel,
+  ListSubheader,
   RadioGroup,
   Drawer,
   IconButton
@@ -51,7 +51,7 @@ import {
 } from "../recoil/atom";
 import { filteredTableDataState } from '../recoil/selector'; // or '../recoil/atom' if you added it there
 import { useRouter } from "next/router";
-import { screenLoaded } from "../utils/mixpanel";
+import { screenLoad } from "../utils/mixpanel-web (1)";
 
 const Header = ({
   isShowCopy = false,
@@ -67,7 +67,6 @@ const Header = ({
   const isProductAnalyst = useRecoilValue(isProductAnalystState);
   const [showList, setShowList] = useRecoilState(showListState);
   const [openDrawer, setOpenDrawer] = useState(false);
-
   const [view, setView] = useRecoilState(viewState);
   const [open, setOpen] = useRecoilState(openState);
   const [categoryOpen, setCategoryOpen] = useRecoilState(categoryOpenState);
@@ -83,11 +82,28 @@ const Header = ({
     console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
   }
   useEffect(() => {
-    screenLoaded({ user_channel: "web", screen_name: "Hodor Home" });
+    screenLoad({
+      Screen_name: "Hodor Header",
+      User_channel: "web"
+    });
+    //screenLoaded({ user_channel: "web", screen_name: "Hodor Home" });
   }, []);
+  useEffect(() => {
+    console.log(selectedSource);
+    //screenLoaded({ user_channel: "web", screen_name: "Hodor Home" });
+  }, [selectedSource]);
   const safeTableData = Array.isArray(tableData) ? tableData : []; // Ensure tableData is an array
 const eventSize = safeTableData.length;  // Use safeTableData here
-
+const sources = [
+  { category: "Cross Platform", value: "React Native" },
+  { category: "Cross Platform", value: "Flutter" },
+  { category: "Android", value: "Kotlin (Android)" },
+  { category: "iOS", value: "Swift (iOS)" },
+  { category: "Web", value: "Javascript" },
+  { category: "Backend", value: "Node.js" },
+  { category: "Website", value: "PHP" },
+  { category: "API", value: "HTTP API" },
+];
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
       setView(newView);
@@ -143,7 +159,7 @@ const eventSize = safeTableData.length;  // Use safeTableData here
       showToast("Please select a source first.");
       return;
     }
-
+    setOpenDrawer(false);
     const filteredEvents = allEvents.filter((event) =>
       event.source.includes(selectedSource)
     );
@@ -152,47 +168,50 @@ const eventSize = safeTableData.length;  // Use safeTableData here
     let filename = "";
 
    // if (isProductAnalyst) {
-      switch (selectedSource) {
-        case "Web":
-          code = generateWebsiteCode(filteredEvents, mixpanelToken);
-          filename = "mixpanel-web.js";
-          break;
-        case "server":
-          code = generateBackendCode(filteredEvents, mixpanelToken);
-          filename = "mixpanel-backend.js";
-          break;
-        case "Android":
-          code = generateAndroidCode(filteredEvents);
-          filename = "MixpanelTracking.kt";
-          break;
-        case "iOS":
-          code = generateIOSCode(filteredEvents);
-          filename = "MixpanelTracking.swift";
-          break;
-          case "App":
-            // Generate both Android and iOS files
-            const androidCode = generateAndroidCode(filteredEvents);
-            const iosCode = generateIOSCode(filteredEvents);
-        
-            // Function to trigger file downloads
-            downloadFile("MixpanelTracking.kt", androidCode);
-            downloadFile("MixpanelTracking.swift", iosCode);
-            
-            showToast("Android & iOS files generated!");
-            return; 
-        default:
-          showToast("Unsupported platform");
-          return;
-      }
-      function downloadFile(filename, content) {
-        const blob = new Blob([content], { type: "text/plain" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }      
+    switch (selectedSource) {
+      case "Javascript":
+        code = generateWebsiteCode(filteredEvents, mixpanelToken);
+        filename = "mixpanel.js";
+        break;
+    
+      case "Node.js":
+        code = generateBackendCode(filteredEvents, mixpanelToken);
+        filename = "mixpanel.js";
+        break;
+    
+      case "Kotlin (Android)":
+        code = generateAndroidCode(filteredEvents);
+        filename = "MixpanelTracking.kt";
+        break;
+    
+      case "Swift (iOS)":
+        code = generateIOSCode(filteredEvents);
+        filename = "MixpanelTracking.swift";
+        break;
+    
+      case "React Native":
+        code = generateReactNativeCode(filteredEvents);
+        filename = "MixpanelTracking.js";
+        break;
+    
+      case "Flutter":
+        code = generateFlutterCode(filteredEvents);
+        filename = "MixpanelTracking.dart";
+        break;
+    
+      case "PHP":
+        code = generatePHPCode(filteredEvents);
+        filename = "mixpanel-tracking.php";
+        break;
+    
+      case "HTTP API":
+        code = generateHTTPAPICode(filteredEvents, mixpanelToken);
+        filename = "mixpanel-http-api.json";
+        break;
+      default:
+        showToast("Unsupported platform");
+        return;
+    }   
     /*} else {
       switch (selectedSource) {
         case "Website":
@@ -459,7 +478,16 @@ const eventSize = safeTableData.length;  // Use safeTableData here
       if (!row.eventName) return acc;
   
       const validPlatforms = ["Web", "Server Side", "All Mobile"];
-      const validSources = ["web", "server side", "app"];
+      const validSources = [
+        "Javascript",
+        "Node.js",
+        "React Native",
+        "Kotlin (Android)",
+        "Swift (iOS)",
+        "Flutter",
+        "PHP",
+        "HTTP API",
+      ];
       const isValidPlatform = validPlatforms.includes(row.platform);
       const isValidSource = validSources.includes(row.source);
       const platform = validPlatforms.includes(row.platform) ? row.platform : "Undefined";
@@ -573,7 +601,8 @@ const eventSize = safeTableData.length;  // Use safeTableData here
     } catch (err) {
       console.error(err);
     }
-  };  const generateWebsiteCode = (events, mixpanelToken) => {
+  }; 
+   const generateWebsiteCode = (events, mixpanelToken) => {
     const importSection = `
 //  # Installation Instructions
 //  # via npm
@@ -659,7 +688,14 @@ ${generatePlatformImportComment(functionNames, "ios")}
         return `// Import these functions from MixpanelTracking.swift
   // import MixpanelTracking // Make sure this file is in your project
   // Available functions: ${functionNames.join(", ")}`;
-      
+      case "flutter":
+        return `// Import these functions from mixpanel_service.dart
+    // import 'mixpanel_service.dart';
+    // Available functions: ${functionNames.join(", ")}`;
+    case "php":
+      return `// Import these functions from mixpanel_service.php
+  // require 'mixpanel_service.php';
+  // Available functions: ${functionNames.join(", ")}`;
       default:
         return "";
     }
@@ -711,11 +747,51 @@ ${generatePlatformImportComment(functionNames, "ios")}
           return generateKotlinMethodCode(properties, methodType, eventName);
         case "ios":
           return generateSwiftMethodCode(properties, methodType, eventName);
+        case "react-native":
+          return generateReactNativeMethodCode(properties, methodType, eventName);
+        case "flutter":
+          return generateFlutterMethodCode(properties, methodType, eventName);
+          case "php":
+        return generatePHPMethodCode(properties, methodType, eventName);
         default:
           return "";
       }
     };
-
+    const generatePHPMethodCode = (properties, methodType, eventName) => {
+      switch (methodType) {
+        case "Track":
+          return `$mp->track("${eventName}", array(
+    ${properties
+      ?.map(
+        (prop) =>
+          `"${prop?.property_name}" => $data["${prop?.property_name}"], // ${prop?.property_type}`
+      )
+      .join(",\n    ")}
+  ));`;
+  
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register" ? "registerSuperProperties" : "registerSuperPropertiesOnce";
+          return `$mp->${registerMethod}(array(
+    ${properties
+      ?.map((prop) => `"${prop?.property_name}" => $data["${prop?.property_name}"],`)
+      .join(",\n    ")}
+  ));`;
+  
+        case "People Set":
+        case "People Set Once":
+          const setMethod = methodType === "People Set" ? "set" : "setOnce";
+          return `$mp->people->${setMethod}($userId, array(
+    ${properties
+      ?.map((prop) => `"${prop?.property_name}" => $data["${prop?.property_name}"],`)
+      .join(",\n    ")}
+  ), $ip = 0);`;
+  
+        default:
+          return "";
+      }
+    };
     const generateJSMethodCode = (properties, methodType, eventName) => {
       switch (methodType) {
         case "Track":
@@ -819,7 +895,41 @@ ${generatePlatformImportComment(functionNames, "ios")}
           return "";
       }
     };
-
+    const generateFlutterMethodCode = (properties, methodType, eventName) => {
+      switch (methodType) {
+        case "Track":
+          return `mixpanel.track("${eventName}", {
+    ${properties
+      ?.map(
+        (prop) =>
+          `"${prop?.property_name}": data["${prop?.property_name}"], // ${prop?.property_type}`
+      )
+      .join(",\n    ")}
+  });`;
+  
+        case "Register":
+        case "Register Once":
+          const registerMethod =
+            methodType === "Register" ? "registerSuperProperties" : "registerSuperPropertiesOnce";
+          return `mixpanel.${registerMethod}({
+    ${properties
+      ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+      .join(",\n    ")}
+  });`;
+  
+        case "People Set":
+        case "People Set Once":
+          const setMethod = methodType === "People Set" ? "set" : "setOnce";
+          return `mixpanel.people.${setMethod}({
+    ${properties
+      ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+      .join(",\n    ")}
+  });`;
+  
+        default:
+          return "";
+      }
+    };
 
     const generateExampleInvocation = (event, platform) => {
       const { camelCase: functionName } = formatEventName(event?.eventName);
@@ -892,7 +1002,24 @@ let data: [String: Any] = [
   ${formattedData}
 ]
 ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
-
+        case "react-native":
+          return `// Example invocation:
+        // ${event?.event_definition || "Track user interaction"}
+        ${functionName}(${event?.identify ? '"user123", ' : ""}{
+        ${formattedData}
+        });`;
+        case "flutter":
+                return `// Example invocation:
+        // ${event?.event_definition || "Track user interaction"}
+        ${functionName}(${event?.identify ? '"user123", ' : ""}{
+          ${formattedData}
+        });`;
+        case "php":
+                return `// Example invocation:
+        // ${event?.event_definition || "Track user interaction"}
+        ${functionName}(${event?.identify ? '"user123", ' : ""}array(
+          ${formattedData}
+        ));`;
         default:
           return "";
       }
@@ -983,6 +1110,18 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         return `Mixpanel.mainInstance().registerSuperProperties([
       ${propsString}
   ])`;
+      case "react-native":
+          return `mixpanel.register({
+        ${propsString}
+    });`;
+    case "flutter":
+      return `mixpanel.registerSuperProperties({
+    ${propsString}
+});`;
+case "php":
+  return `$mp->registerSuperProperties(array(
+${propsString}
+));`;
       default:
         return "";
     }
@@ -1014,6 +1153,18 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         return `Mixpanel.mainInstance().people.set(properties: [
       ${propsString}
   ])`;
+      case "react-native":
+          return `mixpanel.people.set({
+        ${propsString}
+});`;
+case "flutter":
+  return `mixpanel.people.set({
+${propsString}
+});`;
+case "php":
+  return `$mp->people->set($userId, array(
+${propsString}
+), $ip = 0);`;
       default:
         return "";
     }
@@ -1031,6 +1182,12 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).identify(userId);";
       case "ios":
         return "\n    Mixpanel.mainInstance().identify(distinctId: userId)";
+      case "react-native":
+        return "\n  mixpanel.identify(userId);";
+      case "flutter":
+        return "\n  mixpanel.identify(userId);";
+        case "php":
+      return "\n  $mp->identify($userId);";
       default:
         return "";
     }
@@ -1048,6 +1205,12 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         return "\n    MixpanelAPI.getInstance(context, MIXPANEL_TOKEN).reset();";
       case "ios":
         return "\n    Mixpanel.mainInstance().reset()";
+      case "react-native":
+        return "\n  mixpanel.reset();";
+      case "flutter":
+        return "\n  mixpanel.reset();";
+        case "php":
+          return "\n  $mp->reset();";    
       default:
         return "";
     }
@@ -1069,12 +1232,111 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         return `func ${functionName}(${
           hasUserId ? "userId: String, " : ""
         }data: [String: Any])`;
+        case "react-native":
+      return `export function ${functionName}(${
+        hasUserId ? "userId, " : ""
+      }data)`;
+      case "flutter":
+      return `Future<void> ${functionName}(${
+        hasUserId ? "String userId, " : ""
+      }Map<String, dynamic> data) async`;
+      case "php":
+        return `function ${functionName}(${
+          hasUserId ? "$userId, " : ""
+        }$data)`;
       default:
         return "";
     }
   };
+  const generateReactNativeCode = (events) => {
+    const importSection = `
+  // Import Mixpanel
+  import mixpanel from 'mixpanel-browser';
+  
+  // Initialize Mixpanel
+  mixpanel.init('YOUR_PROJECT_TOKEN', {
+    debug: true, // Enable debug mode for development
+    track_pageview: true, // Automatically track page views
+  });
+  `;
+  
+    return generateEventCode(events, importSection, "react-native");
+  };
+  
+  const generateFlutterCode = (events) => {
+    const importSection = `
+  import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+  
+  ${generatePlatformImportComment(functionNames, "flutter")}
+  
+  // Initialize Mixpanel in your app
+  // Add this to your app's initialization logic (e.g., in main.dart or a dedicated service)
+  Mixpanel mixpanel;
+  
+  Future<void> initMixpanel() async {
+    mixpanel = await Mixpanel.init("YOUR_PROJECT_TOKEN", trackAutomaticEvents: false);
+  }
+  `;
+  
+    return generateEventCode(events, importSection, "flutter");
+  };  
+  const generatePHPCode = (events) => {
+    const importSection = `
+  <?php
+  // Import dependencies
+  require 'vendor/autoload.php';
+  
+  ${generatePlatformImportComment(functionNames, "php")}
+  
+  // Initialize Mixpanel
+  $mp = Mixpanel::getInstance("YOUR_PROJECT_TOKEN", array(
+      "debug" => true, // Enable debug mode
+      "max_batch_size" => 50, // Set max batch size
+  ));
+  `;
+  
+    return generateEventCode(events, importSection, "php");
+  };
+  const generateReactNativeMethodCode = (properties, methodType, eventName) => {
+    switch (methodType) {
+      case "Track":
+        return `mixpanel.track("${eventName}", {
+  ${properties
+    ?.map(
+      (prop) =>
+        `"${prop?.property_name}": data["${prop?.property_name}"], // ${prop?.property_type}`
+    )
+    .join(",\n    ")}
+});`;
+
+      case "Register":
+      case "Register Once":
+        const registerMethod =
+          methodType === "Register" ? "register" : "register_once";
+        return `mixpanel.${registerMethod}({
+  ${properties
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
+});`;
+
+      case "People Set":
+      case "People Set Once":
+        const setMethod = methodType === "People Set" ? "set" : "set_once";
+        return `mixpanel.people.${setMethod}({
+  ${properties
+    ?.map((prop) => `"${prop?.property_name}": data["${prop?.property_name}"],`)
+    .join(",\n    ")}
+});`;
+
+      default:
+        return "";
+    }
+  };
+  const handleSourceChange = (event) => {
+    setSelectedSource(event.target.value);
+  };
   return (
-    <>
+    <Box>
       <Box
         display="flex"
         flexDirection="row"
@@ -1086,9 +1348,10 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         sx={{
           width: "100%",
           zIndex: 1000,
+          height: "60px", // Set a fixed height for the header
         }}
       >
-     <Box display="flex" alignItems="center" gap={2}>
+     <Box display="flex" alignItems="center" gap={2} >
   <Typography
     variant="h6"
     fontWeight="bold"
@@ -1104,7 +1367,6 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
       padding: "4px 8px",
       borderRadius: "8px",
       "&:hover": !isMasterEventsPath && currentOrganization?.name && {
-        textDecoration: "underline",
         backgroundColor: "#333",
       },
     }}
@@ -1116,7 +1378,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
   </Typography>
       { /*</Box>
         <Box display="flex" alignItems="center">*/}
-         <Box display="flex" alignItems="center" gap={2}>
+         <Box display="flex" alignItems="center" gap={2} >
   {/* ToggleButtonGroup */}
   <ToggleButtonGroup
     value={view}
@@ -1124,6 +1386,8 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
     onChange={handleViewChange}
     aria-label="view toggle"
     sx={{
+      alignItems:"center",
+      justifyContent:"center",
       width: "200px", // Set the same width as the FormControl
       height: "56px", // Match the height of the Select component
     }}
@@ -1134,7 +1398,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
       onClick={() => setShowList(true)}
       sx={{
         width: "50%", // Each ToggleButton takes half the width
-        height: "100%", // Full height of the ToggleButtonGroup
+        height: "70%", // Full height of the ToggleButtonGroup
       }}
     >
       Category
@@ -1145,7 +1409,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
       onClick={() => setShowList(false)}
       sx={{
         width: "50%", // Each ToggleButton takes half the width
-        height: "100%", // Full height of the ToggleButtonGroup
+        height: "70%", // Full height of the ToggleButtonGroup
       }}
     >
       List
@@ -1154,85 +1418,92 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
 
   {/* FormControl with Select */}
   {isShowFilter && (
-        <FormControl sx={{ minWidth: 200, height: "56px" }}>
-          <InputLabel
-            id="organization-filter-label"
-            sx={{
-              color: "black",
-              "&.Mui-focused": {
-                color: "black",
-              },
-            }}
-          >
-            Industry
-          </InputLabel>
-          <Select
-            labelId="organization-filter-label"
-            multiple
-            value={selectedOrganizations}
-            onChange={handleIndustrySelection}
-            renderValue={(selected) => selected.join(", ")}
-            sx={{
-              color: "black",
-              height: "56px",
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "black",
-              },
-            }}
-          >
-            {Array.isArray(safeTableData) ? (
-              Array.from(
-                new Set(
-                  safeTableData
-                    .map((event) => event.organization)
-                    .filter((org) => org && org.trim() !== "")
-                )
+  <Box sx={{ height: "50%", display: "flex", alignItems: "center" }}> {/* Parent with defined height */}
+    <FormControl
+      sx={{
+        minWidth: 200,
+        height: "50%", // Take full height of the parent (70% of the header)
+      }}
+    >
+      <InputLabel
+        id="organization-filter-label"
+        sx={{
+          color: "black",
+          "&.Mui-focused": {
+            color: "black",
+          },
+        }}
+      >
+        Industry
+      </InputLabel>
+      <Select
+        labelId="organization-filter-label"
+        multiple
+        value={selectedOrganizations}
+        onChange={handleIndustrySelection}
+        renderValue={(selected) => selected.join(", ")}
+        sx={{
+          color: "black",
+          height: "100%", // Take full height of the FormControl
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black",
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "black",
+          },
+        }}
+      >
+        {Array.isArray(safeTableData) ? (
+          Array.from(
+            new Set(
+              safeTableData
+                .map((event) => event.organization)
+                .filter((org) => org && org.trim() !== "")
+            )
+          )
+            .concat(
+              selectedOrganizations.filter(
+                (org) => !safeTableData.some((e) => e.organization === org)
               )
-                .concat(
-                  selectedOrganizations.filter(
-                    (org) => !safeTableData.some((e) => e.organization === org)
-                  )
-                )
-                .map((org) => (
-                  <MenuItem
-                    key={org}
-                    value={org}
-                    sx={{
+            )
+            .map((org) => (
+              <MenuItem
+                key={org}
+                value={org}
+                sx={{
+                  color: "black",
+                  "&.Mui-selected": {
+                    backgroundColor: "#f0f0f0",
+                  },
+                  "&:hover": {
+                    backgroundColor: "#e0e0e0",
+                  },
+                }}
+              >
+                <Checkbox
+                  checked={selectedOrganizations.includes(org)}
+                  sx={{
+                    color: "black",
+                    "&.Mui-checked": {
                       color: "black",
-                      "&.Mui-selected": {
-                        backgroundColor: "#f0f0f0",
-                      },
-                      "&:hover": {
-                        backgroundColor: "#e0e0e0",
-                      },
-                    }}
-                  >
-                    <Checkbox
-                      checked={selectedOrganizations.includes(org)}
-                      sx={{
-                        color: "black",
-                        "&.Mui-checked": {
-                          color: "black",
-                        },
-                      }}
-                    />
-                    <ListItemText primary={org} />
-                  </MenuItem>
-                ))
-            ) : (
-              <MenuItem disabled>
-                <ListItemText primary="No data available" />
+                    },
+                  }}
+                />
+                <ListItemText primary={org} />
               </MenuItem>
-            )}
-          </Select>
-        </FormControl>
-      )}
+            ))
+        ) : (
+          <MenuItem disabled>
+            <ListItemText primary="No data available" />
+          </MenuItem>
+        )}
+      </Select>
+    </FormControl>
+  </Box>
+)}
 </Box>
         </Box>
 
@@ -1280,14 +1551,15 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
         <Box display="flex" alignItems="center" gap={2} flexDirection="column">
           {isShowCopy && (
             <Button variant="outlined"
-             onClick={handleCopy}
+            onClick={() => {handleCopy();setOpenDrawer(false);}} // Close the drawer when clicked
              sx={{
               color: "black", // White font color
               borderRadius: "8px", // Rounded corners
               borderColor:"black",
               "&:hover": {
-                color:"white",
-                backgroundColor: "#333", // Darker background on hover
+                borderColor:"rgb(255,14,180)",
+                color:"rgb(255,14,180)",
+                backgroundColor: "white", // Darker background on hover
               },
             }}>
               Copy URL
@@ -1297,13 +1569,14 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
 
 <Button
   variant="contained"
-  onClick={handleOpen}
+  onClick={() => {handleOpen();setOpenDrawer(false);}} // Close the drawer when clicked
   sx={{
     backgroundColor: "black", // Dark black background
     color: "white", // White font color
     borderRadius: "8px", // Rounded corners
     "&:hover": {
-      backgroundColor: "#333", // Darker background on hover
+      backgroundColor: "black", // Dark black background
+      color: "rgb(255,14,180)", // Darker background on hover
     },
   }}
 >
@@ -1313,58 +1586,83 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
-              onClick={handleDownloadButtonClick}
+              onClick={handleDownloadButtonClick} // Close the drawer when clicked
               sx={{
                 color: "black", // White font color
                 borderRadius: "8px", // Rounded corners
                 borderColor:"black",
                 "&:hover": {
-                  backgroundColor: "#333", // Darker background on hover
-                  color:"white",
+                  borderColor:"rgb(255,14,180)",
+                  color:"rgb(255,14,180)",
+                  backgroundColor: "white", // Darker background on hover
                 },
               }}>
               Download
             </Button>
           )}
-<Dialog
-        open={openSourceDialog}
-        onClose={() => setOpenSourceDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Select a Source</DialogTitle>
-        <DialogContent dividers>
-          <FormControl component="fieldset">
-            <RadioGroup
-              value={selectedSource}
-              onChange={(e) => setSelectedSource(e.target.value)}
-            >
-              {uniqueSources.map((source) => (
-                <FormControlLabel
-                  key={source}
-                  value={source}
-                  control={<Radio />}
-                  label={
-                    source === "Backend"
-                      ? `${source} (NodeJS)`
-                      : source === "Android"
-                      ? `${source} (Kotlin)`
-                      : source === "iOS"
-                      ? `${source} (Swift)`
-                      : source
-                  }
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSourceDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleDownload}>
-            Handle
-          </Button>
-        </DialogActions>
-      </Dialog>
+ <Dialog
+      open={openSourceDialog}
+      onClose={() => setOpenSourceDialog(false)}
+      fullWidth
+      maxWidth="sm"
+    >
+      <DialogTitle>Select a Source</DialogTitle>
+      <DialogContent dividers>
+        <FormControl fullWidth>
+          <InputLabel id="source-select-label">Source</InputLabel>
+          <Select
+            labelId="source-select-label"
+            id="source-select"
+            value={selectedSource}
+            label="Source"
+            onChange={(e) => setSelectedSource(e.target.value)}
+          >
+            {sources.map((source, index) => {
+              // Add a subheader for each category
+              
+              if (
+                index === 0 || source.category !== sources[index - 1].category
+              ) {
+                return [
+                  <ListSubheader  sx={{ color: "black", fontWeight:"bold", marginTop:"4px",marginBottom:"4px" }} key={source.category}>
+                    {source.category}
+                  </ListSubheader>,
+                  <MenuItem  sx={{ fontSize: "12px", paddingLeft:"34px"}}key={source.value} value={source.value}>
+                    {source.value}
+                  </MenuItem>,
+                ];
+              }
+              return (
+                <MenuItem key={source.value} value={source.value}>
+                  {source.value}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </FormControl>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          sx={{ color: "black" }}
+          onClick={() => {
+            setOpenSourceDialog(false);
+            setOpenDrawer(false);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "rgb(255,14,180)",
+            "&:hover": { backgroundColor: "rgb(220,10,160)" },
+          }}
+          onClick={handleDownload}
+        >
+          Handle
+        </Button>
+      </DialogActions>
+    </Dialog>
       {isMasterEventsPath && (
           <Box display="flex" alignItems="center" gap={2}>
             <Button
@@ -1377,8 +1675,9 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
                 borderRadius: "8px", // Rounded corners
                 borderColor:"black",
                 "&:hover": {
-                  backgroundColor: "#333", // Darker background on hover
-                  color:"white",
+                  borderColor:"rgb(255,14,180)",
+                  backgroundColor: "white", // Darker background on hover
+                  color:"rgb(255,14,180)",
                 },
               }}>
               Upload CSV
@@ -1399,8 +1698,9 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
               borderRadius: "8px", // Rounded corners
               borderColor:"black",
               "&:hover": {
-                color:"white",
-                backgroundColor: "#333", // Darker background on hover
+                borderColor:"rgb(255,14,180)",
+                color:"rgb(255,14,180)",
+                backgroundColor: "white", // Darker background on hover
               },
             }}>
               Master Events
@@ -1417,7 +1717,7 @@ ${functionName}(${event?.identify ? 'userId: "user123", ' : ""}data: data)`;
       </Box>
       <Box sx={{ marginTop: "10px" }}></Box>
       {open && <AddEventModal open={open} setOpen={setOpen} />}
-    </>
+    </Box>
   );
 };
 

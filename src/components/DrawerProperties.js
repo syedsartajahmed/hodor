@@ -119,7 +119,17 @@ const DrawerProperties = () => {
     "Undefined",
   ];
 
-  const sourceOptions = ["Web", "server", "App","Undefined"];
+  const sourceOptions = [
+    "Javascript",
+    "Node.js",
+    "React Native",
+    "Kotlin (Android)",
+    "Swift (iOS)",
+    "Flutter",
+    "PHP",
+    "HTTP API",
+    "Undefined"
+  ];
 
   const methodCallOptions = [
     "Identify",
@@ -856,7 +866,6 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
         <Box mt={0} mb={3}>
           <Typography
             sx={{
-              textDecoration: "underline",
               textDecorationColor: "#000000",
               textDecorationThickness: "2px",
             }}
@@ -1005,23 +1014,6 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
         }}
       >
         <FormControl fullWidth margin="normal">
-          <InputLabel>Platforms</InputLabel>
-          <Select
-            multiple
-            value={platforms}
-            onChange={handlePlatformsChange}
-            renderValue={(selected) => selected?.join(", ")}
-          >
-            {platformOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                <Checkbox checked={platforms.indexOf(option) > -1} />
-                <ListItemText primary={option} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl fullWidth margin="normal">
           <InputLabel>Source</InputLabel>
           <Select
             multiple
@@ -1070,10 +1062,12 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
         Actions
       </Typography>
 
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{borderColor:"black", color: "black", // Darker background on hover
+}}>
         {!showUserProperties && !showLogEvent && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" color="textSecondary">
+      <Box sx={{borderColor:"black", color: "black", // Darker background on hover
+      }}>
+        <Typography variant="subtitle1" color="textSecondary">
               Add actions to proceed.
             </Typography>
           </Box>
@@ -1082,8 +1076,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
           <Button
             variant="outlined"
             color="primary"
-            sx={{ mr: 2, mt: 1 }}
-            startIcon={<AddIcon />}
+            sx={{borderColor:"black", color: "black", // Darker background on hover
+            }}            startIcon={<AddIcon />}
             onClick={() => setShowUserProperties(true)}
           >
             Add Update User Properties
@@ -1093,8 +1087,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
           <Button
             variant="outlined"
             color="primary"
-            sx={{ mt: 1 }}
-            startIcon={<AddIcon />}
+            sx={{borderColor:"black", color: "black", // Darker background on hover
+            }}            startIcon={<AddIcon />}
             onClick={() => setShowLogEvent(true)}
           >
             Add Log Event
@@ -1106,8 +1100,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
         <Button
           variant="outlined"
           color="primary"
-          sx={{ mr: 2, mt: 1 }}
-          startIcon={<AddIcon />}
+          sx={{borderColor:"black", color: "black", // Darker background on hover
+          }}          startIcon={<AddIcon />}
           onClick={() => {
             setShowIdentifyMessage(true);
             setSelectedEvent((prevEvent) => ({
@@ -1123,8 +1117,8 @@ ${callFunctionName}(${selectedEvent?.identify ? '"user123", ' : ""}{
         <Button
           variant="outlined"
           color="primary"
-          sx={{ mt: 1 }}
-          startIcon={<AddIcon />}
+          sx={{borderColor:"black", color: "black", // Darker background on hover
+          }}          startIcon={<AddIcon />}
           onClick={() => {
             setShowUnidentifyMessage(true);
             setSelectedEvent((prevEvent) => ({

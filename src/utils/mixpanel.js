@@ -1,6 +1,6 @@
 import mixpanel from "mixpanel-browser";
 
-const MIXPANEL_TOKEN = "d5278bec8f08ca3379a158ad5e0bca33"; // Use .env variable
+const MIXPANEL_TOKEN = "7d3cc272c44c84d80d671374397998cd"; // Use .env variable
 
 const Mixpanel = {
   init: () => {
