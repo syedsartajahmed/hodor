@@ -83,10 +83,6 @@ const Header = ({
     console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
   }
   useEffect(() => {
-    screen_load('user_123', {
-         Screen_Name: "Header",
-         User_channel: "web",
-      });
     screenLoad({
       Screen_name: "Hodor Header",
       User_channel: "web"
