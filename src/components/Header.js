@@ -52,6 +52,7 @@ import {
 import { filteredTableDataState } from '../recoil/selector'; // or '../recoil/atom' if you added it there
 import { useRouter } from "next/router";
 import { screenLoad } from "../utils/mixpanel-web (1)";
+import { screen_load } from "@/utils/mixpanel-http-api (33)";
 
 const Header = ({
   isShowCopy = false,
@@ -82,6 +83,10 @@ const Header = ({
     console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
   }
   useEffect(() => {
+    screen_load('user_123', {
+         Screen_Name: "Header",
+         User_channel: "web",
+      });
     screenLoad({
       Screen_name: "Hodor Header",
       User_channel: "web"
@@ -205,8 +210,8 @@ const sources = [
         break;
     
       case "HTTP API":
-        code = generateHTTPAPICode(filteredEvents, mixpanelToken);
-        filename = "mixpanel-http-api.json";
+        code = generateHTTPAPICode(filteredEvents);
+        filename = "mixpanel-http-api.js";
         break;
       default:
         showToast("Unsupported platform");
@@ -672,8 +677,118 @@ ${generatePlatformImportComment(functionNames, "ios")}
 
     return generateEventCode(events, importSection, "ios");
   };
+  const generateHTTPAPICode = (events, mixpanelToken) => {
+  console.log(events,"asdfg");
+  const generateEventCode = (events) => {
+    return events.map(event => {
+      console.log(event.eventName);
+      const eventName = event.eventName;
+      const eventProperties = event.items[0]?.event_property || [];
+      const superProperties = event.items[0]?.super_property || [];
+      const userProperties = event.items[0]?.user_property || [];
+
+      // Generate function name
+      const functionName = eventName
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/(^_+|_+$)/g, '');console.log(functionName);
+
+      // Generate example properties
+      const exampleData = {};
+      [...eventProperties, ...superProperties, ...userProperties].forEach(prop => {
+        exampleData[prop.property_name || prop.name] = prop.sample_value || 
+          (prop.data_type === 'Number' ? 123 : `"example_${prop.property_name || prop.name}"`);
+      });
+
+      return `
+// ${event.event_definition || 'Track event'}
+export async function ${functionName}(distinct_id, properties) {
+  try {
+    const requests = [];
+
+    // Track Event
+    ${eventProperties.length ? `
+    requests.push(axios({
+      method: 'POST',
+      url: 'https://api.mixpanel.com/track',
+      headers: { 'Content-Type': 'application/json' },
+      data: [{
+        event: "${eventName}",
+        properties: {
+          ...properties,
+          token: "${mixpanelToken}",
+          distinct_id: distinct_id,
+          $insert_id: \`\${distinct_id}-\${Date.now()}\`
+        }
+      }]
+    }));` : ''}
+
+    // Super Properties
+    ${superProperties.length ? `
+    requests.push(axios({
+      method: 'POST',
+      url: 'https://api.mixpanel.com/track',
+      headers: { 'Content-Type': 'application/json' },
+      data: [{
+        event: "$identify",
+        properties: {
+          ...properties,
+          token: "${mixpanelToken}",
+          distinct_id: distinct_id,
+          $set: {
+            ${superProperties.map(p => 
+              `${p.name}: properties.${p.name}`).join(',\n            ')}
+          }
+        }
+      }]
+    }));` : ''}
+
+    // User Properties
+    ${userProperties.length ? `
+    requests.push(axios({
+      method: 'POST',
+      url: 'https://api.mixpanel.com/engage',
+      headers: { 'Content-Type': 'application/json' },
+      data: [{
+        $token: "${mixpanelToken}",
+        $distinct_id: distinct_id,
+        $set: {
+          ${userProperties.map(p => 
+            `${p.name}: properties.${p.name}`).join(',\n          ')}
+        }
+      }]
+    }));` : ''}
+
+    const responses = await Promise.all(requests);
+    return responses.map(r => r.data);
+    
+  } catch (error) {
+    console.error('Mixpanel API error:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Example invocation
+// ${functionName}('user_123', {
+${Object.entries(exampleData).map(([key, val]) => 
+  `//   ${key}: ${val},`).join('\n')}
+// });`.trim();
+    }).join('\n\n');
+  };
+
+  return `import axios from 'axios';
+
+// HTTP API Documentation:
+// https://developer.mixpanel.com/reference/import-events
+// https://developer.mixpanel.com/reference/profile-set
+
+${generateEventCode(events)}
+`;
+};
   const generatePlatformImportComment = (functionNames, platform) => {
     switch (platform) {
+      case "HttpApi":
+        return `// import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
       case "web":
         return `// import { ${functionNames.join(", ")} } from './utils/mixpanel.js';`;
       
