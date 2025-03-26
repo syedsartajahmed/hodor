@@ -52,7 +52,10 @@ import {
 import { filteredTableDataState } from '../recoil/selector'; // or '../recoil/atom' if you added it there
 import { useRouter } from "next/router";
 import { screenLoad } from "../utils/mixpanel-web (1)";
-import { screen_load } from "@/utils/mixpanel-http-api (33)";
+import { form_start } from "@/utils/mixpanel";
+//import { form_start } from "@/utils/mixpanel-http-api (33)";
+import JSZip from 'jszip';
+
 
 const Header = ({
   isShowCopy = false,
@@ -83,7 +86,12 @@ const Header = ({
     console.error("tableData is not an array. Type:", typeof tableData, "Value:", tableData);
   }
   useEffect(() => {
-    screenLoad({
+    
+    form_start('user_123', {
+         form_text: "Enter your name Provide email address",
+         user_channel: "example_user_channel",
+       });
+        screenLoad({
       Screen_name: "Hodor Header",
       User_channel: "web"
     });
@@ -104,6 +112,8 @@ const sources = [
   { category: "Backend", value: "Node.js" },
   { category: "Website", value: "PHP" },
   { category: "API", value: "HTTP API" },
+  { category: "API", value: "HTTP API Axios" },
+
 ];
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -152,7 +162,7 @@ const sources = [
     setOpenSourceDialog(true);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async() => {
     const mixpanelToken =
       currentOrganization?.applicationDetails?.token || "YOUR_PROJECT_TOKEN";
 
@@ -167,7 +177,68 @@ const sources = [
 
     let code = "";
     let filename = "";
-
+    if (selectedSource === "HTTP API Axios") {
+      try {
+        const zip = new JSZip();
+        const httpCode = generateHTTPAPICode(filteredEvents, mixpanelToken);
+        
+        // Add backend file
+        zip.file(httpCode.backend.filename, httpCode.backend.code);
+        
+        // Add frontend file
+        zip.file(httpCode.frontend.filename, httpCode.frontend.code);
+        
+        // Generate zip file
+        const content = await zip.generateAsync({ type: "blob" });
+        const url = window.URL.createObjectURL(content);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "mixpanel-http-api.zip";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error("Error generating zip file:", error);
+        showToast("Error generating download files");
+      }
+      setOpenSourceDialog(false);
+      return;
+    }
+      if (selectedSource === "HTTP API") {
+        try {
+          // Generate the HTTP API code
+          const httpCode = generateTrackingCode(filteredEvents, mixpanelToken);
+      
+          // Select the file you want to download (e.g., 'frontend' or 'backend')
+          const fileToDownload = httpCode.frontend; // or httpCode.backend
+      
+          // Create a Blob from the file content
+          const blob = new Blob([fileToDownload.code], { type: 'application/javascript' });
+      
+          // Create a URL for the Blob
+          const url = window.URL.createObjectURL(blob);
+      
+          // Create a temporary anchor element
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileToDownload.filename;
+      
+          // Append the anchor to the body, click it to trigger the download, and then remove it
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+      
+          // Release the Blob URL
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error("Error generating download file:", error);
+          showToast("Error generating download file");
+        }
+        setOpenSourceDialog(false);
+        return;
+      }
+      
    // if (isProductAnalyst) {
     switch (selectedSource) {
       case "Javascript":
@@ -206,7 +277,7 @@ const sources = [
         break;
     
       case "HTTP API":
-        code = generateHTTPAPICode(filteredEvents);
+        code = generateTrackingCode(filteredEvents);
         filename = "mixpanel-http-api.js";
         break;
       default:
@@ -415,7 +486,139 @@ const sources = [
 
     event.target.value = null;
   };
-
+  const generateHTTPAPICode = (events, mixpanelToken) => {
+    // Generate backend API route
+    const backendCode = `
+    //create .env.local file and add NEXT_PUBLIC_BASE_URL,MIXPANEL_TOKEN,MIXPANEL_SECRET
+    // 
+    // pages/api/mixpanel.js
+  import axios from 'axios';
+  
+  export default async function handler(req, res) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_BASE_URL || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+  
+    try {
+      const { endpoint, data } = req.body;
+          const response = await axios.post(\`https://api.mixpanel.com/\${endpoint}\`, 
+        \`data=\${encodeURIComponent(JSON.stringify(data))}\`,  // Encode payload
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded', // Correct format
+            'Authorization': \`Basic ${Buffer.from(`${process.env.MIXPANEL_SECRET}:`).toString("base64")}\`
+          }
+        }
+      );
+      res.status(200).json(response.data);
+    } catch (error) {
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { error: error.message };
+      res.status(status).json(errorData);
+    }
+  }
+  `;
+  
+    // Generate frontend client functions
+    const frontendCode = `// utils/mixpanel.js
+  import axios from 'axios';
+  
+  ${events.map(event => {
+    const eventName = event.eventName;
+    const eventProperties = event.items[0]?.event_property || [];
+    const superProperties = event.items[0]?.super_property || [];
+    const userProperties = event.items[0]?.user_property || [];
+  
+    const functionName = eventName
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/(^_+|_+$)/g, '');
+  
+    const exampleData = {};
+    [...eventProperties, ...superProperties, ...userProperties].forEach(prop => {
+      exampleData[prop.property_name || prop.name] = prop.sample_value || 
+        (prop.data_type === 'Number' ? 123 : `"example_${prop.property_name || prop.name}"`);
+    });
+  
+    return `// ${event.event_definition || 'Track event'}
+  export async function ${functionName}(distinct_id, properties) {
+    try {
+      const requests = [];
+  
+      ${eventProperties.length ? `
+      // Track Event
+      requests.push(axios.post('/api/mixpanel', {
+        endpoint: 'track',
+        data: [{
+          event: "${eventName}",
+          properties: {
+            ...properties,
+            distinct_id: distinct_id,
+            $insert_id: \`\${distinct_id}-\${Date.now()}\`
+          }
+        }]
+      }));` : ''}
+  
+      ${superProperties.length ? `
+      // Super Properties
+      requests.push(axios.post('/api/mixpanel', {
+        endpoint: 'track',
+        data: [{
+          event: "$identify",
+          properties: {
+            ...properties,
+            distinct_id: distinct_id,
+            $set: {
+              ${superProperties.map(p => `${p.name}: properties.${p.name}`).join(',\n              ')}
+            }
+          }
+        }]
+      }));` : ''}
+  
+      ${userProperties.length ? `
+      // User Properties
+      requests.push(axios.post('/api/mixpanel', {
+        endpoint: 'engage',
+        data: [{
+          $distinct_id: distinct_id,
+          $set: {
+            ${userProperties.map(p => `${p.name}: properties.${p.name}`).join(',\n            ')}
+          }
+        }]
+      }));` : ''}
+  
+      const responses = await Promise.all(requests);
+      return Promise.all(responses.map(r => r.data));
+    } catch (error) {
+      console.error('Tracking error:', error);
+      throw new Error(\`Tracking failed: \${error.message}\`);
+    }
+  }
+  
+  // Example usage:
+  // ${functionName}('user_123', {
+  ${Object.entries(exampleData).map(([key, val]) => `//   ${key}: ${val},`).join('\n')}
+  // });`;
+  }).join('\n\n')}
+  `;
+  
+    return {
+      backend: {
+        code: backendCode,
+        filename: 'pages/api/mixpanel.js'
+      },
+      frontend: {
+        code: frontendCode,
+        filename: 'utils/mixpanel.js'
+      }
+    };
+  };
   const formatForTable = (savedEvent) => ({
     id: savedEvent._id,
     name: savedEvent.eventName,
@@ -673,114 +876,101 @@ ${generatePlatformImportComment(functionNames, "ios")}
 
     return generateEventCode(events, importSection, "ios");
   };
-  const generateHTTPAPICode = (events, mixpanelToken) => {
-  console.log(events,"asdfg");
-  const generateEventCode = (events) => {
-    return events.map(event => {
-      console.log(event.eventName);
-      const eventName = event.eventName;
-      const eventProperties = event.items[0]?.event_property || [];
-      const superProperties = event.items[0]?.super_property || [];
-      const userProperties = event.items[0]?.user_property || [];
+// Add this near other imports
 
-      // Generate function name
-      const functionName = eventName
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9]+/g, '_')
-        .replace(/(^_+|_+$)/g, '');console.log(functionName);
-
-      // Generate example properties
-      const exampleData = {};
-      [...eventProperties, ...superProperties, ...userProperties].forEach(prop => {
-        exampleData[prop.property_name || prop.name] = prop.sample_value || 
-          (prop.data_type === 'Number' ? 123 : `"example_${prop.property_name || prop.name}"`);
-      });
-
-      return `
-// ${event.event_definition || 'Track event'}
-export async function ${functionName}(distinct_id, properties) {
+// Update the generateHTTPAPICode function
+const generateTrackingCode = (events, mixpanelToken) => {
+  // Generate frontend client functions
+  const frontendCode = `// utils/mixpanel.js
+export async function sendToMixpanel(endpoint, data) {
   try {
-    const requests = [];
-
-    // Track Event
-    ${eventProperties.length ? `
-    requests.push(axios({
+    const response = await fetch('https://api.mixpanel.com/' + endpoint, {
       method: 'POST',
-      url: 'https://api.mixpanel.com/track',
-      headers: { 'Content-Type': 'application/json' },
-      data: [{
-        event: "${eventName}",
-        properties: {
-          ...properties,
-          token: "${mixpanelToken}",
-          distinct_id: distinct_id,
-          $insert_id: \`\${distinct_id}-\${Date.now()}\`
-        }
-      }]
-    }));` : ''}
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        data: JSON.stringify(data),
+      }),
+    });
 
-    // Super Properties
-    ${superProperties.length ? `
-    requests.push(axios({
-      method: 'POST',
-      url: 'https://api.mixpanel.com/track',
-      headers: { 'Content-Type': 'application/json' },
-      data: [{
-        event: "$identify",
-        properties: {
-          ...properties,
-          token: "${mixpanelToken}",
-          distinct_id: distinct_id,
-          $set: {
-            ${superProperties.map(p => 
-              `${p.name}: properties.${p.name}`).join(',\n            ')}
-          }
-        }
-      }]
-    }));` : ''}
+    if (!response.ok) {
+      throw new Error('Mixpanel tracking failed: ' + response.statusText);
+    }
 
-    // User Properties
-    ${userProperties.length ? `
-    requests.push(axios({
-      method: 'POST',
-      url: 'https://api.mixpanel.com/engage',
-      headers: { 'Content-Type': 'application/json' },
-      data: [{
-        $token: "${mixpanelToken}",
-        $distinct_id: distinct_id,
-        $set: {
-          ${userProperties.map(p => 
-            `${p.name}: properties.${p.name}`).join(',\n          ')}
-        }
-      }]
-    }));` : ''}
-
-    const responses = await Promise.all(requests);
-    return responses.map(r => r.data);
-    
+    return await response.json();
   } catch (error) {
-    console.error('Mixpanel API error:', error.response?.data || error.message);
+    console.error('Tracking error:', error);
     throw error;
   }
 }
 
-// Example invocation
-// ${functionName}('user_123', {
-${Object.entries(exampleData).map(([key, val]) => 
-  `//   ${key}: ${val},`).join('\n')}
-// });`.trim();
-    }).join('\n\n');
+${events.map(event => {
+  const eventName = event.eventName;
+  const eventProperties = event.items[0]?.event_property || [];
+  const superProperties = event.items[0]?.super_property || [];
+  const userProperties = event.items[0]?.user_property || [];
+
+  const functionName = eventName
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/(^_+|_+$)/g, '');
+
+  const exampleData = {};
+  [...eventProperties, ...superProperties, ...userProperties].forEach(prop => {
+    exampleData[prop.property_name || prop.name] = prop.sample_value || 
+      (prop.data_type === 'Number' ? 123 : `"example_${prop.property_name || prop.name}"`);
+  });
+
+  return `// Function to track ${eventName} event
+export async function ${functionName}(distinct_id, properties) {
+  const data = {
+    event: "${eventName}",
+    properties: {
+      ...properties,
+      distinct_id: distinct_id,
+      $insert_id: \`\${distinct_id}-\${Date.now()}\`
+    }
   };
 
-  return `import axios from 'axios';
+  return sendToMixpanel('track', data);
+}
 
-// HTTP API Documentation:
-// https://developer.mixpanel.com/reference/import-events
-// https://developer.mixpanel.com/reference/profile-set
-
-${generateEventCode(events)}
+// Example usage:
+// ${functionName}('user_123', {
+//   ${Object.entries(exampleData).map(([key, val]) => `${key}: ${val}`).join(',\n  ')}
+// });`;
+}).join('\n\n')}
 `;
+
+  // Function to download the generated code as a file
+  const downloadFile = (content, filename) => {
+    const blob = new Blob([content], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Trigger the download
+  downloadFile(frontendCode, 'mixpanelTracking.js');
+
+  return {
+    frontend: {
+      code: frontendCode,
+      filename: 'utils/mixpanel.js',
+    },
+  };
 };
+
+
+
+  // Rest of your existing handleDownload code...
+
   const generatePlatformImportComment = (functionNames, platform) => {
     switch (platform) {
       case "HttpApi":
